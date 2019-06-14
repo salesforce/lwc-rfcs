@@ -69,13 +69,13 @@ Examples of changes that would not require a feature flag:
 
 ### Using features in Code
 
-In your code, you must import the `feature` method from the config package to branch your code. We have two options:
+In your code, you must import bindings from the config package to branch your code. We have two options:
 
 #### If/Then/Else Branching
 
 ```js
-import { feature } from "@lwc/config";
-if (feature('foo')) {
+import { ENABLE_FOO } from "@lwc/config";
+if (ENABLE_FOO) {
     runExtra();
 }
 ```
@@ -83,24 +83,25 @@ if (feature('foo')) {
 which gets compiled to one of the following options:
 
 ```js
-import { feature } from "@lwc/config";
-{   // foo feature is configured as `true`
+import { ENABLE_FOO } from "@lwc/config";
+// foo feature is configured as `true`
+{ // this block is needed in case the if-condition declares some binding
     runExtra();
 }
 ```
 
-Note: the block is needed in case the if condition declares some binding.
-
-or,
-
 ```js
-import { feature } from "@lwc/config";
+import { ENABLE_FOO } from "@lwc/config";
 // foo feature is configured as `false`
 ```
 
-or preserves the original code if `"foo"` feature is configured as `null` which means it is a runtime decision.
-
-This option is straightforward but it is error-prone since static analysis is more complicated. Transformation by the compiler is also more complicated since there are many ways the expression can be used.
+```js
+import { ENABLE_FOO } from "@lwc/config";
+// foo feature is configured as `null`
+if (LWC_config.feature.ENABLE_FOO === true) {
+    runExtra();
+}
+```
 
 #### Arrow Function Branching
 
@@ -126,10 +127,12 @@ This could be achieve via the global LWC configuration, e.g.:
 LWC_config = {
     features: {
         foo: true,
-        bar: false, // false is always the default value
+        bar: false,
     },
 };
 ```
+
+All runtime-evaluated features are disabled by default. Therefore, features can only be enabled when the value is `true`.
 
 It is important to notice that this configuration is a global variable, and must be evaluated before LWC runs.
 

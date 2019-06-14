@@ -19,7 +19,7 @@ values to multiple components “lower” in the DOM.
 
 The primary goal of this RFC is to define how the to consume context, guarantee the right ergonomics and semantics for the consumer code while the provider can be experimental APIs.
 
-As a secondary goal is to provide ways for the lightning platform to control who can provide new context values, as a way to gate this feature.
+As a secondary goal is to provide ways for the Lightning Platform to control who can provide new context values, as a way to gate this feature.
 
 A third goal is to support the provision of context values on any element, whether it is LWC or not.
 
@@ -66,7 +66,7 @@ _Note: since `@wire` supports wiring to a method, it will work the same way for 
 
 ## Proposal: Context Provider
 
-This proposal provides a low-level API for authors to provide a context value at any level in the flatten DOM tree that can be consume by any node in the subtree. This API is subject to changes as we understand more and more about how context is used.
+This proposal provides a low-level API for authors to provide a context value at any level in the flattened DOM tree that can be consume by any node in the subtree. This API is subject to changes as we understand more and more about how context is used.
 
 ### Defining a new Context
 
@@ -112,7 +112,7 @@ Invariants:
 * `setContextExperimental()` must be called at least once before the insertion into the DOM phase is completed.
 
 Observations:
-* LWC is not opinionated on how a context definition is going to be share. User-land abstractions are allowed.
+* LWC is not opinionated on how a context definition is going to be shared. User-land abstractions are allowed.
 * LWC is not opinionated on how a developer will share the capabilities to set a new context value on an element. User-land abstractions are allowed.
 
 ## Other examples
@@ -179,8 +179,8 @@ export default class MyComponent extends LightningElement {
 
 # Other Alternatives
 
-* The two new APIs can be imported from `@lwc/context` or `@lwc/wire-service` rather than `lwc` directly. This might help to eventually allow others to use this contexts with vanilla web components. It will also make it easier for us to restrict who has access to these APIs in platform.
-* Make the new APIs a lot more generic, instead of context specific, where you might want to use them to provide contextual wiring per adapters. The fear here is that we will give them a very powerful experimental API.
+* The two new APIs can be imported from `@lwc/context` or `@lwc/wire-service` rather than `lwc` directly. This might help to eventually allow others to use contexts with vanilla web components. It will also make it easier for Lightning Platform to restrict who has access to these APIs in platform.
+* Make the new APIs a lot more generic, instead of context specific, where you might want to use them to provide contextual wiring per adapter. The fear here is that we will give them a very powerful experimental API.
 
 # Adoption strategy
 

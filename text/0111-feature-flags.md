@@ -85,7 +85,7 @@ which gets compiled to one of the following options:
 ```js
 import { ENABLE_FOO } from "@lwc/config";
 // foo feature is configured as `true`
-{ // this block is needed in case the if-condition declares some binding
+{ // this block is needed in case the then-block declares some binding
     runExtra();
 }
 ```

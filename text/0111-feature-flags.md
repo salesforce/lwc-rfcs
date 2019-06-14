@@ -1,4 +1,4 @@
-# RFC: Feature Flag
+# RFC: Feature Flags
 
 ## Status
 
@@ -7,26 +7,26 @@
 
 ## Summary
 
-This RFC defines the infrastructure pieces to support feature flag to enable experimentation and progressive development inside LWC core packages.
+This RFC defines the infrastructure pieces to support feature flags to enable experimentation and progressive development inside LWC core packages.
 
 ## Motivation
 
 * It is becoming more difficult to add new features to engine and compiler due to the potential breaking hazard.
-* Some features need to period of adaptation and testing before we can allow users-of-LWC to consume them, but today the only option is to keep them in a separate branch forever.
-* Performance implications of a change is sometimes difficult to assess without hitting production servers, but at that point, it is too late since everyone has access to the same set of features today.
-* Branching code logic for certain features (e.g.: slotchange event) is becoming more complicated over time, and having that in the actual code makes the code less readable.
+* Some features need a period of adaptation and testing before we allow LWC users to consume them, but today the only option is to keep them in a separate branch forever.
+* The performance implications of a change is sometimes difficult to assess without hitting production servers, but at that point, it is too late since everyone has access to the same set of features today.
+* Branching code logic for certain features (e.g., slotchange event) is becoming more complicated over time, and having that in the actual code makes the code less readable.
+* Polyfilling new shadow dom semantics is almost impossible considering that we know it is going to break LWC users at some point.
 
 ## Goals of this proposal
 
-* Define strategy to support incremental development of features without compromising the stability of the platform and breakages for users-of-LWC.
-* Define ways to keep experimental and unstable code-branches out of production artifacts.
-* Define ways to turn certain features on and off at runtime.
-* Define ways to turn certain features on permanently on production artifacts without unnecessary branching logic.
-* Polyfilling new shadow dom semantics is almost impossible considering that we know is going to break users-of-LWC at some point.
+* Define strategy to support incremental development of features without compromising the stability of the platform and breakages for LWC users.
+* Define ways to remove experimental/unstable code branches from production artifacts.
+* Define ways to enable and disable features at runtime.
+* Define ways to permanently enable features on production artifacts without unnecessary branching logic.
 
 ## Prior Art
 
-EmberJS is probably the framework with more success when it comes to backward compatible changes. We can take a page from their book when it comes to introducing new features via Feature Flags:
+EmberJS is probably one of the more successful frameworks when it comes to backwards-compatible changes. We can take a page from their playbook when it comes to introducing new features via Feature Flags:
 
 * https://guides.emberjs.com/release/configuring-ember/feature-flags/
 
@@ -34,7 +34,7 @@ EmberJS is probably the framework with more success when it comes to backward co
 
 New features are added within conditional statements.
 
-Code behind these flags can be conditionally enabled (or completely removed) based on your project's configuration. This allows newly developed features to be selectively released when the LWC platform considers them ready for production use.
+Code behind these flags can be conditionally enabled (or completely removed) based on your project configuration. This allows newly developed features to be selectively released when the LWC platform considers them ready for production use.
 
 ### Flagging Details
 
@@ -57,7 +57,7 @@ If you intend to make "substantial" changes to LWC or any other package inside t
 * The introduction of new idiomatic usage or conventions, even if they do not include code changes to LWC itself.
 * Polyfill or patch of browsers APIs to implement shadow dom semantics in our synthetic shadow DOM polyfill.
 
-Some changes do not require an RFC:
+Examples of changes that would not require a feature flag:
 
 * Rephrasing, reorganizing or refactoring
 * Addition or removal of warnings
@@ -100,7 +100,7 @@ import { feature } from "@lwc/config";
 
 or preserves the original code if `"foo"` feature is configured as `null` which means it is a runtime decision.
 
-This option is very straight forward, but it is error prompt since static analysis is more complicated. Also, transformation is more complicated as well in the compiler since there are many ways the expression can be used.
+This option is straightforward but it is error-prone since static analysis is more complicated. Transformation by the compiler is also more complicated since there are many ways the expression can be used.
 
 #### Arrow Function Branching
 
@@ -131,13 +131,13 @@ LWC_config = {
 };
 ```
 
-It is important to notice that this configuration is a global variable, and must be evaluated before the LWC runs.
+It is important to notice that this configuration is a global variable, and must be evaluated before LWC runs.
 
 It is also important to notice that only features that are configured as `null` on the LWC multi-package repository can be enabled or disabled on the client side. If the feature is marked as `true`, it will be always present independently of the `LWC_config` value, while those marked as `false` are just not present at runtime, which means attempting to configure those via `LWC_config` will do nothing.
 
 #### Testing
 
-During test phase, all features will be compiled out as runtime optional (equivalent to setting them to `null` value). This guarantees that we can have different tests for the different branching logic. With that in mind, you can use a test helper function to enable certain features per test, e.g.:
+During the test phase, all features will be compiled out as runtime optional (equivalent to setting them to `null` value). This guarantees that we can have different tests for the different branching logic. With that in mind, you can use a test helper function to enable certain features per test, e.g.:
 
 ```js
 import { enableFeature } from '@salesforce/lwc-test-support'; // bikeshed required here

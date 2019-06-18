@@ -17,7 +17,7 @@ values to multiple components “lower” in the DOM.
 
 # Goals
 
-The primary goal of this RFC is to define how the to consume context, guarantee the right ergonomics and semantics for the consumer code while the provider can be experimental APIs.
+The primary goal of this RFC is to define how to consume context, guarantee the right ergonomics and semantics for the consumer code while the provider can be an experimental API.
 
 As a secondary goal is to provide ways for the Lightning Platform to control who can provide new context values, as a way to gate this feature.
 
@@ -31,8 +31,7 @@ A third goal is to support the provision of context values on any element, wheth
 
 Important Notes:
 
-* It is important for the consumer to be able to consume more than one context value
-from different context providers if needed.
+* It is important for the consumer to be able to consume more than one context value from different context providers if needed.
 * It is important to guarantee that the provisioned object is reactive, so the UI can
 rely on it directly.
 
@@ -42,12 +41,12 @@ This proposal provides a high-level API (an abstraction layer) for authors to co
 
 ```js
 import { LightningElement } from 'lwc';
-import { XFooContext } from 'x/fooContext';
-import { XBarContext } from 'x/barContext';
+import XFooContext from 'x/fooContext';
+import XBarContext from 'x/barContext';
 
 export default class MyComponent extends LightningElement {
-    @wire(XFooContext) a; // context object provided by an element up in the flatten tree
-    @wire(XBarContext) b; // context object provided by an element up in the flatten tree
+    @wire(XFooContext.Provider) a; // context object provided by an element up in the flatten tree
+    @wire(XBarContext.Provider) b; // context object provided by an element up in the flatten tree
 }
 ```
 
@@ -66,121 +65,91 @@ _Note: since `@wire` supports wiring to a method, it will work the same way for 
 
 ## Proposal: Context Provider
 
-This proposal provides a low-level API for authors to provide a context value at any level in the flattened DOM tree that can be consumed by any node in the subtree. This API is subject to change as we understand more and more about how context is used.
+This proposal provides a way for authors to provide a context value at any level in the flattened DOM tree that can be consumed by any node in the subtree.
 
-### Defining a new Context
+### Defining a new Context Provider
 
-The definition of a new context is equivalent to creation of a new wire adapter. It has an identity, and it has some internal implementation details that are necessary to work as the first argument of the `@wire` decorator.
-
-This API must be experimental for the MVP:
+The definition of a new context is equivalent to creation of a component that must extend `LightningContext`, e.g.:
 
 ```js
-import { createContextExperimental } from 'lwc';
+import LightningContext from 'lightning/context';
 
-export const XFooContext = createContextExperimental({
-    x: 0,
-    y: 0,
-});
-```
-
-Where the first argument to `createContextExperimental()` function receives the default payload to be provided to any node consuming this new context.
-
-_Note: we could add a second argument for a context value validation routine if needed._
-
-The consumer of this context is as described in the previous section of this document for `XFooContext`.
-
-## Providing a custom value for a context
-
-Setting the value of a context already defined must be an operation involving an element. Any element in the  flatten DOM subtree of that element or its shadowRoot, can consume the value set for a context.
-
-This API must be experimental for the MVP:
-
-```js
-import { setContextExperimental } from 'lwc';
-import { XFooContext } from 'x/fooContext';
-
-setContextExperimental(elm, XFooContext, {
-    x: 1,
-    y: 2,
-});
-```
-
-Where the first argument is the element that provides the new context value into its flatten DOM subtree, the second argument is the defined context reference returned from `createContextExperimental` function call, and the 3rd argument is the _context value_ to be provided.
-
-Invariants:
-
-* `setContextExperimental()` must be called at least once before the insertion into the DOM phase is completed.
-
-Observations:
-* LWC is not opinionated on how a context definition is going to be shared. User-land abstractions are allowed.
-* LWC is not opinionated on how a developer will share the capabilities to set a new context value on an element. User-land abstractions are allowed.
-
-## Other examples
-
-### How to implement a React-like context HOC in LWC?
-
-```js
-import { LightningElement, createContextExperimental, setContextExperimental } from 'lwc';
-
-// creating a new context definition
-const Context = createContextExperimental({
-    x: 0,
-    y: 0,
-});
-
-export default class XFooContext extends LightningElement {
-    _value = {};
-
-    @api
+export default class ThemeContext extends LightningContext {
+    @api set theme() {
+        this.setContextValue(v);
+    }
     get theme() {
-        return this._value;
+        return this.getContextValue();
     }
-    set theme(v) {
-        // you can validate `v` here if you want
-        this._value = v;
-        // setting a new context value 
-        this.setNewContextValue();
-    }
-
-    connectedCallback() {
-        // setting the initial value of the context
-        this.setNewContextValue();
-    }
-    setNewContextValue() {
-        setContextExperimental(this, Context, this._value);
-    }
-    static Consumer = Context;
 }
 ```
 
-The way a provider is used in a template is very straight forward:
+Where `LightningContext` component is provided by the `lightning` namespace. This class is intended to be extended and provides two protected methods `setContextValue(newValue)` and `getContextValue()` to interact with the underlying implementation that takes care of provisioning  the context value to any node consuming this new context.
 
-```html
-<template>
-    <x-foo-context theme="dark">
-        <c-consumer></c-consumer> 
-    </x-foo-context>
-    <x-foo-context value="lite">
-        <c-other-consumer></c-other-consumer> 
-    </x-foo-context>    
-</template>
-```
+_Note: No html file is required, unless the author want to customize the UI of the context provider._
 
-Where `<c-consumer>` and `<c-other-consumer>` or any of their descendent will be able to consume the context value by using the `@wire(XFooContext.Consumer)` decorator, e.g.:
+This class also provides a static accessor called `Provider`, which is intended to be used for the consumer to wire to the provided context, e.g.:
 
 ```js
 import { LightningElement } from 'lwc';
-import XFooContext from 'x/fooContext';
+import ThemeContext from 'x/themeContext';
 
-export default class MyComponent extends LightningElement {
-    @wire(XFooContext.Consumer) foo; // context object provided by <x-foo-context> element
+// Consumer
+export default class XBar extends LightningElement {
+    @wire(ThemeContext.Provider) x;
 }
 ```
 
-# Other Alternatives
+### Providing a context value
 
-* The two new APIs can be imported from `@lwc/context` or `@lwc/wire-service` rather than `lwc` directly. This might help to eventually allow others to use contexts with vanilla web components. It will also make it easier for Lightning Platform to restrict who has access to these APIs in platform.
-* Make the new APIs a lot more generic, instead of context specific, where you might want to use them to provide contextual wiring per adapter. The fear here is that we will give them a very powerful experimental API.
+Setting a context value must be an operation involving a custom element. Any element in the  light DOM subtree of that element or their descendent, can consume the value set for a context.
+
+To provide a new context value, you must use the declarative form via an HTML template. Any structure that involves `<x-theme-context>` and `<x-bar>` components can share the `theme` value, e.g.: 
+
+```html
+<template>
+    <x-theme-context theme="dark">
+        <x-bar></x-bar>
+    </x-theme-context>
+</template>
+```
+
+It means that `<x-bar>` or any of its descendants can wire to `ThemeContext.Provider` to obtain the `theme` value.
+
+## Implementation Details
+
+In order to implement `LightningContext`, it requires a reform on the the wire protocol. This reforms has two folds:
+
+1. We need to introduce a new event that can be dispatched by a wire adapter to create a side channel between the `eventTarget` with a context provider installed on an element in the the composed path. The new event is implemented via a new constructor called `LinkContextEvent`, and it expects a unique `token`, and a `callback` to finalize the linking process. E.g.:
+
+```js
+import { register, ValueChangedEvent, LinkContextEvent } from 'wire-service';
+
+const adapter = Symbol('ContextProvider');
+register(adapter, (eventTarget) => {
+    let unsubscribeCallback;
+
+    function callback(data, unsubscribe) {
+        // provider calls this function at any given time
+        eventTarget.dispatchEvent(new ValueChangedEvent(data));
+        unsubscribeCallback = unsubscribe;
+    }
+
+    eventTarget.addEventListener('connect', () => {
+        // attempt to link to a context provider identified by token
+        const event = new LinkContextEvent(token, callback);
+        eventTarget.dispatchEvent(event);
+    });
+
+    eventTarget.addEventListener('disconnect', () => {
+        if (unsubscribeCallback !== undefined) {
+            unsubscribeCallback();
+        }
+    });
+});
+```
+
+2. The existing, and hacky way, to implement context with wire via an arbitrary event name `"WireContextEvent"`, must be removed. This cannot happen right now, we should move existing consumers to the new API.
 
 # Adoption strategy
 
@@ -192,9 +161,5 @@ This is a brand new feature, we just need to document it.
 
 # Unresolved questions
 
-* Should the context value be validated?
-* Should the context value be type any? or must be an object?
-* Should the context value be serializable to support locker?
 * ~~How can the context be propagated when the fiber is cut (insertion of root elements inside a template)?~~ Events coordination solves this.
 * ~~How can the context be provided to elements in the light DOM of the context element?~~ Events coordination solves this.
-* Should the context definition be a default export or a named export?

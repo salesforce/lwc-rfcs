@@ -47,14 +47,14 @@ import { XBarContext } from 'x/barContext';
 
 export default class MyComponent extends LightningElement {
     @wire(XFooContext) a; // context object provided by an element up in the flatten tree
-    @wire(XBarContext) b; // context object provided by element up in the flatten tree
+    @wire(XBarContext) b; // context object provided by an element up in the flatten tree
 }
 ```
 
 Pros:
 * it could be statically verified when wired to a field.
-* it works nicely with inheritance since it relies on field declarations.
-* it is extremely familiar since it relies on the `wire` decorator.
+* it works well with inheritance since it relies on field declarations.
+* it is familiar since it relies on the `wire` decorator.
 
 Cons:
 * the wire decorator is often seen as more complicated, and often requires authors to be defensive in case the value is never resolved (which is not the case of for context).
@@ -66,11 +66,11 @@ _Note: since `@wire` supports wiring to a method, it will work the same way for 
 
 ## Proposal: Context Provider
 
-This proposal provides a low-level API for authors to provide a context value at any level in the flattened DOM tree that can be consume by any node in the subtree. This API is subject to changes as we understand more and more about how context is used.
+This proposal provides a low-level API for authors to provide a context value at any level in the flattened DOM tree that can be consumed by any node in the subtree. This API is subject to change as we understand more and more about how context is used.
 
 ### Defining a new Context
 
-The definition of a new context is equivalent to create a new wire adapter. It has an identity, and it has some internal implementation details that are necessary to work as the first argument of the `@wire` decorator.
+The definition of a new context is equivalent to creation of a new wire adapter. It has an identity, and it has some internal implementation details that are necessary to work as the first argument of the `@wire` decorator.
 
 This API must be experimental for the MVP:
 

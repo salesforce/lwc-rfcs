@@ -45,8 +45,12 @@ import XFooContext from 'x/fooContext';
 import XBarContext from 'x/barContext';
 
 export default class MyComponent extends LightningElement {
-    @wire(XFooContext.Provider) a; // context object provided by an element up in the flatten tree
-    @wire(XBarContext.Provider) b; // context object provided by an element up in the flatten tree
+    // context value provided by <x-foo-context> wired into a field
+    @wire(XFooContext.Provider) a;
+    // context value provided by <x-bar-context> wired into a method
+    @wire(XBarContext.Provider) someMethod(contextValue) {
+        // contextValue available after connecting
+    }
 }
 ```
 
@@ -61,7 +65,7 @@ Cons:
 
 _Note: This is very similar to how React does it, but extending it to access multiple contexts._
 
-_Note: since `@wire` supports wiring to a method, it will work the same way for context._
+_Note: since `@wire` supports wiring to a method, it will work the same way for context values._
 
 ## Proposal: Context Provider
 
@@ -163,3 +167,5 @@ This is a brand new feature, we just need to document it.
 
 * ~~How can the context be propagated when the fiber is cut (insertion of root elements inside a template)?~~ Events coordination solves this.
 * ~~How can the context be provided to elements in the light DOM of the context element?~~ Events coordination solves this.
+* Is the value always synchronous provisioned during the `wiring` stage of the component life-cycle?
+* Is there a formal error state that the wire can provision? Will it participate in the component error boundary?

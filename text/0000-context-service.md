@@ -122,9 +122,9 @@ It means that `<x-bar>` or any of its descendants can wire to `ThemeContext.Prov
 
 ## Implementation Details
 
-In order to implement `LightningContext`, it requires a reform on the the wire protocol. This reforms has two folds:
+In order to implement `LightningContext`, it requires a reform on the wire protocol. This reform has two folds:
 
-1. We need to introduce a new event that can be dispatched by a wire adapter to create a side channel between the `eventTarget` with a context provider installed on an element in the the composed path. The new event is implemented via a new constructor called `LinkContextEvent`, and it expects a unique `token`, and a `callback` to finalize the linking process. E.g.:
+1. We need to introduce a new event that can be dispatched by a wire adapter to create a side channel between the `eventTarget` with a context provider installed on an element in the composed path. The new event is implemented via a new constructor called `LinkContextEvent`, and it expects a unique `token`, and a `callback` to finalize the linking process. E.g.:
 
 ```js
 import { register, ValueChangedEvent, LinkContextEvent } from 'wire-service';

@@ -41,14 +41,14 @@ This proposal provides a high-level API (an abstraction layer) for authors to co
 
 ```js
 import { LightningElement } from 'lwc';
-import XFooContext from 'x/fooContext';
-import XBarContext from 'x/barContext';
+import XFooContextElement from 'x/fooContext';
+import XBarContextElement from 'x/barContext';
 
 export default class MyComponent extends LightningElement {
     // context value provided by <x-foo-context> wired into a field
-    @wire(XFooContext.Provider) a;
+    @wire(XFooContextElement.Provider) a;
     // context value provided by <x-bar-context> wired into a method
-    @wire(XBarContext.Provider) someMethod(contextValue) {
+    @wire(XBarContextElement.Provider) someMethod(contextValue) {
         // contextValue available after connecting
     }
 }
@@ -73,22 +73,25 @@ This proposal provides a way for authors to provide a context value at any level
 
 ### Defining a new Context Provider
 
-The definition of a new context is equivalent to creation of a component that must extend `LightningContext`, e.g.:
+The definition of a new context is equivalent to creation of a component that must extend `LightningContextElement`, e.g.:
 
 ```js
-import LightningContext from 'lightning/context';
+import LightningContextElement from 'lightning/context';
 
-export default class ThemeContext extends LightningContext {
-    @api set theme() {
-        this.setContextValue(v);
+export default class ThemeContextElement extends LightningContextElement {
+    @api set theme(data) {
+        this._theme = data;
+        this.setContext({ data });
     }
     get theme() {
-        return this.getContextValue();
+        return this._theme;
     }
 }
 ```
 
-Where `LightningContext` component is provided by the `lightning` namespace. This class is intended to be extended and provides two protected methods `setContextValue(newValue)` and `getContextValue()` to interact with the underlying implementation that takes care of provisioning  the context value to any node consuming this new context.
+Where `LightningContextElement` component is provided by the `lightning` namespace. This class is intended to be extended and provides one protected method `setContext(newValue)` to interact with the underlying implementation that takes care of provisioning  the context value to any node consuming this new context.
+
+Additionally, this class provides a protected protocol to define the default value to be set for the context in case no provider is found. This can be done via `static getDefaultContext() { return defaultValue; }` method in the subclass. This is optional, and by default, it will return `undefined`.
 
 _Note: No html file is required, unless the author want to customize the UI of the context provider._
 
@@ -96,11 +99,11 @@ This class also provides a static accessor called `Provider`, which is intended 
 
 ```js
 import { LightningElement } from 'lwc';
-import ThemeContext from 'x/themeContext';
+import ThemeContextElement from 'x/themeContext';
 
 // Consumer
 export default class XBar extends LightningElement {
-    @wire(ThemeContext.Provider) x;
+    @wire(ThemeContextElement.Provider) x;
 }
 ```
 
@@ -118,11 +121,43 @@ To provide a new context value, you must use the declarative form via an HTML te
 </template>
 ```
 
-It means that `<x-bar>` or any of its descendants can wire to `ThemeContext.Provider` to obtain the `theme` value.
+It means that `<x-bar>` or any of its descendants can wire to `ThemeContextElement.Provider` to obtain the `theme` value.
+
+### Chaining context value throughout the DOM
+
+Sometimes you want to have a hierarchical context value, where intermediate context element provider can be linked to another parent, and propagate pieces of the value, e.g.: 
+
+```js
+import LightningContextElement from 'lightning/context';
+
+export default class DepthContextElement extends LightningContextElement {
+    @wire(DepthContextElement.Provider) onParentContext(value) {
+        this.setContext(value + 1);
+    }
+
+    static getDefaultValue() {
+        return 0;
+    }
+}
+```
+
+The example above is very trivial, but illustrate how to collect the outer context value, and propagate a new one to its flattened DOM subtree.
+
+## Semantics and Invariants
+
+* In order to wire to a context provider, you must have access to the element constructor that is responsible for setting the context. You do not need access to the instance that provide the context though.
+* If there is no provider in your composed path (parentElement chain), the default value specified via `getDefaultContext()` static method will be used. Context providers can implement their own semantics on top of this protocol, e.g.: they can set the default value to `{ error }`, in which case consumers can fork their logic based on the error signal.
+
+It is the responsibility of the context provider to define the proper signals to its consumers. This is our recommendation for context element authors:
+
+  - `this.setContext({ data })` for valid context data.
+  - `this.setContext({ error })` for invalid context resolution.
+  - `this.setContext(null)` for pending context value to be set in the future (base implementation works like this).
+  - and `undefined` default context value when no provider is found (base implementation works like this).
 
 ## Implementation Details
 
-In order to implement `LightningContext`, it requires a reform on the the wire protocol. This reforms has two folds:
+In order to implement `LightningContextElement`, it requires a reform on the the wire protocol. This reforms has two folds:
 
 1. We need to introduce a new event that can be dispatched by a wire adapter to create a side channel between the `eventTarget` with a context provider installed on an element in the the composed path. The new event is implemented via a new constructor called `LinkContextEvent`, and it expects a unique `token`, and a `callback` to finalize the linking process. E.g.:
 

@@ -24,7 +24,7 @@ This RFC introduces a set of principles and invariants required to preserve a re
 ```js
 import { LightningElement, track } from "lwc";
 export default class DynamicCtor extends LightningElement {
-    @track customConstructor;
+    @track customCtor;
 
     connectedCallback() {
         this.loadCtor();

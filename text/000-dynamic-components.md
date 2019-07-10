@@ -132,7 +132,7 @@ export default class Chart extends LightningElement {
 </script>
 ```
 
-In this implementation we have introduced the directive `lwc:dynamic` which effectively tells LWC “sorry I don't know yet which constructor I will use, so I will tell you at runtime.
+In this implementation we have introduced the directive `lwc:dynamic` which tells LWC that the constructor will not be known until runtime.
 
 What is important is that both codes are **semantically equivalent**
 

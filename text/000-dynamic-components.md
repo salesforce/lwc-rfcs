@@ -203,7 +203,7 @@ We want to avoid ad-hoc solutions and proprietary non-standard ways to define dy
 
 ## General Invariants
 
-Note that the invariants defined bellow are not necessarily constraints on LWC in general but rather explicitly defined for the UI Platform use cases:
+Note that the invariants defined below are not necessarily constraints on LWC in general but rather explicitly defined for the Lightning Platform use cases:
 
 - A dynamic import must always be statically verifiable.
     - A dependency should never be discovered or learned of for the first time at runtime.
@@ -219,7 +219,7 @@ You will notice that this follows the same pattern as what we have done for `@wi
 
 ## API
 
-Bellow is the API and its ergonomics for dynamically loading a module. It has very similar mental model to the `is` attribute proposal (which we can't use since Safari will not implement it in the foreseeable future): An arbitrary tag name on which you can assign any constructor.
+Below is the API and its ergonomics for dynamically loading a module. It has very similar mental model to the HTML `is` attribute proposal (which we can't use since Safari will not implement it in the foreseeable future): An arbitrary tag name on which you can assign any constructor.
 
 ```json5
 {
@@ -318,19 +318,19 @@ The compiler add to its metadata all of the parsed dynamic imports, its source v
 
 # Drawbacks
 
-The biggest draback on this API is its historic abuse in the Lightning Platform: A lot of missuse of dynamic component creation. We will be adding a lot of guiderails to avoid developers shooting themselves in the foot.
+The biggest drawback of this feature is the historic abuse of dynamic component creation in the Lightning Platform. We will add guardrails to prevent developers from shooting themselves in the foot.
 
 # Alternatives
 
-We have consider very early on non-standard ways to import modules, but we belive that will put us in the wrong path in the long term.
+We considered several non-standard alternatives but we came to the conclusion that they would put us on the wrong path in the long term.
 
 # Adoption strategy
 
-This will be first allowed in OSS and depending on feedback and usage, we will be rolling it out on the Salesforce Lightning Platform as we see fit.
+This feature will initially be implemented in OSS and will be rolled out to the Salesforce Lightning Platform depending on usage and feedback.
 
 # How we teach this
 
-Dynamic imports is a standard feature (in Stage 4), and we will be documenting `lwc:dynamic` directive along with a lot of documentation explaining the anti-patterns and and when to use it (and more importantly when to not use it).
+Dynamic imports is a standard feature (in Stage 4). Our documentation around the `lwc:dynamic` directive should provide a comprehensive list of known anti-patterns along with details around when this feature should be used.
 
 # Unresolved questions
 

@@ -148,7 +148,7 @@ The problem is though that maybe some of this dependencies are really heavy. Let
 
 ```html
 <template>
-  <lwc-chatter-impl **lwc:dynamic**={dynamicCtor} data={data}></lwc-chatter-impl>
+  <lwc-chatter-impl lwc:dynamic={dynamicCtor} data={data}></lwc-chatter-impl>
 </template>
 
 <script>

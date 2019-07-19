@@ -43,8 +43,9 @@ Further, there are inconsistencies in the current implementation. For example, c
 For custom elements, a node that is appended to the document or one of its connected discendents is considered as connected. [Node.isConnected](https://dom.spec.whatwg.org/#dom-node-isconnected) offers the most reliable way to determine if a node is connected.
 
 ## Invariants
-1. A lifecycle event can occour multiple times for the same node. Every time the event happens, the registered hooks have to be invoked.
-2. Multiple hooks can be registered per lifecycle event for the same node. Duplicate hooks for the same event type, for the same node will be ignored.
+1. A node can be connected and disconnected from the DOM more than once. Every time the event happens, the qualifying hook should be invoked.
+2. For a given node, more than one service can be registered to react to the same lifecycle event. In which case, each hook should be invoked in the order of registration(FIFO). 
+    2.1 Duplicate hooks for the same event type, for the same node will be ignored. For example, if a service registers the same connectedCallback more than once for the same node, the callback is invoked only once.
 3. Hooks are invoked synchronously.
 4. In case of an event affecting a subtree, nodes are processed in [preorder(or treeorder)](https://dom.spec.whatwg.org/#concept-tree-order).
 
@@ -56,8 +57,8 @@ On the inbound side, the library will accept requests for a DOM node. A map will
 WeakMap<Node, { [key: string]: Array<keyOf Function> }> 
 ```
 Following constraints govern the API usage:
-1. node param is required and has to be a Node
-2. node cannot be a shared node(document, body, head)
+    1. node param is required and has to be a Node
+    2. node cannot be a shared node(document, body, head) - This is just an optimization. Shared nodes are mostly managed by the browser and do not go through lifecycle events as frequently as regular DOM nodes. 
 
 *The references to the Node will be weak so as to not interfere with garbage collection. The hooks are garbage collectible only when all the nodes they are associated with are garbage collected.*
 
@@ -104,6 +105,10 @@ The library will identify the DOM APIs that can trigger mutations in a node. Whe
 5. If an existing node is being replaced by a new node
     5.1 Process lifecycle events for existing node(s)
     5.2 Next, process lifecycle events for new node(s)
+6. If the currentNode is a custom element, then the order of processing is as follows(TODO - provide link to native custom elements example)
+    6.1 The host element is processed first
+    6.2 shadowRoot and nodes in the shadow tree next
+    6.3 Nodes in the light DOM
 ```
 
 ### What browser APIs control a node's lifecycle?
@@ -142,8 +147,10 @@ Element.outerHTML
 
 Node.appendChild
 Node.insertBefore
+Node.nodeValue
 Node.replaceChild
 Node.removeChild
+Node.textContent
 
 Range.insertNode
 Range.deleteContents
@@ -174,7 +181,9 @@ Why should we *not* do this? Please consider:
 
 # Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
+## MutationObserver
+ MutationObserver is a browser API to monitor mutations in a node and its subtree. MutationObserver is not a viable option because of the following limitations:
+ 1. Callbacks are invoked asynchronously. This is a major limitation because lifecycle callbacks are to be invoked synchronously as per spec. Asynchronous reactions are also a limitation for applying styling to shadow dom in case of portal elements(TODO: clarify).
 
 # Adoption strategy
 
@@ -184,7 +193,7 @@ How should this feature be taught to existing Lightning Web Components developer
 
 # Unresolved questions
 
-- How will this work for closed mode shadow DOM? In web components, Lifecycle hooks behave the same regardless of mode of shadow DOM. For example: https://jsbin.com/misofod/edit?html,js,console,output
+- How will traversal work for native custom elements running in closed shadow mode? In web components, Lifecycle hooks behave the same regardless of mode of shadow DOM. For example: https://jsbin.com/misofod/edit?html,js,console,output
 - Are there any browser APIs that are faster than manual DOM traversal?
 
 Notes:

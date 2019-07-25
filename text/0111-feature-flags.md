@@ -38,7 +38,7 @@ Code behind these flags can be conditionally enabled (or completely removed) bas
 
 ### Flagging Details
 
-The flag status in the generated build is controlled by the `@lwc/config` package. This package exports a list of all available features and their current status.
+The flag status in the generated build is controlled by the `@lwc/features` package. This package exports a list of all available features and their current status.
 
 A feature can have one of a three flags:
 
@@ -69,12 +69,12 @@ Examples of changes that would not require a feature flag:
 
 ### Using features in Code
 
-In your code, you must import bindings from the config package to branch your code. We have two options:
+In your code, you must import bindings from the features package to branch your code. We have two options:
 
 #### If/Then/Else Branching
 
 ```js
-import { ENABLE_FOO } from "@lwc/config";
+import { ENABLE_FOO } from "@lwc/features";
 if (ENABLE_FOO) {
     runExtra();
 }
@@ -83,7 +83,7 @@ if (ENABLE_FOO) {
 which gets compiled to one of the following options:
 
 ```js
-import { ENABLE_FOO } from "@lwc/config";
+import { ENABLE_FOO } from "@lwc/features";
 // foo feature is configured as `true`
 { // this block is needed in case the then-block declares some binding
     runExtra();
@@ -91,14 +91,14 @@ import { ENABLE_FOO } from "@lwc/config";
 ```
 
 ```js
-import { ENABLE_FOO } from "@lwc/config";
+import { ENABLE_FOO } from "@lwc/features";
 // foo feature is configured as `false`
 ```
 
 ```js
-import { ENABLE_FOO } from "@lwc/config";
+import { ENABLE_FOO } from "@lwc/features";
 // foo feature is configured as `null`
-if (LWC_config.feature.ENABLE_FOO === true) {
+if (globalThis.LWC_config.feature.ENABLE_FOO === true) {
     runExtra();
 }
 ```
@@ -106,7 +106,7 @@ if (LWC_config.feature.ENABLE_FOO === true) {
 #### Arrow Function Branching
 
 ```js
-import { feature } from "@lwc/config";
+import { feature } from "@lwc/features";
 feature('foo', _ => {
     // do something...
 });
@@ -124,7 +124,7 @@ This could be achieve via the global LWC configuration, e.g.:
 
 ```js
 // client side configuration
-LWC_config = {
+globalThis.LWC_config = {
     features: {
         foo: true,
         bar: false,
@@ -154,9 +154,30 @@ describe('foo', () => {
 });
 ```
 
+Note that this will only work for features behind flags that are not used during the initialization of the engine.
+
+```js
+// Works when run as part of initialization
+const foo = () => {
+    if (ENABLE_FOO) {
+        return 1;
+    } else {
+        return 2;
+    }
+};
+
+// Doesn't work when run as part of initialization
+let foo;
+if (ENABLE_FOO) {
+    foo = () => 1;
+} else {
+    foo = () => 2;
+}
+```
+
 ### Extensibility
 
-It is possible that `@lwc/config` can be used beyond this package, so other parts of the platform can implement a similar solution for their own features. This might include components, which means that the LWC compiler will have to understand the transformation as well.
+It is possible that `@lwc/features` can be used beyond this package, so other parts of the platform can implement a similar solution for their own features. This might include components, which means that the LWC compiler will have to understand the transformation as well.
 
 ## Alternatives
 

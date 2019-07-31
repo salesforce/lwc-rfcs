@@ -11,7 +11,8 @@ This RFC describes the reform for the tracking mechanism and the `@track` decora
 
 ## Goal
 
-* Track all fields and private fields (once enabled) without requiring the `@track` decorator.
+* Make template react to mutations in all fields (including private fields once enabled) without requiring the `@track` decorator.
+* Use `@track` decorator only when you want track fields that can hold values other than primitives (react to mutations in the field value).
 
 ## Motivation
 
@@ -21,15 +22,16 @@ Another confusion is when for `@wire` decorator reactivity works fine even when 
 
 ## Proposal
 
-### "Unlearn" the `@track` decorator
+### Learn the `@track` decorator when you really need it.
 
-We don't have the concept of deprecate, instead it is more accurate to call it "unlearn" because new users don't need to learn about it, and old users can just forget about it. Components that are using that decorator will just simply continue to function, and the compiler will completely ignore (remove) that decorator.
+The runtime/compiler will figure what is the list of fields that are defined by a class, and make the template react to mutations of the field at runtime.
 
-Instead, the runtime/compiler will figure what is the list of fields that are defined by a class, and make them all trackable at runtime.
+Mutations on fields (ex: `this.x = 5;`) is the majority of the use cases, but sometimes you need a field to hold a value other than a primitive, and make changes in its value ex: `this.address.city = 'San Francisco'`. Only in such cases you will need to use the `@track` decorator.
+
 
 ### Compiler changes
 
-When the compiler compiles the class, it can extract any field that is not decorated with `@api`, and pass the metadata through the registerComponent call, this information will be used as the same list of things to be tracked today. Not need to change the logic in the engine, just the error messages if any.
+When the compiler compiles the class, it can extract any field that is not decorated with `@api`, `@track` or `@wire`, and pass the metadata through the registerComponent call. For every class property that is passed to the registerComponent, we will create a getter and a setter in the prototype in order to observe mutations in to class property. No change is needed to the logic in the engine.
 
 ### Backwards Compatible
 
@@ -60,8 +62,53 @@ export default class Foo extends LightningElement {
 
 In the example above, calling `foo()` and `bar()` will always render the latest on the next tick, while calling `baz()` might or might not update on the next tick, depending on others mutations in the current job. With this reform, they will always get the latest on the next tick, no matter what.
 
+Also, because of the way is going to be implemented, those non decorated class properties will maintain identity. Example:
+
+```js
+export default class Foo extends LightningElement {
+    _x;
+
+    get x() {
+        this.x = value;
+    }
+
+    set x(value) {
+        this.x = value;
+    }
+}
+
+const bar = {};
+
+foo.x = bar;
+console.log(foo.x === bar); // true
+```
+
 ### Benefits
 
-* No need to learn what the `@track` decorator is and when to use it.
-* No need to ask whether a field should be tracked or not (we get this question a lot).
+* No need to learn the `@track` decorator until you really need it, which is to track mutations in the value of the field. Ex:
+
+```html
+<template>
+    <p>Your address is: {address.street}, {address.zipCode}</p>
+</template>
+```
+
+```js
+    // This statement mutates the field
+    // it will be reflected on the template by default
+    this.address = {
+        street: 'Mission St',
+        zipCode: '94102'
+    }
+
+    // this statament mutates the value of the field
+    // and it won't be reflected in the template.
+    // you need to use @track to properly reflect this in the template.
+    this.address.zipCode = '94104';
+```
+
+* Performance improvement: since there is no need to use proxies to observe primitive values (majority of use cases). Suppose we have a base component that is heavily used today (ex: icon) with a tracked property (ex: name, and it receives a string); by removing the track, which is not needed anymore for this field, we will remove the extra computations added by the proxy logic times how many instances of this component on the page.
+
 * Deterministic update of the UI after mutating a field.
+
+* No need to ask whether a field should be tracked or not (we get this question a lot). It should come naturally to developers: You start by adding class properties until you mutate the value of a property and you don't see it reflected on the template, then you are going to the documentation and see that in such cases where you need to react to changes in the value of the field, `@track` is your friend.

@@ -22,16 +22,16 @@ Another confusion is when for `@wire` decorator reactivity works fine even when 
 
 ## Proposal
 
-### Learn the `@track` decorator when you really need it.
+### Only use the `@track` decorator when you really need it.
 
-The runtime/compiler will figure what is the list of fields that are defined by a class, and make the template react to mutations of the field at runtime.
+The runtime/compiler will extract all fields that are defined by a class, and make the template observe mutations of any of those fields updating the UI accordingly.
 
-Mutations on fields (ex: `this.x = 5;`) is the majority of the use cases, but sometimes you need a field to hold a value other than a primitive, and make changes in its value ex: `this.address.city = 'San Francisco'`. Only in such cases you will need to use the `@track` decorator.
+Mutations on fields (ex: `this.x = 5;`) represent the majority of the use cases, but sometimes you need a field to hold a value other than a primitive, mutated ex: `this.address.city = 'San Francisco'`. Only in such cases you will need to use the `@track` decorator.
 
 
 ### Compiler changes
 
-When the compiler compiles the class, it can extract any field that is not decorated with `@api`, `@track` or `@wire`, and pass the metadata through the registerComponent call. For every class property that is passed to the registerComponent, we will create a getter and a setter in the prototype in order to observe mutations in to class property. No change is needed to the logic in the engine.
+When the compiler compiles the class, it can extract any field that is not decorated with `@api`, `@track` or `@wire`, and pass the metadata through the registerComponent call. For every class field that is passed to the registerComponent, we will create a getter and a setter in the prototype in order to observe mutations in to class field. No change is needed to the logic in the engine.
 
 ### Backwards Compatible
 
@@ -62,26 +62,7 @@ export default class Foo extends LightningElement {
 
 In the example above, calling `foo()` and `bar()` will always render the latest on the next tick, while calling `baz()` might or might not update on the next tick, depending on others mutations in the current job. With this reform, they will always get the latest on the next tick, no matter what.
 
-Also, because of the way is going to be implemented, those non decorated class properties will maintain identity. Example:
-
-```js
-export default class Foo extends LightningElement {
-    _x;
-
-    get x() {
-        this.x = value;
-    }
-
-    set x(value) {
-        this.x = value;
-    }
-}
-
-const bar = {};
-
-foo.x = bar;
-console.log(foo.x === bar); // true
-```
+Also, non decorated class fields will maintain identity because in the proposed implementation we achieve observability of such fields without using proxies.
 
 ### Benefits
 
@@ -107,8 +88,8 @@ console.log(foo.x === bar); // true
     this.address.zipCode = '94104';
 ```
 
-* Performance improvement: since there is no need to use proxies to observe primitive values (majority of use cases). Suppose we have a base component that is heavily used today (ex: icon) with a tracked property (ex: name, and it receives a string); by removing the track, which is not needed anymore for this field, we will remove the extra computations added by the proxy logic times how many instances of this component on the page.
+* Performance improvement: since there is no need to use proxies to observe primitive values (majority of use cases). Suppose we have a base component that is heavily used today (ex: icon) with a tracked property (ex: name, and it receives a string); by removing the track, which is not needed anymore for this field, we will remove the extra checks of apply a proxy to the value.
 
-* Deterministic update of the UI after mutating a field.
+* Updates in the UI after a mutating a field are more deterministic now because all fields are observed.
 
-* No need to ask whether a field should be tracked or not (we get this question a lot). It should come naturally to developers: You start by adding class properties until you mutate the value of a property and you don't see it reflected on the template, then you are going to the documentation and see that in such cases where you need to react to changes in the value of the field, `@track` is your friend.
+* No need to ask whether a field should be tracked or not (we get this question a lot). It should come naturally to developers: You start by adding class fields until you mutate the value of a property and you don't see it reflected on the template, then you read the documentation and see that in such cases where you need to react to changes in the value of the field, `@track` is your friend.

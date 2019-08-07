@@ -31,7 +31,11 @@ Mutations on fields (ex: `this.x = 5;`) represent the majority of the use cases,
 
 ### Compiler changes
 
-When the compiler compiles the class, it can extract any field that is not decorated with `@api`, `@track` or `@wire`, and pass the metadata through the registerComponent call. For every class field that is passed to the registerComponent, we will create a getter and a setter in the prototype in order to observe mutations in to class field. No change is needed to the logic in the engine.
+When the compiler compiles the class, it can extract any field that is not decorated with `@api`, `@track` or `@wire`, and pass the metadata through the registerDecorators call.
+
+Notice that a vm is needed in order to observe a field mutation. registerDecorators will only save the class fields information in the decoratorsMeta, that will be used later on when the ComponentDefinition is created, only then we know with certain that the class represents a component.
+
+For every class field that is present in the decoratorMeta of the ComponentDefinition, we will create a getter and a setter in the prototype in order to observe mutations in to the class field. No change is needed to the logic in the engine.
 
 ### Backwards Compatible
 

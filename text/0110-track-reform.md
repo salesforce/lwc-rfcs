@@ -3,7 +3,7 @@
 ## Status
 
 - Start Date: 2019-05-08
-- RFC PR: TBD
+- RFC PR: https://github.com/salesforce/lwc-rfcs/pull/4
 
 ## Summary
 

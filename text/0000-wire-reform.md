@@ -70,12 +70,12 @@ interface WireAdapter {
 }
 
 interface WireAdapterConstructor {
-    new (callback: emitDataCallback, contextualizer?: requestContextCallback): WireAdapter;
+    new (callback: EmitDataCallback, contextualizer?: RequestContextCallback): WireAdapter;
 }
 
-type emitDataCallback = (value: any) => void;
+type EmitDataCallback = (value: any) => void;
 
-type requestContextCallback = (uid: string) => void;
+type RequestContextCallback = (uid: string) => void;
 ```
 
 _Notes:_

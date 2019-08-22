@@ -8,17 +8,17 @@ This RFC describes the way to decouple the wire service from LWC entirely, and i
 
 # Motivations
 
-There is a dual-dependency between `@lwc/engine` and `wire-service`, even though neither of those two packages are importing each other, it is the responsibility of the adapter author to connect them via `registerWireService(register)` where `registerWireService()` is provided by `wire-service` and `register()` is provided by `@lwc/engine`. This is, on itself, complex and confusing. Additionally, there is another `register()` method from `wire-service` that is used by authors to link their wire adapters with their adapter ID (identity). This process also posses a limitation, and unnecessary dependency, making adapters to tied to LWC.
+There is a dual-dependency between `@lwc/engine` and `@lwc/wire-service`, even though neither of those two packages are importing each other, it is the responsibility of the adapter author to connect them via `registerWireService(register)` where `registerWireService()` is provided by `@lwc/wire-service` and `register()` is provided by `@lwc/engine`. This is, by itself, complex and confusing. Additionally, there is another `register()` method from `@lwc/wire-service` that is used by authors to link their wire adapters with their adapter ID (identity). This process also posses a limitation, and unnecessary dependency, making adapters to tied to LWC.
 
 Additionally, there are various situations where the wired field or method is not behaving correctly, the most notable example is when a configuration value that uses a member expression might not trigger the update on the config. (e.g. `wire(foo, { x: '$foo.bar' }) data`, if `foo.bar` changes, config is not updated). This is because the wire decorator is not relying on the reactivity system used by LWC, and instead it relies on getter and setters that are slower, intrusive, complex and do not cover the whole spectrum of mutations that could occur on a component.
 
-Finally, keeping the wire service tied to LWC means that when needed, wire adapters will not be very useful beyond LWC, when in reality their are just not tied to the component system.
+Finally, keeping the wire service tied to LWC means that when needed, wire adapters will not be very useful beyond LWC, when in reality they are not tied to the component system.
 
 # Goals
 
-The primary goal of this RFC is to decouple the wire service from the LWC and from the LWC Wire Decorator implementation.
+The primary goal of this RFC is to decouple the wire service from LWC and the LWC Wire Decorator implementation.
 
-As a secondary goal is to embrace reactivity for the configuration payload and the wired method in LWC.
+As a secondary goal, to embrace reactivity for the configuration payload and the wired method in LWC.
 
 A third goal is to support the provision of wire adapters via wire service on any object, whether it is LWC component or not.
 
@@ -36,7 +36,7 @@ This reform is focused on the refactor of the wire decorator code, and the wire-
 * To install a prototype descriptor to handle the wired field value from the `vm` of the component.
 * To create an instance of an adapter and link it to the host.
 * To signal to the adapter instance when the component is connected or disconnected.
-* To signal to the adapter instance when the config have changed by providing the new config object.
+* To signal to the adapter instance when the config has changed by providing the new config object.
 * To extract the config value from the host object by relying on the compiler's wire metadata.
 * To signal to the adapter instance when a context is available by providing the new context value. 
 
@@ -59,7 +59,7 @@ This reform is focused on the refactor of the wire decorator code, and the wire-
 
 ### Wire Adapter Protocol
 
-The formalization of the wire adapter protocol is important because that enables the interoperability aspect of this feature. The adapter's code should not be aware for the component system, or even the application framework, it only cares about very specific hints to produce a stream of data. The following describes the proposed protocol:
+The formalization of the wire adapter protocol is important because that enables the interoperability aspect of this feature. The adapter's code should not be aware of the component system, or even the application framework. It only cares about very specific hints to produce a stream of data. The following describes the proposed protocol:
 
 ```ts
 interface WireAdapter {
@@ -137,7 +137,7 @@ Additionally, those callable objects can implement a forking logic based on the 
 # How we teach this
 
 * For adapter consumers, nothing changes.
-* For adapter author, the wire protocol is now well defined and does not need registration, which means it is easier to reasoning about compared to the existing mechanism.
+* For adapter author, the wire protocol is now well defined and does not need registration, which means it is easier to reason about compared to the existing mechanism.
 * As for existing adapters based on `@lwc/wire-service`, they can remain the same until after they get refactored and simplified when possible.
 
 # Unresolved questions

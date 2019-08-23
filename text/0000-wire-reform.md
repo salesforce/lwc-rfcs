@@ -8,7 +8,7 @@ This RFC describes the way to decouple the wire service from LWC entirely, and i
 
 # Motivations
 
-There is a dual-dependency between `@lwc/engine` and `@lwc/wire-service`, even though neither of those two packages are importing each other, it is the responsibility of the adapter author to connect them via `registerWireService(register)` where `registerWireService()` is provided by `@lwc/wire-service` and `register()` is provided by `@lwc/engine`. This is, by itself, complex and confusing. Additionally, there is another `register()` method from `@lwc/wire-service` that is used by authors to link their wire adapters with their adapter ID (identity). This process also posses a limitation, and unnecessary dependency, making adapters to tied to LWC.
+There is a dual-dependency between `@lwc/engine` and `@lwc/wire-service`, even though neither of those two packages are importing each other, it is the responsibility of the adapter author to connect them via `registerWireService(register)` where `registerWireService()` is provided by `@lwc/wire-service` and `register()` is provided by `@lwc/engine`. This is, by itself, complex and confusing. Additionally, there is another `register()` method from `@lwc/wire-service` that is used by authors to link their wire adapters with their adapter ID (identity). This process also poses a limitation, and unnecessary dependency, making adapters to tied to LWC.
 
 Additionally, there are various situations where the wired field or method is not behaving correctly, the most notable example is when a configuration value that uses a member expression might not trigger the update on the config. (e.g. `wire(foo, { x: '$foo.bar' }) data`, if `foo.bar` changes, config is not updated). This is because the wire decorator is not relying on the reactivity system used by LWC, and instead it relies on getter and setters that are slower, intrusive, complex and do not cover the whole spectrum of mutations that could occur on a component.
 
@@ -25,11 +25,11 @@ A third goal is to support the provision of wire adapters via wire service on an
 # No-goals
 
 * This reform does not change the wire decorator syntax.
-* This reform does not change the wire adapter API for lightning platform (we should be able to keep that intact).
+* This reform does not change the wire adapter API for Lightning Platform (we should be able to keep that intact).
 
 # Proposal
 
-This reform is focused on the refactor of the wire decorator code, and the wire-service code. As part of the separation process, there are certain responsibilities that must be well defined:
+This reform is focused on the refactor of the wire decorator code, and the wire service code. As part of the separation process, there are certain responsibilities that must be well defined:
 
 ## Responsibilities of the wire decorator
 
@@ -43,7 +43,7 @@ This reform is focused on the refactor of the wire decorator code, and the wire-
 ## Responsibilities of the wire service
 
 * To define the wire adapter protocol.
-* To provide a referral implementation of the wire adapter protocol.
+* To provide a reference implementation of the wire adapter protocol.
 * To provide an optional abstraction for existing "legacy" wire adapter factories.
 
 ## Implementation Details
@@ -55,7 +55,7 @@ This reform is focused on the refactor of the wire decorator code, and the wire-
 * `@wire` decorator will create a mutation tracking phase to track any access executed during the computation of the config before calling the `update` routine to be able to detect mutations on those values and issue another update on the adapter instance.
 * `@wire` decorator will implement the logic to provide contextual information when requested by the wire adapter.
 * `@lwc/compiler` will provide a config function per `@wire()` declaration to produce a new config object when invoked with the `component` as the first argument. The `@wire` adapter can rely on that config function to produce a new config object at will.
-* `@lwc/wire-service` becomes lightning platform specific for most part (`register()` method), since anyone can implement the wire adapter protocol.
+* `@lwc/wire-service` becomes Lightning Platform-specific for the most part (`register()` method) since anyone can implement the wire adapter protocol.
 
 ### Wire Adapter Protocol
 
@@ -137,7 +137,7 @@ Additionally, those callable objects can implement a forking logic based on the 
 # How we teach this
 
 * For adapter consumers, nothing changes.
-* For adapter author, the wire protocol is now well defined and does not need registration, which means it is easier to reason about compared to the existing mechanism.
+* For adapter author, the wire protocol no longer needs registration, which means it is easier to reason about compared to the existing mechanism.
 * As for existing adapters based on `@lwc/wire-service`, they can remain the same until after they get refactored and simplified when possible.
 
 # Unresolved questions

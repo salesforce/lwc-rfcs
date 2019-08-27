@@ -1,5 +1,5 @@
 - Start Date: 2019-08-01
-- RFC PR: TBD
+- RFC PR: https://github.com/salesforce/lwc-rfcs/pull/14
 - Lightning Web Component Issue: (leave this empty)
 
 # Summary
@@ -35,10 +35,10 @@ This reform is focused on the refactor of the wire decorator code, and the wire 
 
 * To install a prototype descriptor to handle the wired field value from the `vm` of the component.
 * To create an instance of an adapter and link it to the host.
-* To signal to the adapter instance when the component is connected or disconnected.
-* To signal to the adapter instance when the config has changed by providing the new config object.
+* To signal to the adapter instance when the component is connected or disconnected via `connect()` and `disconnect()` APIs.
+* To signal to the adapter instance when the config has changed by providing the new config object via `update()` API.
 * To extract the config value from the host object by relying on the compiler's wire metadata.
-* To signal to the adapter instance when a context is available by providing the new context value. 
+* To signal to the adapter instance when a configured context is available by providing the new context value via `update()` API. 
 
 ## Responsibilities of the wire service
 
@@ -50,12 +50,16 @@ This reform is focused on the refactor of the wire decorator code, and the wire 
 
 * `@lwc/engine` does not know about `@lwc/wire-service` and vice versa.
 * `@lwc/engine` will install a descriptor on the prototype for every wired field during the decorators registration routine.
-* `@wire` decorator will create an instance of the provided `WireAdapter` during the component initialization routine by providing the data callback, and the context callback as arguments. 
+* `@wire` decorator will create an instance of the provided `WireAdapter` during the component initialization routine by providing the data callback as argument.
 * `@wire` decorator will invoke the adapter's `connect` and `disconnect` based on the internal hooks used per component.
 * `@wire` decorator will create a mutation tracking phase to track any access executed during the computation of the config before calling the `update` routine to be able to detect mutations on those values and issue another update on the adapter instance.
-* `@wire` decorator will implement the logic to provide contextual information when requested by the wire adapter.
+* `@wire` decorator will detect if the adapter is expecting contextual information, and if there is a context provider defined to carry on the hand-shaking protocol between the consumer and the provider.
 * `@lwc/compiler` will provide a config function per `@wire()` declaration to produce a new config object when invoked with the `component` as the first argument. The `@wire` adapter can rely on that config function to produce a new config object at will.
 * `@lwc/wire-service` becomes Lightning Platform-specific for the most part (`register()` method) since anyone can implement the wire adapter protocol.
+
+_Backwards Compatibility Notes:_
+
+* As today, the descriptor installed on the prototype of the component by the `@wire` decorator was identical to `track` when decorating a field. This means that the component author could change the value of the field, and such change will be tracked. This is not longer the case, and even though the author can still change the value, it will not be reactive, causing no side effects on the UI of the element. This is a non-backwards compatible change, but we believe this is a very low risk for something that was not working as expected.
 
 ### Wire Adapter Protocol
 
@@ -63,24 +67,57 @@ The formalization of the wire adapter protocol is important because that enables
 
 ```ts
 interface WireAdapter {
-    update(config: Record<string, any>);
-    context(uid: string, value: any);
+    update(config: ConfigValue, context?: ContextValue);
     connect();
     disconnect();
 }
-
 interface WireAdapterConstructor {
-    new (callback: EmitDataCallback, contextualizer?: RequestContextCallback): WireAdapter;
+    new (callback: DataCallback): WireAdapter;
+    configSchema?: Record<string, WireAdapterSchemaValue>;
+    contextSchema?: Record<string, WireAdapterSchemaValue>;
 }
-
-type EmitDataCallback = (value: any) => void;
-
-type RequestContextCallback = (uid: string) => void;
+type DataCallback = (value: any) => void;
+type ConfigValue = Record<string, any>;
+type ContextValue = Record<string, any>;
+type WireAdapterSchemaValue = 'optional' | 'required';
 ```
 
 _Notes:_
 
-* Not all environments will support or need contextualization (e.g.: preloading LDS data), the `requestContextCallback` is optional. All adapters should be able to work with and without a context provider.
+* Not all environments will support or need context (e.g.: preloading LDS data), but does supporting it can rely on the static field called `contextSchema` to provide the context value when available.
+* Some environments might choose to implement validation rules for `configSchema` and `contextSchema` to guarantee compliance.
+* we favored the `DataCallback` over a promised based on `update()` calls because the callback can be invoked sync and async, but most important, because update might never be called by the environment.
+
+### Semantic changes for `@wire` decorator IDL
+
+As today, there are few restrictions and ambiguities with the IDL for the config object in `@wire` decorator declarations. This sections will describe the new semantics, which are almost identical for most cases:
+
+* `$token` can only appear as the value of a top level member property, e.g.: `@wire(foo, { x: '$prop1' })` will continue to be valid, while `@wire(foo, { x: { y: '$prop1' } })` will throw a compiler error, while today it doesn't but the value is never transformed, and remains as a string value. This is a non-backwards compatible change, but we believe this is a very low risk for something that was not working as expected.
+* there will be no identity for inline JSON objects when assigned to a property in the config object, e.g.: `@wire(foo, { x: { y: 1 } })` where the value of `x` will be computed every time, instead of cached per instance or per class as today.
+* there will be identity preserved when assigning a reference values in the config object, e.g.: `@wire(foo, { x: someValue })` where the value of `x` will be a reference to `someValue` during the class declaration.
+* every time that `adapter.update()` is invoked, a new config object will be provided as a first argument, no identity is preserved in this case.
+
+### Context Provider for Wire Adapters
+
+TBD
+
+### Backwards Compatibility
+
+This RFC does introduce minor (or minimal) breaking changes:
+
+* Minor semantic changes for `@wire` decorator IDL as described above.
+* Removal of the experimental `LinkContextEvent` constructor in `@lwc/wire-service` in favor of the new `ContextProvider` API.
+* Minor semantic change on the identity of the first argument passed into `@wire`, it is now a wire adapter instead of a symbol.
+* Removal of LWC's `wire` services via `register()`, which was only needed for `@lwc/wire-services` to plug registered Wire Adapters.
+
+### Forward Compatible Changes
+
+* Lifting the restrictions around manual invocation of Wire Adapters.
+
+### Proposed Restrictions for Lightning Platform
+
+* `ContextProvider` should be gold-filed to prevent proliferation of contextual information in the first release.
+* Preserve the current restrictions to only allow certain wire adapters in `@wire` decorators declarations for one more release.
 
 ## Interop
 
@@ -132,7 +169,21 @@ class Foo extends React.Component {
 
 Since there is a need to support callable adapters that behave differently depending on who uses that (wire adapter vs user invoking the function directly), we have added a simple mechanism to support such feature via `adapter` property member expression on the callable. This opens the door to transition existing adapters to the new form. E.g.: APEX adapters are all callable objects.
 
-Additionally, those callable objects can implement a forking logic based on the type of argument, if there is a desire to avoid the `adapter` property member expression.
+Additionally, those callable objects can implement a forking logic based on the type of argument, if there is a desire to avoid the `adapter` property member expression. E.g.:
+
+```js
+export function invokeApex(...args) {
+    if (new.target) {
+        // invocation via new, return a WireAdapter instance
+        const [ dataCallback ] = args;
+        // ...
+    } else {
+        // standard function call, return a Promise of some Apex controller result
+        const [ apexControllerParams ] = args;
+        // ...
+    }
+}
+```
 
 # How we teach this
 

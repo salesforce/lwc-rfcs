@@ -99,7 +99,52 @@ As today, there are few restrictions and ambiguities with the IDL for the config
 
 ### Context Provider for Wire Adapters
 
-TBD
+For LWC, we can introduce a new API that allows the creation of a `Contextualizer`, which is a function that can be use to install a Context Provider on any `EventTarget`. This `Contextualizer` has very specific semantics, and allows LWC engine to do the bridging between `ContextProvider` and `ContextConsumer` (Wire Adapters used via `@wire` decorator when defining `contextSchema` as a static field on the adapter).
+
+When installing a `Contextualizer` in an `EventTarget`, you can provide a set of options that will allow pushing context values to each individual `ContextConsumer` via a very simple API. Lets see an example:
+
+```js
+import { createContextProvider } from 'lwc';
+import { MyAdapter } from 'my/adapter';
+// creating a new contextualizer for `MyAdapter`
+const contextualizer = createContextProvider(MyAdapter);
+
+// finding the element to be used as the provider
+const elm = document.querySelector('container');
+// installing contextualizer on `elm`
+contextualizer(elm, {
+    consumerConnectedCallback(consumer) {
+        consumer.provide({ x: 1 });
+    },
+});
+```
+
+The example above guarantees that any component connected under `elm`'s subtree, and wired to `MyAdapter` will receive a context of `{ x: 1 }` in the adapter via the Adapter's `update()` API.
+
+The following is the specification of the `Contextualizer`:
+
+```ts
+interface ContextConsumer {
+    provide(newContext: ContextValue): void;
+}
+interface ContextProviderOptions {
+    consumerConnectedCallback: (consumer: ContextConsumer) => void;
+    consumerDisconnectedCallback?: (consumer: ContextConsumer) => void;
+}
+type Contextualizer = (elm: EventTarget, options: ContextProviderOptions) => void;
+```
+
+Invariants:
+
+* Only one `Contextualizer` can be created per `WireAdapter`, otherwise throws.
+* Only a `WireAdapter` with `contextSchema` can be contextualized, otherwise throws.
+* A `Contextualizer` can only be installed once on a given `EventTarget`, otherwise throws.
+* Each individual `ContextConsumer` has its own identity, and it can't be forged.
+
+_Notes_:
+* `Contextualizer`'s options allow the control of the consumers, and can provide the same data for all consumers, or data based on the identity of each consumer, both cases are valid and supported.
+* The consumer disconnect flow is optional.
+* `Contextualizer` is a LWC specific mechanism, and it is only relevant for LWC `@wire` decorator.
 
 ### Backwards Compatibility
 
@@ -109,6 +154,7 @@ This RFC does introduce minor (or minimal) breaking changes:
 * Removal of the experimental `LinkContextEvent` constructor in `@lwc/wire-service` in favor of the new `ContextProvider` API.
 * Minor semantic change on the identity of the first argument passed into `@wire`, it is now a wire adapter instead of a symbol.
 * Removal of LWC's `wire` services via `register()`, which was only needed for `@lwc/wire-services` to plug registered Wire Adapters.
+* Minor semantic change in the descriptor installed on the prototype of the component by the `@wire` decorator. The component author could change the value of the field, and it will not be reactive, causing no side effects on the UI of the element.
 
 ### Forward Compatible Changes
 
@@ -189,9 +235,10 @@ export function invokeApex(...args) {
 
 * For adapter consumers, nothing changes.
 * For adapter author, the wire protocol no longer needs registration, which means it is easier to reason about compared to the existing mechanism.
+* The new formalized wire protocol is a lot simpler to reasoning about, and simpler to implement.
 * As for existing adapters based on `@lwc/wire-service`, they can remain the same until after they get refactored and simplified when possible.
 
 # Unresolved questions
 
-* In the current implementation, a wired field is `writable`, which means the component author can alter the value of the field at will. What should we do? a) throw on setter, b) do nothing on setter, c) preserve the current semantics. This is a breaking change if we do a) or b), while the current behavior is weird.
-* How context providers can be provisioned? In theory, a context provider is bound to a particular framework/system, while the context consumer is abstracted out in the wire adapter, and specific implementations per framework can provide the piping into the wire adapter protocol via the second argument in the constructor and the `adapter.context(uid, value)` mechanism. Is this sufficient?
+* ~~In the current implementation, a wired field is `writable`, which means the component author can alter the value of the field at will. What should we do? a) throw on setter, b) do nothing on setter, c) preserve the current semantics. This is a breaking change if we do a) or b), while the current behavior is weird.~~ (resolution is described in Backwards Compatibility section)
+* ~~How context providers can be provisioned? In theory, a context provider is bound to a particular framework/system, while the context consumer is abstracted out in the wire adapter, and specific implementations per framework can provide the piping into the wire adapter protocol via the `contextSchema` static field on the wire adapter constructor. Is this sufficient?~~ `createContextProvider` from LWC seems sufficient to implement context.

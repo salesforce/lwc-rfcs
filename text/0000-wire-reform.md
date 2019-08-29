@@ -99,7 +99,7 @@ As today, there are few restrictions and ambiguities with the IDL for the config
 
 ### Context Provider for Wire Adapters
 
-For LWC, we can introduce a new API that allows the creation of a `Contextualizer`, which is a function that can be use to install a Context Provider on any `EventTarget`. This `Contextualizer` has very specific semantics, and allows LWC engine to do the bridging between `ContextProvider` and `ContextConsumer` (Wire Adapters used via `@wire` decorator when defining `contextSchema` as a static field on the adapter).
+For LWC, we can introduce a new API that allows the creation of a `Contextualizer`, which is a function that can be used to install a Context Provider on any `EventTarget`. This `Contextualizer` has very specific semantics, and allows LWC engine to do the bridging between `ContextProvider` and `ContextConsumer` (Wire Adapters used via `@wire` decorator when defining `contextSchema` as a static field on the adapter).
 
 When installing a `Contextualizer` in an `EventTarget`, you can provide a set of options that will allow pushing context values to each individual `ContextConsumer` via a very simple API. Lets see an example:
 

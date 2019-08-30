@@ -140,6 +140,7 @@ Invariants:
 * Only a `WireAdapter` with `contextSchema` can be contextualized, otherwise throws.
 * A `Contextualizer` can only be installed once on a given `EventTarget`, otherwise throws.
 * Each individual `ContextConsumer` has its own identity, and it can't be forged.
+* The identity of a `ContextConsumer` is bound to the provider.
 
 _Notes_:
 * `Contextualizer`'s options allow the control of the consumers, and can provide the same data for all consumers, or data based on the identity of each consumer, both cases are valid and supported.
@@ -155,6 +156,8 @@ This RFC does introduce minor (or minimal) breaking changes:
 * Minor semantic change on the identity of the first argument passed into `@wire`, it is now a wire adapter instead of a symbol.
 * Removal of LWC's `wire` services via `register()`, which was only needed for `@lwc/wire-services` to plug registered Wire Adapters.
 * Minor semantic change in the descriptor installed on the prototype of the component by the `@wire` decorator. The component author could change the value of the field, and it will not be reactive, causing no side effects on the UI of the element.
+* Removal of the experimental `decorate` function exposed in `lwc`.
+* `@lwc/wire-services`'s `register()` cannot accept a symbol as the adapter id anymore, authors will have to replace that with a function or an arrow function must likely.
 
 ### Forward Compatible Changes
 

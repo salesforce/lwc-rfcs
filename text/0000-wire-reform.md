@@ -59,7 +59,7 @@ This reform is focused on the refactor of the wire decorator code, and the wire 
 
 _Backwards Compatibility Notes:_
 
-* As today, the descriptor installed on the prototype of the component by the `@wire` decorator was identical to `track` when decorating a field. This means that the component author could change the value of the field, and such change will be tracked. This is not longer the case, and even though the author can still change the value, it will not be reactive, causing no side effects on the UI of the element. This is a non-backwards compatible change, but we believe this is a very low risk for something that was not working as expected.
+* As today, the descriptor installed on the prototype of the component by the `@wire` decorator was identical to `track` when decorating a field. This means that the component author could change the value of the field, and such change will be tracked. This is no longer the case, and even though the author can still change the value, it will not be reactive, causing no side effects on the UI of the element. This is a non-backwards compatible change, but we believe this is a very low risk for something that was not working as expected.
 
 ### Wire Adapter Protocol
 
@@ -90,7 +90,7 @@ _Notes:_
 
 ### Semantic changes for `@wire` decorator IDL
 
-As today, there are few restrictions and ambiguities with the IDL for the config object in `@wire` decorator declarations. This sections will describe the new semantics, which are almost identical for most cases:
+There exist a few restrictions and ambiguities with the IDL for the config object in `@wire` decorator declarations. This section will describe the changed semantics. Most use cases of `@wire` are unaffected. 
 
 * `$token` can only appear as the value of a top level member property, e.g.: `@wire(foo, { x: '$prop1' })` will continue to be valid, while `@wire(foo, { x: { y: '$prop1' } })` will throw a compiler error, while today it doesn't but the value is never transformed, and remains as a string value. This is a non-backwards compatible change, but we believe this is a very low risk for something that was not working as expected.
 * there will be no identity for inline JSON objects when assigned to a property in the config object, e.g.: `@wire(foo, { x: { y: 1 } })` where the value of `x` will be computed every time, instead of cached per instance or per class as today.
@@ -163,7 +163,7 @@ This RFC does introduce minor (or minimal) breaking changes:
 ### Proposed Restrictions for Lightning Platform
 
 * `ContextProvider` should be gold-filed to prevent proliferation of contextual information in the first release.
-* Preserve the current restrictions to only allow certain wire adapters in `@wire` decorators declarations for one more release.
+* Preserve the current restrictions to only allow certain wire adapters in `@wire` decorators for one more release.
 
 ## Interop
 
@@ -215,7 +215,7 @@ class Foo extends React.Component {
 
 Since there is a need to support callable adapters that behave differently depending on who uses that (wire adapter vs user invoking the function directly), we have added a simple mechanism to support such feature via `adapter` property member expression on the callable. This opens the door to transition existing adapters to the new form. E.g.: APEX adapters are all callable objects.
 
-Additionally, those callable objects can implement a forking logic based on the type of argument, if there is a desire to avoid the `adapter` property member expression. E.g.:
+Additionally, those callable objects can implement forking logic based on the type of argument, if there is a desire to avoid the `adapter` property member expression. E.g.:
 
 ```js
 export function invokeApex(...args) {

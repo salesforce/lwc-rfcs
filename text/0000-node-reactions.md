@@ -106,7 +106,6 @@ ChildNode.before
 ChildNode.replaceWith
 
 Range.insertNode
-
 ```
 
 ##### DOM APIs that disconnect a node
@@ -174,6 +173,7 @@ MutationObserver is a browser API to monitor mutations in a node and its subtree
 2. Add support for adoptedCallback, attributeChangedCallback.
 3. Add support to unsubscribe callbacks. Currenty it is not supported for performance reasons. The expectation is that if a component decides to not react to an elements reactions, that logic can be included as part of the callback itself. 
 4. Memoize sub tree information during insertion and reuse it during removal. This should help avoid the expensive querySelectorAll() calls.
+5. The insertion APIs like appendChild, insertBefore have been optimized now to react only when a registered element is attached to the document. This has to be expanded to also include indirect insertions. For example, appending an element to a document fragment and inserting the document fragment to the document.
 
 ## Adoption strategy
 

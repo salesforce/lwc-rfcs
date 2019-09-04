@@ -34,8 +34,8 @@ Further, there are inconsistencies in the current implementation of callbacks in
 For custom elements, when an element is inserted into the document either directly or indirectly, it is considered as connected. [Node.isConnected](https://dom.spec.whatwg.org/#dom-node-isconnected) offers the most reliable way to determine if a node is connected.
 
 ### Invariants
-1. A DOM element can be connected and disconnected from the DOM more than once. Every time the event happens, the qualifying hook should be invoked.
-2. For a given element, more than one service can be registered to react to the same lifecycle event. In which case, each hook should be invoked in the order of registration(FIFO). 
+1. A DOM element can be connected and disconnected from the DOM more than once. Every time the event happens, the qualifying callback should be invoked.
+2. For a given element, more than one service can be registered to react to the same lifecycle event. In which case, each callback should be invoked in the order of registration(FIFO). 
     2.1 Duplicate callbacks for the same event type, for the same element will be ignored. For example, if a service registers the same connectedCallback more than once for the same node, the callback is invoked only once.
 3. Callbacks are invoked synchronously.
 4. In case of an dom mutation affecting a subtree, nodes are processed in [preorder(or treeorder)](https://dom.spec.whatwg.org/#concept-tree-order).
@@ -72,12 +72,12 @@ The library will identify the DOM APIs that can trigger mutations in a element. 
     2.2 If currentNode is replacing an existing child node of the parent, then the actors are the existing child node and its subtree, the currentNode and its subtree.
     2.3 If currentNode's subtree is being mutated without changing the placement of the current node itself, then the actors are all the child nodes of currentNode and their subtree.
 3. Identify the order of traversal
-    3.1 Predetermine the order in which the hooks will be invoked.
-    3.2 Once a hook is qualified, it will be invoked regardless of any mutations that occur during invocation of prior hooks.
+    3.1 Predetermine the order in which the callbacks will be invoked.
+    3.2 Once a callback is qualified, it will be invoked regardless of any mutations that occur during invocation of prior callbacks.
 4. If the same node qualifies for more than one lifecycle event e.g, appendChild(existingConnectedNode)
     4.1 Then process all lifecycle events for the given node
     4.2 The order of lifecycle events is: disconnectedCallback, connectedCallback
-    4.3 After all hooks for all events have been invoked, move on to other nodes as per order of traversal.
+    4.3 After all callbacks for all events have been invoked, move on to other nodes as per order of traversal.
 5. If an existing node is being replaced by a new node
     5.1 Process lifecycle events for existing node(s)
     5.2 Next, process lifecycle events for new node(s)
@@ -151,7 +151,7 @@ Here are some sample reactions for the APIs listed above.
 Why should we *not* do this? Please consider:
 
 - Performance: Traversing the dom is not cheap. We need to think about memoization techniques to prevent repetitive traversal. This is of significant importance since the invocations are synchronous in nature.
-- Security: Can a malicious actor sniff and get access to hooks that they do not own? If they did, could utilize that hook and attack the subscriber by simulating an event.
+- Security: Can a malicious actor sniff and get access to callbacks that they do not own? If they did, could utilize that callback and attack the subscriber by simulating an event.
 - Native web components: When we switch to native web components, will this library become obsolete?
 
 ## Alternatives
@@ -181,13 +181,13 @@ The usage of this library in LWC will be an implementation detail of the engine.
 
 ## Unresolved questions
 
-- How will traversal work for native custom elements running in closed shadow mode? In web components, Lifecycle hooks behave the same regardless of mode of shadow DOM. For example: https://jsbin.com/misofod/edit?html,js,console,output
+- How will traversal work for native custom elements running in closed shadow mode? In web components, Lifecycle callbacks behave the same regardless of mode of shadow DOM. For example: https://jsbin.com/misofod/edit?html,js,console,output
 - Are there any browser APIs that are faster than manual DOM traversal?
 
-Notes:
+*Footnotes:*
 1. isConnected works for regular dom and shadow DOM: https://jsbin.com/femohaqoku/edit?html,js,console,output
 2. isConnected works for shadowRoot node and other documentFragments
 3. When a node is moved to a different subtree, invoke its disconnectedCallback first and then the connectedCallback: https://jsbin.com/qawacil/edit?html,js,output
-4. All hooks for a given node is processed first before moving down the subtree: https://jsbin.com/qawacil/edit?html,js,output
-5. Hooks in subtree are invoked even in closed shadow mode.
+4. All callbacks for a given node is processed first before moving down the subtree: https://jsbin.com/qawacil/edit?html,js,output
+5. In native shadow, callbacks in subtree are invoked even in closed shadow mode.
 

@@ -70,7 +70,7 @@ libraries, easily consumable by an LWC application, are available to do the job.
 The compiler generates an error if an element has both an `innerHTML` property and
 some content defined, like bellow:  
 
-```
+```html
 <template>
     <div lwc:innerHTML={myHTML()}>
       Adding content when innerMTML is defined leads to a compilation error

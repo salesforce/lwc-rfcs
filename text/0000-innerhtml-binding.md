@@ -46,7 +46,7 @@ It seems that there is a consensus among the most popular libraries to expose th
 innerHTML property of an element, although the exposed name for this property varies:
 
 React: [dangerouslySetInnerHTML attribute](https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml).  
-Angular: [https://angular.io/guide/template-syntax#property-binding-or-interpolation]().  
+Angular: [[innerHTML]](https://angular.io/guide/template-syntax#property-binding-vs-interpolation).  
 VueJS: [https://vuejs.org/v2/guide/syntax.html#Raw-HTML]().  
 
 The Angular choice of `innerHTML` feels the most natural, while the React `dangerouslyInnerHTML`

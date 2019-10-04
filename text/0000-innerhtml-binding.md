@@ -13,7 +13,7 @@ which makes the rich content data not rendered as expected.
 
 The following template render some HTML content as innerHTML  
 
-```
+```js
 function createMarkup() { return {__html: 'First &middot; Second'}; };
 
 <template>

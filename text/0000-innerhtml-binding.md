@@ -47,7 +47,7 @@ innerHTML property of an element, although the exposed name for this property va
 
 React: [dangerouslySetInnerHTML attribute](https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml).  
 Angular: [[innerHTML]](https://angular.io/guide/template-syntax#property-binding-vs-interpolation).  
-VueJS: [https://vuejs.org/v2/guide/syntax.html#Raw-HTML]().  
+VueJS: [v-html attribute](https://vuejs.org/v2/guide/syntax.html#Raw-HTML).  
 
 The Angular choice of `innerHTML` feels the most natural, while the React `dangerouslyInnerHTML`
 has probably be named this way to not conflict with any potential component property.

@@ -17,7 +17,7 @@ The following template render some HTML content as innerHTML
 function createMarkup() { return {__html: 'First &middot; Second'}; };
 
 <template>
-    <div lwc:innerHTML={createMarkup()}/>
+    <div lwc:innerHTML={createMarkup}/>
 </template>
 ```
 

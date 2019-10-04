@@ -45,7 +45,7 @@ facility.
 It seems that there is a consensus among the most popular libraries to expose the
 innerHTML property of an element, although the exposed name for this property varies:
 
-React: [https://zhenyong.github.io/react/tips/dangerously-set-inner-html.html]().  
+React: [dangerouslySetInnerHTML attribute](https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml).  
 Angular: [https://angular.io/guide/template-syntax#property-binding-or-interpolation]().  
 VueJS: [https://vuejs.org/v2/guide/syntax.html#Raw-HTML]().  
 

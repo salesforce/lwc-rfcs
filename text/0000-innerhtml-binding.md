@@ -57,7 +57,7 @@ React makes it even more secure by forcing the HTML to be added to a temporary
 object with a `__html` property. This avoids undesired assignment from a method
 that does not sanitize the content:
 
-```
+```html
 <template>
     <div lwc:innerHTML={getUserName()}/>
 </template>

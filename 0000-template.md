@@ -1,68 +1,52 @@
-- Start Date: (fill me in with today's date, YYYY-MM-DD)
-- RFC PR: (leave this empty)
-- Lightning Web Component Issue: (leave this empty)
+- Start Date: 2019-10-06
+- RFC PR: 
+- Lightning Web Component Issue: 
 
 # Summary
 
-Brief explanation of the feature.
+Generation of PDFs from current screen of LWCs
 
 # Basic example
 
-If the proposal involves a new or changed API, include a basic code example.
-Omit this section if it's not applicable.
+Since current PDF generation compiler(Slicer, I guess) does not support JS/dynamic generation of reports/charts; specially generated from LWCs. Hence, we need to rewrite the entire syntax in VF. This will be like just give a button - convert to PDF/PDF report,so we can reuse the existing tested and beautifully working LWCs. 
 
 # Motivation
 
 Why are we doing this? What use cases does it support? What is the expected
 outcome?
 
-Please focus on explaining the motivation so that if this RFC is not accepted,
-the motivation could be used to develop alternative solutions. In other words,
-enumerate the constraints you are trying to solve without coupling them too
-closely to the solution you have in mind.
+Since, in business there are lots of use cases, where we need to generate PDFs. Specially if there're lots of customization requires/visual reports to the end customer. However current Salesforce implementation only support VF with static html(even reports are manipulated by means of images). So, I am expecting a solution where lightning web/aura components should be able to mold themselves into PDF, so we can save effort of redesigning the entire thing into VF also lots of code base will be optimized(and development efforts will be reduced). 
+
+
 
 # Detailed design
 
-This is the bulk of the RFC. Explain the design in enough detail for somebody
-familiar with Lightning Web Components to understand, and for somebody familiar with the
-implementation to implement. This should get into specifics and corner-cases,
-and include examples of how the feature is used. Any new terminology should be
-defined here.
+I have not gone through entire code-base/design, so I will not be a best person to suggest the same. 
 
 # Drawbacks
 
 Why should we *not* do this? Please consider:
 
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people Lightning Web Components
-- integration of this feature with other existing and planned features
-- cost of migrating existing Lightning Web Components applications (is it a breaking change?)
+- implementation cost, both in term of code size and complexity -- Big 
+- whether the proposed feature can be implemented in user space -- Possibly by means of other third party libraries
+- the impact on teaching people Lightning Web Components -- No/Less
+- integration of this feature with other existing and planned features --N/A
+- cost of migrating existing Lightning Web Components applications (is it a breaking change?) -- Imrproved/Zero
 
 There are tradeoffs to choosing any path. Attempt to identify them here.
 
+
 # Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
+
 
 # Adoption strategy
 
-If we implement this proposal, how will existing Lightning Web Components developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
 
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing Lightning Web Components patterns?
-
-Would the acceptance of this proposal mean the Lightning Web Components documentation must be
-re-organized or altered? Does it change how Lightning Web Components is taught to new developers
-at any level?
-
-How should this feature be taught to existing Lightning Web Components developers?
+This is more intuitive part, so no need of the same. 
 
 # Unresolved questions
 
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
+

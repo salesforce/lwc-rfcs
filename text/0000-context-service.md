@@ -5,10 +5,6 @@ created_at: July 1, 2019
 updated_at: November 4, 2019
 ---
 
-- Start Date: 2019-06-01
-- RFC PR: https://github.com/salesforce/lwc-rfcs/pull/6
-- Lightning Web Component Issue: (leave this empty)
-
 # Context Service
 
 Context provides a way to pass data through the component tree without having to pass props down manually at every level.

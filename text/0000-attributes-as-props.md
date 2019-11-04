@@ -1,3 +1,7 @@
+---
+title: Attributes as props
+---
+
 # LWC Attribute listening and reflection
 
 ## Status

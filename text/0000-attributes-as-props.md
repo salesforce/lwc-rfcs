@@ -1,8 +1,11 @@
 ---
 title: Attributes as props
+status: Consensus
+created_at: May 26, 2019
+updated_at: November 4, 2019
 ---
 
-# LWC Attribute listening and reflection
+# Attributes as props
 
 ## Status
 

@@ -1,16 +1,19 @@
 ---
-title: Context Service
+title: Context service
+status: Consensus
+created_at: July 1, 2019
+updated_at: November 4, 2019
 ---
 
 - Start Date: 2019-06-01
 - RFC PR: https://github.com/salesforce/lwc-rfcs/pull/6
 - Lightning Web Component Issue: (leave this empty)
 
-# Summary
+# Context Service
 
 Context provides a way to pass data through the component tree without having to pass props down manually at every level.
 
-# Motivation
+## Motivation
 
 In a web component, data is passed top-down (host to child elements on its shadowRoot) via attributes, but this can be cumbersome for certain types of attributes (e.g. UI theme) that are required by many components within an application. Context provides a way to share values like these between components without having to explicitly pass a prop through every level of the tree.
 
@@ -19,7 +22,7 @@ when you don't own the components in between.
 * A context allows a provider component to provision a stream of immutable
 values to multiple components “lower” in the DOM.
 
-# Goals
+## Goals
 
 The primary goal of this RFC is to define how to consume context, guarantee the right ergonomics and semantics for the consumer code while the provider can be an experimental API.
 
@@ -27,11 +30,11 @@ As a secondary goal is to provide ways for the Lightning Platform to control who
 
 A third goal is to support the provision of context values on any element, whether it is LWC or not.
 
-# Prior Art
+## Prior Art
 
 * React Context: https://reactjs.org/docs/context.html
 
-# Detailed design
+## Detailed design
 
 Important Notes:
 
@@ -194,15 +197,15 @@ register(adapter, (eventTarget) => {
 
 2. The existing, and hacky way, to implement context with wire via an arbitrary event name `"WireContextEvent"`, must be removed. This cannot happen right now, we should move existing consumers to the new API.
 
-# Adoption strategy
+## Adoption strategy
 
 This is a brand new feature, we just need to document it.
 
-# How we teach this
+## How we teach this
 
 * The consumer aspect of it is very straight forward considering that we have plenty of documentation about the `@wire` decorator.
 
-# Unresolved questions
+## Unresolved questions
 
 * ~~How can the context be propagated when the fiber is cut (insertion of root elements inside a template)?~~ Events coordination solves this.
 * ~~How can the context be provided to elements in the light DOM of the context element?~~ Events coordination solves this.

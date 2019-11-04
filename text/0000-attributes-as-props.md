@@ -19,7 +19,7 @@ Global HTML Attributes and public props are often a source of confusion for for 
 ### Attribute reactivity
 LWC Attributes are not reactive today. In order to trigger a re-render from an attribute change, component authors have to jump through several hoops to make it happen:
 
-```
+```js
 export default class MyComponent extends Element {
     @track privateTitle;
     attributeChangedCallback(attrName, oldValue, nextValue) {
@@ -34,13 +34,15 @@ export default class MyComponent extends Element {
 
 To fix this, LWC should make HTML attributes reactive by _default_ by creating getters/setters for all global HTML attribute names on the Element prototype (sans data- and aria-, which will be later on in this document):
 
-```
+```js
 // my-component.js
 export default class MyComponent extends Element {
 
 }
+```
 
-// my-component.html
+```html
+<!-- my-component.html -->
 <template>
     <div id={id} title={title}></div>
 </template>
@@ -54,7 +56,8 @@ export default class MyComponent extends Element {
 
 ### Detecting changes to attributes
 Today, component authors can.. listen to attribute changes by defining `attributeChangedCallback` coupled with a static `observedAttributes` property:
-```
+
+```js
 import { LightningElement } from 'lwc';
 
 export default class MyComponent extends LightningElement {
@@ -68,7 +71,7 @@ export default class MyComponent extends LightningElement {
 
 With getters and setters defined on the Element prototype, it becomes possible instead for component authors to define their own setters to listen to component changes. It also avoids inheritance-related hazards with `attributeChangedCallback` usage.
 
-```
+```js
 import { LightningElement } from 'lwc';
 
 export default class MyComponent extends LightningElement {
@@ -100,15 +103,17 @@ This completely removes the need for `attributeChangedCallback` at all.
 There are cases where it is desirable to prevent automatic reflection back to the custom element. If a component author does not define a custom getter/setter for an attribute, the attribute will be reflected back to the custom element by default:
 
 Automatic reflection:
+```js
+export default class MyComponent extends Element {}
 ```
-export default class MyComponent extends Element { }
 
-// template.html
+```html
+<!-- template.html -->
 <template>
     <my-component title="foo"></my-component>
 </template>
 
-// output
+<!-- output -->
 <div>
     <my-component title="foo"></my-component>
 </div>
@@ -116,7 +121,7 @@ export default class MyComponent extends Element { }
 
 If a component author does define a custom getter/setter for an attribute, then the attribute _will not_ be reflected by default:
 
-```
+```js
 import { LightningElement } from 'lwc';
 export default class MyComponent extends LightningElement {
     @track privateTitle;
@@ -130,13 +135,15 @@ export default class MyComponent extends LightningElement {
         this.privateTitle = value;
     }
 }
+```
 
-// template.html
+```html
+<!-- template.html -->
 <template>
     <my-component title="foo"></my-component>
 </template>
 
-// output
+<!-- output -->
 <div>
     <my-component></my-component>
 </div>
@@ -146,7 +153,7 @@ export default class MyComponent extends LightningElement {
 
 In order to enable attribute reflection for that property, component author can use `setAttribute` directly in their getter/setter:
 
-```
+```js
 import { LightningElement } from 'lwc';
 export default class MyComponent extends LightningElement {
     @track privateTitle;
@@ -161,13 +168,15 @@ export default class MyComponent extends LightningElement {
         this.setAttribute('title', value);
     }
 }
+```
 
-// template.html
+```html
+<!-- template.html -->
 <template>
     <my-component title="foo"></my-component>
 </template>
 
-// output
+<!-- output -->
 <div>
     <my-component title="foo"></my-component>
 </div>
@@ -184,7 +193,7 @@ export default class MyComponent extends LightningElement {
 ### data- and aria- attributes
 Defining getters and setters for all possible data- and aria- attributes is not possible, especially since data- attributes are arbitrary. Also, because component authors have access to `@api` to expose setters, `data-` attributes are unnecessary. With this proposal, it will be _impossible_ for component authors to listen and use values from `data-` and `aria-` attributes. They will, however, still reflect out to the DOM:
 
-```
+```js
 import { LightningElement } from 'lwc';
 export default class MyComponent extends LightningElement {
     @api
@@ -192,18 +201,18 @@ export default class MyComponent extends LightningElement {
         console.log('here');
     }
 }
-
-// template.html
+```
+```html
+<!-- template.html -->
 <template>
     <my-component data-foo="bar"></my-component>
 </template>
 
-// output
+<!-- output -->
 <div>
     <my-component data-foo="bar"></my-component>
 </div>
 
-// no console
 ```
 
 #### Pros
@@ -214,7 +223,6 @@ export default class MyComponent extends LightningElement {
 #### Cons
 - New decorator
 - Possible landmine when defining custom getter/setter with no automatic reflection
-
 
 ----
 

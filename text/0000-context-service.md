@@ -1,3 +1,7 @@
+---
+title: Context Service
+---
+
 - Start Date: 2019-06-01
 - RFC PR: https://github.com/salesforce/lwc-rfcs/pull/6
 - Lightning Web Component Issue: (leave this empty)

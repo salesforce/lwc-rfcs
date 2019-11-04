@@ -7,10 +7,6 @@ updated_at: November 4, 2019
 
 # Attributes as props
 
-## Status
-
-_consensus_
-
 ## TL;DR
 - `static observableAttributes` and `attributeChangedCallback` removal
 - Allow Component authors to define public getter/setter for global HTML attributes

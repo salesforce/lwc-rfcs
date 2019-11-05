@@ -1,8 +1,8 @@
 ---
 title: Data service
-status: Consensus
-created_at: July 1, 2019
-updated_at: November 4, 2019
+status: consensus
+created_at: November 4, 2018
+updated_at: November 4, 2018
 ---
 
 # Data Service

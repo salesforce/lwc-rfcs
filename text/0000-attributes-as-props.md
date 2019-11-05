@@ -1,8 +1,8 @@
 ---
 title: Attributes as props
 status: Consensus
-created_at: May 26, 2019
-updated_at: November 4, 2019
+created_at: November 4, 2018
+updated_at: November 4, 2018
 ---
 
 # Attributes as props

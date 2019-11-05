@@ -1,16 +1,12 @@
 ---
-title: Wire adapters
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+title: Wire Adapters
+status: IMPLEMENTED
+created_at: 2018-02-06
+updated_at: 2018-03-13
+pr: https://github.com/salesforce/lwc/pull/74
 ---
 
 # Wire Adapters
-
-## Status
-
-- Start Date: 2018-02-06
-- RFC PR: https://github.com/salesforce/lwc/pull/74
 
 ## Summary
 

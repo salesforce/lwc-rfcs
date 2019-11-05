@@ -1,8 +1,9 @@
 ---
-title: Context service
-status: Consensus
+title: Context Service
+status: REJECTED
 created_at: July 1, 2019
 updated_at: October 1, 2019
+pr: https://github.com/salesforce/lwc-rfcs/pull/6
 ---
 
 # Context Service

@@ -1,6 +1,6 @@
 ---
 title: Track Reform
-status: draft
+status: IMPLEMENTED
 created_at: 2019-05-08
 updated_at: 2019-08-07
 pr: https://github.com/salesforce/lwc-rfcs/pull/4

@@ -9,13 +9,13 @@ updated_at: November 4, 2019
 
 Global HTML Attributes and public props are often a source of confusion for for LWC developers (and LWC maintainers!). This proposal seeks to remove the concept of attributes in LWC and treat all incoming data as props, regardless of whether they are HTML global attributes. With this goal in mind, below are the proposals for listening to prop changes, reflecting props on the custom element(or not!) and handling of `data-` and `aria-`.
 
-### TL;DR
+## TL;DR
 - `static observableAttributes` and `attributeChangedCallback` removal
 - Allow Component authors to define public getter/setter for global HTML attributes
 - Opt-out of attribute reflection
 - `data-` and `aria-` attributes can no longer be accessed inside of components. They only reflect back to the DOM.
 
-### Attribute reactivity
+## Attribute reactivity
 LWC Attributes are not reactive today. In order to trigger a re-render from an attribute change, component authors have to jump through several hoops to make it happen:
 
 ```js
@@ -47,13 +47,13 @@ export default class MyComponent extends Element {
 </template>
 ```
 
-#### Pros
+### Pros
 - No code needed to make attributes reactive
 
-#### Cons
+### Cons
 - Requires updating existing components
 
-### Detecting changes to attributes
+## Detecting changes to attributes
 Today, component authors can.. listen to attribute changes by defining `attributeChangedCallback` coupled with a static `observedAttributes` property:
 
 ```js
@@ -98,7 +98,7 @@ This completely removes the need for `attributeChangedCallback` at all.
 - Requires updating existing components
 - Non-backwards compatible change that cannot be applied with codemod
 
-### HTML Attribute reflection
+## HTML Attribute reflection
 There are cases where it is desirable to prevent automatic reflection back to the custom element. If a component author does not define a custom getter/setter for an attribute, the attribute will be reflected back to the custom element by default:
 
 Automatic reflection:
@@ -181,11 +181,11 @@ export default class MyComponent extends LightningElement {
 </div>
 ```
 
-#### Pros
+### Pros
 - Declarative way to opt-out of attribute reflection
 - Much improved accessibility ergonomics
 
-#### Cons
+### Cons
 - New decorator
 - Possible landmine when defining custom getter/setter with no automatic reflection
 
@@ -225,7 +225,7 @@ export default class MyComponent extends LightningElement {
 
 ----
 
-## Conclusion:
+## Conclusion
 - Global attribute getters/setters defined on Element.prototype for automatic reactivity and reflection
 - Allow component authors to define global attribute getters/setters to detect changes, opt out of reflection
 - Removal of `attributeChangedCallback` and `observedAttributes`

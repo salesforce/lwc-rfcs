@@ -1,8 +1,8 @@
 ---
 title: Error codes I
 status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+created_at: November 4, 2018
+updated_at: November 4, 2018
 ---
 
 # Error codes (I)

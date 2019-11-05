@@ -1,16 +1,12 @@
 ---
-title: Track reform
+title: Track Reform
 status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+created_at: 2019-05-08
+updated_at: 2019-08-07
+pr: https://github.com/salesforce/lwc-rfcs/pull/4
 ---
 
 # Track Reform
-
-## Status
-
-- Start Date: 2019-05-08
-- RFC PR: https://github.com/salesforce/lwc-rfcs/pull/4
 
 ## Summary
 

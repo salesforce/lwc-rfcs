@@ -1,8 +1,15 @@
-# Status
-This is a `draft`, brainstorm is needed
+---
+title: Error boundary
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
 
 # Error Boundary Components in LWC
 JavaScript errors inside components corrupt LWC internal state and cause UI errors visible to users.
+
+## Status
+This is a `draft`, brainstorm is needed
 
 ## Use Cases
 - As an app developer, I can structure my component logic to metigate rendering failures

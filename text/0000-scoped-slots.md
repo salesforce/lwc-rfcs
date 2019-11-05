@@ -1,12 +1,13 @@
+---
+title: Scoped slots
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
 # Scoped Slots
 
-## Status
-
-_wip_
-
-## Goals
-
-* Provide a way to pass a _template_ into a slot, which would then have access to properties provided by the child component
+Provide a way to pass a _template_ into a slot, which would then have access to properties provided by the child component
 
 ## Prior Art
 

@@ -1,3 +1,10 @@
+---
+title: Camel Cased props
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
 # Template Camel Cased Props
 
 ## The problem

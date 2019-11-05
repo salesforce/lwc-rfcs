@@ -1,4 +1,11 @@
-# RFC: Wire Adapters
+---
+title: Wire adapters
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
+# Wire Adapters
 
 ## Status
 

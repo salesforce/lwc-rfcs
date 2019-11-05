@@ -1,8 +1,11 @@
-# Lightning Web Components Libraries
+---
+title: Libraries
+status: implemented
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
 
-## Status
-
-_Implemented_
+# Libraries
 
 ## Simple Example
 

@@ -1,6 +1,11 @@
-# Platform Metadata
+---
+title: Platform metadata
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
 
-## Goal
+# Platform Metadata
 
 Define a way to signal when a Lightning Web Components bundle is global (platform available), plus the mimimum set of metadata required by our platform to operate.
 

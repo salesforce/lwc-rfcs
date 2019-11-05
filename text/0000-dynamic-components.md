@@ -1,8 +1,11 @@
+---
+title: Dynamic components
+status: wip
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
 # Dynamic Components or Pivots
-
-## Status
-
-_wip_
 
 ## Goal
 

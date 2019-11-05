@@ -1,4 +1,11 @@
-# RFC: Accessibility - Delegate Focus
+---
+title: Delegate focus
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
+# Delegate Focus
 
 ## Status
 

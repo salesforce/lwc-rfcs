@@ -1,4 +1,11 @@
-### Standardizing Git Commits
+---
+title: Structured commits
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
+# Structured commits
 
 This proposal lays down the groundwork for auto-generated changelog. Before we begin working on changelog functionality, we must tackle inconsistencies between commit styles, which make it difficult to read through the commit history and changelog/release notes in the future. To fix that, we need to solidify existing commit process by introducing well defined format to our commit messages. Having standardized structure will allow us to generated clean, easy to read and follow list of changes.
 

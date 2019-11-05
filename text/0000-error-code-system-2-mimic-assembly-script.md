@@ -1,3 +1,12 @@
+---
+title: Error codes II
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
+# Error codes (II)
+
 ## **Second Version of Error Code Proposal.**
 Proposal summary is identical from the original [proposal](error-code-system.md). However, error processing deviates in the way errors are parsed and stored. From @p-dartus summary
 

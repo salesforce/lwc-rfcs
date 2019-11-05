@@ -1,4 +1,11 @@
-# Services in Lightning Web Components
+---
+title: Services
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
+# Services
 
 Just like the virtual DOM implementation (currently snabbdom) provides hooks for controlling the diffing process of vnodes, we need similar capabilities for component instances. This API is not intended for component authors; it is a high-privilege low-level API for application developers.
 

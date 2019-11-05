@@ -1,4 +1,10 @@
-# RFC: Feature Flags
+---
+title: Feature flags
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+# Feature Flags
 
 ## Status
 

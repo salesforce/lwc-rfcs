@@ -1,3 +1,12 @@
+---
+title: Error codes I
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
+# Error codes (I)
+
 This proposal will address two items:
 1. Introduce dev vs prod error messages
 2. Introduce error code system

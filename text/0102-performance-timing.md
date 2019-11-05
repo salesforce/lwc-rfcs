@@ -1,3 +1,10 @@
+---
+title: Performance Timing
+status: draft
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
 # LWC Performance Timing
 
 ## Status

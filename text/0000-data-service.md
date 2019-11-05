@@ -1,8 +1,11 @@
+---
+title: Data service
+status: Consensus
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
+
 # Data Service
-
-## Status
-
-_Finalized_
 
 ## Goals
 

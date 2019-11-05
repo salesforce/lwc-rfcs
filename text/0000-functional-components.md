@@ -1,6 +1,13 @@
-## Status
+---
+title: Functional Components
+status: withdrawn
+created_at: July 1, 2019
+updated_at: November 4, 2019
+---
 
-_withdrawn_
+# Functional Components
+
+## Status
 
 This proposal has been _withdrawn_ with the following resolution:
 

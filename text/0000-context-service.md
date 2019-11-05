@@ -16,7 +16,7 @@ In a web component, data is passed top-down (host to child elements on its shado
 * *Common use case*: receiving values from a component higher “up” the DOM tree
 when you don't own the components in between.
 * A context allows a provider component to provision a stream of immutable
-values to multiple components “lower” in the DOM.
+values to multiple components lower in the DOM.
 
 ## Goals
 

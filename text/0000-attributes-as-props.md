@@ -7,14 +7,13 @@ updated_at: November 4, 2019
 
 # Attributes as props
 
-## TL;DR
+Global HTML Attributes and public props are often a source of confusion for for LWC developers (and LWC maintainers!). This proposal seeks to remove the concept of attributes in LWC and treat all incoming data as props, regardless of whether they are HTML global attributes. With this goal in mind, below are the proposals for listening to prop changes, reflecting props on the custom element(or not!) and handling of `data-` and `aria-`.
+
+### TL;DR
 - `static observableAttributes` and `attributeChangedCallback` removal
 - Allow Component authors to define public getter/setter for global HTML attributes
 - Opt-out of attribute reflection
 - `data-` and `aria-` attributes can no longer be accessed inside of components. They only reflect back to the DOM.
-
-## Description
-Global HTML Attributes and public props are often a source of confusion for for LWC developers (and LWC maintainers!). This proposal seeks to remove the concept of attributes in LWC and treat all incoming data as props, regardless of whether they are HTML global attributes. With this goal in mind, below are the proposals for listening to prop changes, reflecting props on the custom element(or not!) and handling of `data-` and `aria-`.
 
 ### Attribute reactivity
 LWC Attributes are not reactive today. In order to trigger a re-render from an attribute change, component authors have to jump through several hoops to make it happen:

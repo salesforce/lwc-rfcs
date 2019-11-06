@@ -1,14 +1,18 @@
 ---
 title: Context Service
 status: REJECTED
-created_at: July 1, 2019
-updated_at: October 1, 2019
+created_at: 2019-06-14
+updated_at: 2019-07-03
 pr: https://github.com/salesforce/lwc-rfcs/pull/6
 ---
 
 # Context Service
 
 Context provides a way to pass data through the component tree without having to pass props down manually at every level.
+
+## Status
+
+__This RFC was partially rejected during implementation due to the intersection with Wire Reform (#14). Parts of it are now implemented via Wire Reform, and the rest is still possible. In other words, the implementations details were discarded, while the context feature remains available.__
 
 ## Motivation
 

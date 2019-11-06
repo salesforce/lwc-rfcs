@@ -1,8 +1,7 @@
 ---
-title: Data service
-status: consensus
-created_at: November 4, 2018
-updated_at: November 4, 2018
+title: Data Service
+status: DRAFTED
+created_at: 2018
 ---
 
 # Data Service

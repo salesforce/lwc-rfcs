@@ -1,11 +1,12 @@
 ---
-title: Camel Cased props
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+title: Attributes as Properties
+status: IMPLEMENTED
+created_at: 2018-01-16
+updated_at: 2018-03-08
+pr: https://github.com/salesforce/lwc/pull/14
 ---
 
-# Template Camel Cased Props
+# Attributes as Properties
 
 ## The problem
 
@@ -13,7 +14,7 @@ With proposal [#14](https://github.com/salesforce/lwc/pull/14), all values defin
 
 ```html
 <template>
-    <!-- tittle is set via div.title = 'hello' -->
+    <!-- title is set via div.title = 'hello' -->
     <div title="hello"></div>
 </template>
 ```
@@ -35,7 +36,7 @@ How then does the compiler know to set `tabindex` as `tabIndex` on the element?
 
 ```html
 <template>
-    <!-- title is set via div.tabIndex = '1'. Need to map to camelCase -->
+    <!-- tabindex value is set via div.tabIndex = '1'. Need to map to camelCase -->
     <div tabindex="1"></div>
 
     <!-- max value is set via input.maxValue = '100'. -->

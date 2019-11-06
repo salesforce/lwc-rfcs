@@ -1,8 +1,7 @@
 ---
 title: Structured commits
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+status: APPROVED
+created_at: 2018
 ---
 
 # Structured commits

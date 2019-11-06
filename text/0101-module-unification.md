@@ -1,16 +1,12 @@
 ---
-title: Module unification
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+title: Module Unification
+status: IMPLEMENTED
+created_at: 2018-02-05
+updated_at: 2018-02-20
+pr: https://github.com/salesforce/lwc/pull/63
 ---
 
 # Module Unification
-
-## Status
-
-- Start Date: 2018-02-05
-- RFC PR: https://github.com/salesforce/lwc/pull/63
 
 ## Summary
 

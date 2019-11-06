@@ -1,11 +1,17 @@
 ---
 title: Services
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+status: IMPLEMENTED
+created_at: 2018
+updated_at: 2019-11-05
 ---
 
 # Services
+
+## Status
+
+__Services are implemented in LWC but are not exposed to platform users, the were part of the GA under the experimental tag. They are about to be removed after the Wire Reform lands.__
+
+## Summary
 
 Just like the virtual DOM implementation (currently snabbdom) provides hooks for controlling the diffing process of vnodes, we need similar capabilities for component instances. This API is not intended for component authors; it is a high-privilege low-level API for application developers.
 
@@ -22,7 +28,7 @@ __This is the first draft of what we call Lightning Web Components Services.__
 
 Services must be registered to participate in the lifecycle of components. Services must register during application boot so they may be involved in all stages of all components. Because services are an application concern it is expected the application defines which services are available within it.
 
-Services may not be unregistered. A sevice may instead choose not to exhibit behavior at any time.
+Services may not be unregistered. A service may instead choose not to exhibit behavior at any time.
 
 The following code demonstrates the registration of a new service:
 

@@ -1,18 +1,15 @@
 ---
-title: Error boundary
-status: draft
-created_at: November 6, 2018
-updated_at: November 6, 2018
+title: Error Boundary
+status: APPROVED
+created_at: 2018
 ---
 
 # Error Boundary Components in LWC
+
 JavaScript errors inside components corrupt LWC internal state and cause UI errors visible to users.
 
-## Status
-This is a `draft`, brainstorm is needed
-
 ## Use Cases
-- As an app developer, I can structure my component logic to metigate rendering failures
+- As an app developer, I can structure my component logic to mitigate rendering failures
 - As an app developer, I can render an alternative view in the event of component failure
 - As an app developer, I will have a piece of mind that corrupted components are not rendered nor interacted with.  Great example from react:
 > in a product like Messenger leaving the broken UI visible could lead to somebody sending a message to the wrong person. Similarly, it is worse for a payments app to display a wrong amount than to render nothing
@@ -20,9 +17,9 @@ This is a `draft`, brainstorm is needed
 
 ## Proposal
 
-To prevent breakage of an entire UI and to allow component logic to take advantage of alternative view rendering, LWC introduces Error Boundaries. Error Boundaries are LWC's components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback/alternative UI instead of the component tree that crashed. Error boundaries only catch error occured in lifecycle method, such as constructor, render, connectedCallback, renderedCallback, and attributeChangedCallback.
+To prevent breakage of an entire UI and to allow component logic to take advantage of alternative view rendering, LWC introduces Error Boundaries. Error Boundaries are LWC's components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback/alternative UI instead of the component tree that crashed. Error boundaries only catch error occurred in lifecycle method, such as constructor, render, connectedCallback, renderedCallback, and attributeChangedCallback.
 
-Note that error boundary only catches errors in its children and not in the error boundary itself. If a component fails to catch rendering failure, the error will propagate to the closest error boundary component above. This, too, is similar to how catch {} block works in JavaScript. It is important to note that error caused outside of the lifecycle hooks, such as errors occurring when handling click event, will not result in compoment removal from the DOM.
+Note that error boundary only catches errors in its children and not in the error boundary itself. If a component fails to catch rendering failure, the error will propagate to the closest error boundary component above. This, too, is similar to how catch {} block works in JavaScript. It is important to note that error caused outside of the lifecycle hooks, such as errors occurring when handling click event, will not result in component removal from the DOM.
 
 
 Error Boundary functionality is inspired by [React 16 new error handling mechanism]:(https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html)
@@ -44,7 +41,7 @@ export default class Boundary extends LightningElement {
     }
 }
 ```
-The renderedError() method works like a JavaScript catch {} block, but for components. Only class components can be error boundaries.
+The `renderedError()` method works like a JavaScript `catch` block, but for components. Only class components can be error boundaries.
 
 
 ```html
@@ -59,7 +56,9 @@ The renderedError() method works like a JavaScript catch {} block, but for compo
     </template>
 </template>
 ```
+
 Then use Boundary component as a wrapper
+
 ```html
 <x-boundary>
     <x-child></x-child>

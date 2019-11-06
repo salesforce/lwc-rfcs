@@ -96,7 +96,5 @@ Also, non decorated class fields will maintain identity because in the proposed 
 ```
 
 * Performance improvement: since there is no need to use proxies to observe primitive values (majority of use cases). Suppose we have a base component that is heavily used today (ex: icon) with a tracked property (ex: name, and it receives a string); by removing the track, which is not needed anymore for this field, we will remove the extra checks of apply a proxy to the value.
-
 * Updates in the UI after a mutating a field are more deterministic now because all fields are observed.
-
 * No need to ask whether a field should be tracked or not (we get this question a lot). It should come naturally to developers: You start by adding class fields until you mutate the value of a property and you don't see it reflected on the template, then you read the documentation and see that in such cases where you need to react to changes in the value of the field, `@track` is your friend.

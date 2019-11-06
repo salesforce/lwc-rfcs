@@ -6,7 +6,6 @@ updated_at: 2018-06-18
 pr: https://github.com/salesforce/lwc/pull/412
 ---
 
-
 ## Summary
 
 This RFC defines the changes that need to be made to the LWC compiler to accommodate the usage of custom properties.

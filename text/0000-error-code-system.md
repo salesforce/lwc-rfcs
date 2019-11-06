@@ -1,17 +1,29 @@
+---
+title: Error Codes I
+status: APPROVED
+created_at: 2018
+---
+
+# Error Codes (I)
+
 This proposal will address two items:
 1. Introduce dev vs prod error messages
 2. Introduce error code system
 
-Summary:
-Developers will replace assert blocks/statements with invariant( condition, message ) calls. With invariant calls, during development mode, error messages will appear in the console in its full length; however in production mode, only a friendly URL with an errorCode will be shown. User can follow the URL to the Lightning Web Components site to read detailed error explanation. This minimizes amount of text being shipped and hides error verboseness in production code.
+## Summary
+
+This RFC focused on the compiler errors only, but some of the concepts can be applied later on to the runtime.
+
+Developers will replace assert blocks/statements with `invariant(condition, message)` calls. With invariant calls, during development mode, error messages will appear in the console in its full length; however in production mode, only a friendly URL with an errorCode will be shown. User can follow the URL to the Lightning Web Components site to read detailed error explanation. This minimizes amount of text being shipped and hides error verboseness in production code.
 
 NOTE: This proposal mimics, with some deviations, logic from React's [Error Code system](https://reactjs.org/blog/2016/07/11/introducing-reacts-error-code-system.html).
 Please read over above react doc for it will help you follow current proposal.
 
 
 # Lightning Web Components Error Code system will consist of following parts:
-**1.** errorCodes.json -  json object with key:value pairs, where key is a unique error code and value is a unique message key. The message key is a result of concatenating error name-space and error-key ex:
-```
+**1.** `errorCodes.json` -  json object with key:value pairs, where key is a unique error code and value is a unique message key. The message key is a result of concatenating error name-space and error-key ex:
+
+```js
 {
    "1001":"EVENTS_callback_must_be_expression"
 }
@@ -22,17 +34,18 @@ Please read over above react doc for it will help you follow current proposal.
 Error-code keys follow numeric sequence, where each sequence represents a collection of error codes related to an individual engine part ( ex: 100x - events, 200x - props, 300x - render ... ). Leading digit of the error code will represent a specific engine part and will help developers to quickly identify failing area ( any error starting with '1' is related to events for example ).
 NOTE: this file is append only - since these codes will be served on our website for documentation purposes and can potentially be referenced by support groups, these codes must not change.
 
-**2.** errors.json - json object with key:value pairs, where key is a unique error identifier and value is a message string ( see below for 'discussion needed' ). This message key becomes the value in the error-code map ( error-code inverse map is used during prod build to retrieve an error code by the message key - see below ). This is the part where Lightning Web Components deviates from React ( see more in info section for explanation ).
+**2.** `errors.json` - json object with key:value pairs, where key is a unique error identifier and value is a message string ( see below for 'discussion needed' ). This message key becomes the value in the error-code map ( error-code inverse map is used during prod build to retrieve an error code by the message key - see below ). This is the part where Lightning Web Components deviates from React ( see more in info section for explanation ).
 
-**3.** extract-errors.js - ( this may not be needed - see discussion section below ) - script that will parse all error file(s) during build time to create new code entries.
+**3.** `extract-errors.js` - ( this may not be needed - see discussion section below ) - script that will parse all error file(s) during build time to create new code entries.
 
-**4.** replace-invariant-error-codes.js - is a Babel pass that rewrites error messages to IDs for a production (minified) build. ex:
-```
+**4.** `replace-invariant-error-codes.js` - is a Babel pass that rewrites error messages to IDs for a production (minified) build. ex:
+
+```js
 // Turns this code:
 invariant(condition, message, arguments);
 ```
 
-```
+```js
 // into this:
 if (!condition) {
      if ("production" !== process.env.NODE_ENV) {
@@ -43,18 +56,23 @@ if (!condition) {
 }
 ```
 
-**5.** lwcProdInvariant.js is the replacement for invariant code in production, that accepts errorCode, arguments, and builds lwc error url. ex: https://lwc.sfdc.es/docs/error-decoder.html?id=1001&arg1='foo'&arg2='bar'.
+**5.** `lwcProdInvariant.js` is the replacement for invariant code in production, that accepts errorCode, arguments, and builds lwc error url. ex: https://lwc.sfdc.es/docs/error-decoder.html?id=1001&arg1='foo'&arg2='bar'.
 
-**6.** ErrorDecoderComponent is an LWC component that lives at 'https://lwc.sfdc.es/docs/error-decoder.html'. This page takes parameters like lwc version and errorCode. Our documentation site will need to have support for adding the latest codes.json to the error decoder page.
+**6.** `ErrorDecoderComponent` is an LWC component that lives at 'https://lwc.sfdc.es/docs/error-decoder.html'. This page takes parameters like lwc version and `errorCode`. Our documentation site will need to have support for adding the latest codes.json to the error decoder page.
 
 Sample code to use instead of assertions:
 
-```invariant( !isRendering, ErrorsRender.action_during_render )```
+```js
+invariant( !isRendering, ErrorsRender.action_during_render )
+```
 
 or
 
-```invariant( !isRendering, Errors.get( action_during_render, render )```
-// where first param is msg key and second param is namespace
+```js
+invariant( !isRendering, Errors.get( action_during_render, render )
+```
+
+where first param is msg key and second param is namespace
 
 ----------------------------------------------------------------------------------------------------
 
@@ -62,7 +80,8 @@ or
 **How should error messages be organized?**
 
 **a.** Error message are broken down into separate files, where each file represents one individual part of the engine ex:
-```
+
+```bash
 engine/errors/
             render.json
             props.json
@@ -76,7 +95,7 @@ Pros:
 
 **b.** there is one common error file. Root level keys represent individual parts of the engine ex:
 
-```
+```json
 {
    "render":{
       "not_mounted":"Component has not been mounted"

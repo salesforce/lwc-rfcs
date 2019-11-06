@@ -1,9 +1,11 @@
-# RFC: Feature Flags
-
-## Status
-
-- Start Date: 2019-03-01
-- RFC PR: TBD
+---
+title: Feature Flags
+status: APPROVED
+created_at: 2019-03-01
+updated_at: 2019-07-25
+pr: https://github.com/salesforce/lwc-rfcs/pull/3
+---
+# Feature Flags
 
 ## Summary
 
@@ -28,7 +30,7 @@ This RFC defines the infrastructure pieces to support feature flags to enable ex
 
 EmberJS is probably one of the more successful frameworks when it comes to backwards-compatible changes. We can take a page from their playbook when it comes to introducing new features via Feature Flags:
 
-* https://guides.emberjs.com/release/configuring-ember/feature-flags/
+* [https://guides.emberjs.com/release/configuring-ember/feature-flags/](https://guides.emberjs.com/release/configuring-ember/feature-flags/)
 
 ## Proposal
 

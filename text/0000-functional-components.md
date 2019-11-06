@@ -1,6 +1,12 @@
-## Status
+---
+title: Functional Components
+status: REJECTED
+created_at: 2018
+---
 
-_withdrawn_
+# Functional Components
+
+## Status
 
 This proposal has been _withdrawn_ with the following resolution:
 

@@ -1,8 +1,10 @@
+---
+title: Dynamic Components
+status: REJECTED
+created_at: 2018
+---
+
 # Dynamic Components or Pivots
-
-## Status
-
-_wip_
 
 ## Goal
 
@@ -12,10 +14,10 @@ Support dynamic (lazy or promise based) component creation that runs in the same
 
 Today, there are only 2 ways to create a LWC component instance:
 
- * Invoking `engine.createElement()`, which returns a new DOM Element with the public API of the underlaying component instance, creating a brand new fiber.
+ * Invoking `engine.createElement()`, which returns a new DOM Element with the public API of the underlying component instance, creating a brand new fiber.
  * Use a `<template>` tag in a component, which creates a new component under the hood that runs on the same fiber as the owner component, and therefore it is subject to the invariants of the diffing algo.
 
-The problem is that to create a component programatically, you have to use `engine.createElement()`, which implies creating a new fiber, which is sometimes undesirable because the developer will have to observe the owner state, and pipe all values into the children element manually, which also implies that there will be at multiple invocations to the patch mechanism (one per fiber).
+The problem is that to create a component programmatically, you have to use `engine.createElement()`, which implies creating a new fiber, which is sometimes undesirable because the developer will have to observe the owner state, and pipe all values into the children element manually, which also implies that there will be at multiple invocations to the patch mechanism (one per fiber).
 
 ## Open questions
 
@@ -56,7 +58,7 @@ Pros:
  * No changes needed in the engine, nor on the diffing algo.
  * Seemless integration with compiled templates, without observable differences.
  * Could be make more restrictive if needed.
- * The result of `template.create()` is memoizable, and we can warn when they create it everytime in render().
+ * The result of `template.create()` is memoizable, and we can warn when they create it every time in render().
 
 Cons:
  * How to guarantee that all custom elements used by the newly create elements are available?
@@ -84,7 +86,7 @@ Pros:
 Cons:
  * Very restrictive, (no explicit HTML attrs, no explicit events, etc.)
  * Not very ergonomic, and maybe hard to explain how it works.
- * Confusing because they will not know that it must be created everytime the render mechod is called.
+ * Confusing because they will not know that it must be created every time the render method is called.
 
 _Note: the render() method might also expect a promise of the dynamic element._
 

@@ -1,12 +1,12 @@
-# Two-ways bindings
+---
+title: Two-ways Bindings
+status: REJECTED
+created_at: 2018
+---
 
-## Status
+# Two-ways Bindings
 
-_Drafted_
-
-## Goals
-
-* Provide a simple, yet robust way to declarate two ways data bound attributes via template.
+Provide a simple, yet robust way to declare two ways data bound attributes via template.
 
 ## Two-ways Attributes
 

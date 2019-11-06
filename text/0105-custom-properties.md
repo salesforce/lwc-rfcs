@@ -1,13 +1,14 @@
-# RFC: CSS Custom Properties
-
-## Status
-
-- Start Date: 2018-06-13
-- RFC PR: https://github.com/salesforce/lwc/pull/412
+---
+title: CSS Custom Properties
+status: IMPLEMENTED
+created_at: 2018-06-13
+updated_at: 2018-06-18
+pr: https://github.com/salesforce/lwc/pull/412
+---
 
 ## Summary
 
-> This RFC defines the changes that need to be made to the LWC compiler to accommodate the usage of custom properties.
+This RFC defines the changes that need to be made to the LWC compiler to accommodate the usage of custom properties.
 
 ## Motivation
 

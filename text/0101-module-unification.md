@@ -1,9 +1,12 @@
-# RFC: Module Unification
+---
+title: Module Unification
+status: IMPLEMENTED
+created_at: 2018-02-05
+updated_at: 2018-02-20
+pr: https://github.com/salesforce/lwc/pull/63
+---
 
-## Status
-
-- Start Date: 2018-02-05
-- RFC PR: https://github.com/salesforce/lwc/pull/63
+# Module Unification
 
 ## Summary
 

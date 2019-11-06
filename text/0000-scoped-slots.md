@@ -1,12 +1,12 @@
+---
+title: Scoped Slots
+status: REJECTED
+created_at: 2018
+---
+
 # Scoped Slots
 
-## Status
-
-_wip_
-
-## Goals
-
-* Provide a way to pass a _template_ into a slot, which would then have access to properties provided by the child component
+Provide a way to pass a _template_ into a slot, which would then have access to properties provided by the child component
 
 ## Prior Art
 
@@ -70,4 +70,3 @@ export default class MyComponent extends Element {
     </li>
 </ul>
 ```
-

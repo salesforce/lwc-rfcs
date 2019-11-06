@@ -1,13 +1,16 @@
-# RFC: Accessibility - Delegate Focus
+---
+title: Synthetic Focus Delegation
+status: IMPLEMENTED
+created_at: 2018-07-26
+updated_at: 2019-01-19
+pr: https://github.com/salesforce/lwc/pull/670
+---
 
-## Status
-
-- Start Date: 2018-07-26
-- RFC PR: TBD
+# Synthetic Focus Delegation
 
 ## Summary
 
-This RFC defines how to enable `delegatesFocus` flag when attaching a `ShadowRoot`. This defines the navigation sequence of elements contained by the `ShadowRoot`. Few rules:
+This RFC defines how to enable `delegatesFocus` flag when attaching a synthetic `ShadowRoot`. This defines the navigation sequence of elements contained by the `ShadowRoot`. Few rules:
 
 * If the delegate focus flag is on, an element inside the shadow root is focused at the same time the host is focused. This literally means that there can be more than one active element at the same time, they just need to be in different shadow roots.
 * If the delegate focus flag is on, and no element in the shadow root can receive focus, the host itself should be removed from the navigation since it cannot delegate its focus properly.

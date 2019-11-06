@@ -1,8 +1,12 @@
-- Start Date: 2019-08-01
-- RFC PR: https://github.com/salesforce/lwc-rfcs/pull/14
-- Lightning Web Component Issue: (leave this empty)
+---
+title: Wire Reform
+status: APPROVED
+created_at: 2019-08-01
+updated_at: 2019-09-10
+pr: https://github.com/salesforce/lwc-rfcs/pull/14
+---
 
-# Summary
+# Wire reform
 
 This RFC describes the way to decouple the wire service from LWC entirely, and implement reactive tracking for wired configuration and wired methods.
 

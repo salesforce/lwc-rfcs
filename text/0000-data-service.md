@@ -1,8 +1,10 @@
+---
+title: Data Service
+status: DRAFTED
+created_at: 2018
+---
+
 # Data Service
-
-## Status
-
-_Finalized_
 
 ## Goals
 

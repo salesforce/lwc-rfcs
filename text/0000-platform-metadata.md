@@ -1,8 +1,12 @@
+---
+title: Platform Metadata
+status: REJECTED
+created_at: 2018
+---
+
 # Platform Metadata
 
-## Goal
-
-Define a way to signal when a Lightning Web Components bundle is global (platform available), plus the mimimum set of metadata required by our platform to operate.
+Define a way to signal when a Lightning Web Components bundle is global (platform available), plus the minimum set of metadata required by our platform to operate.
 
 ## Requirements
 
@@ -78,7 +82,7 @@ We have decided to go with Proposal 1.
 
 ## Versioning
 
-It seems that somehow a runtime forking logic might be needed. We haven't found problems like this, but if they arrise, we better be prepared.
+It seems that somehow a runtime forking logic might be needed. We haven't found problems like this, but if they arise, we better be prepared.
 
 ### Proposal 1: Runtime Logic Fork on Version
 

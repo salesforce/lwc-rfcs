@@ -1,9 +1,12 @@
-# RFC: Wire Adapters
+---
+title: Wire Adapters
+status: IMPLEMENTED
+created_at: 2018-02-06
+updated_at: 2018-03-13
+pr: https://github.com/salesforce/lwc/pull/74
+---
 
-## Status
-
-- Start Date: 2018-02-06
-- RFC PR: https://github.com/salesforce/lwc/pull/74
+# Wire Adapters
 
 ## Summary
 

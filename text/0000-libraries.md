@@ -1,8 +1,10 @@
-# Lightning Web Components Libraries
+---
+title: Libraries
+status: IMPLEMENTED
+created_at: 2018
+---
 
-## Status
-
-_Implemented_
+# Libraries
 
 ## Simple Example
 

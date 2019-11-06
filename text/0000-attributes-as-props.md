@@ -1,11 +1,10 @@
 ---
-title: Attributes as props
-status: Consensus
-created_at: November 4, 2018
-updated_at: November 4, 2018
+title: Properties
+status: IMPLEMENTED
+created_at: 2018
 ---
 
-# Attributes as props
+# Properties
 
 Global HTML Attributes and public props are often a source of confusion for for LWC developers (and LWC maintainers!). This proposal seeks to remove the concept of attributes in LWC and treat all incoming data as props, regardless of whether they are HTML global attributes. With this goal in mind, below are the proposals for listening to prop changes, reflecting props on the custom element(or not!) and handling of `data-` and `aria-`.
 

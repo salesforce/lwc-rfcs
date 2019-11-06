@@ -1,21 +1,16 @@
 ---
 title: Performance Timing
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+status: IMPLEMENTED
+created_at: 2018-02-05
+updated_at: 2018-02-12
+pr: https://github.com/salesforce/lwc/pull/61
 ---
 
-# LWC Performance Timing
-
-## Status
-
-- Start Date: 2018-02-05
-- RFC PR: https://github.com/salesforce/lwc/pull/61
-- Implementation PR: https://github.com/salesforce/lwc/pull/98
+# Performance Timing
 
 ## Goals
 
-* Provide better tooling to speedup a LWC based application by surfacing performance timing information about the engine and the components.
+* Provide better tooling to speedup a LWC based application by surfacing performance timing information about the LWC engine and the components.
 * Allow programmatic access to the timing information for automated performance testing.
 * Provide an equivalent support on all the supported browsers.
 

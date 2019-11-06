@@ -1,16 +1,15 @@
 ---
-title: LWC Locker
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+title: Locker Integration
+status: DRAFTED
+created_at: 2018
 ---
 
-# Locker Service
+# Locker Service Integration
 
 ## Invariants
 
 * the HOST element is the public api of the component.
-* creation and render are the critial paths, no membrane implementation is allowed during crital path execution.
+* creation and render are the critical paths, no membrane implementation is allowed during critical path execution.
 * LWC elements and HTML elements cannot be propagated as properties.
 
 ## Matching the semantics of the shadow DOM with closed mode
@@ -57,7 +56,7 @@ In the output dom structure, there are marks everywhere in the dom via the `x` a
 this.querySelectorAll('div') // returns [<div x="footpl">, <div onclick={handleClick} x="footpl">]
 ```
 
-We can use the mark to filter out elements that are not reachable by the WC's shadowdom specification.
+We can use the mark to filter out elements that are not reachable by the WC's Shadow DOM specification.
 
 ### Open questions about Proposal 1
 

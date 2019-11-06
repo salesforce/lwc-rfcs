@@ -1,8 +1,7 @@
 ---
-title: Scoped slots
-status: draft
-created_at: July 1, 2019
-updated_at: November 4, 2019
+title: Scoped Slots
+status: REJECTED
+created_at: 2018
 ---
 
 # Scoped Slots
@@ -71,4 +70,3 @@ export default class MyComponent extends Element {
     </li>
 </ul>
 ```
-

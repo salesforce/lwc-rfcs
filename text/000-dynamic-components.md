@@ -1,11 +1,22 @@
-- Start Date: 2019-07-01
-- RFC PR: https://github.com/salesforce/lwc/pull/1397
+---
+title: Dynamic Components
+status: DRAFTED
+created_at: 2019-07-01
+updated_at: 2019-07-01
+pr: https://github.com/salesforce/lwc-rfcs/pull/10
+---
 
-# Summary
+# Dynamic Components 
+
+## Summary
 
 This RFC introduces a set of principles and invariants required to preserve a reliable and predictable system while allowing lazy loading of dependencies.
 
-# Terminology
+## Back Pointers
+
+* Original PR: https://github.com/salesforce/lwc/pull/1397
+
+## Terminology
 
 **Lazy loading**: loading javascript from the server that is not initially sent to the client.
 
@@ -13,7 +24,7 @@ This RFC introduces a set of principles and invariants required to preserve a re
 
 **Code splitting:** Capability to split the code base in multiple bundles, that can be loaded on demand
 
-# Basic example
+## Basic example
 
 ```html
 <template>
@@ -37,11 +48,11 @@ export default class DynamicCtor extends LightningElement {
 }
 ```
 
-# Motivation
+## Motivation
 
 Before this RFC, LWC does not support dynamic component creation nor allow you to specify at build or design time different component configurations to pivot on during runtime. We purposely made this decision to ensure we have a clean, statically analyzable and predictable behavior on which to build upon. Due to the complexity and dynamic nature of the Lightning Platform and OSS, as we expand LWC to new clouds, applications and contexts, this strategy isn't sufficient. New primitives must be introduced to guarantee and allow for a more flexible and scalable model.
 
-# Proposal
+## Proposal
 
 This proposal has two distinct parts (or you can think of them as two separate proposals):
 
@@ -51,13 +62,13 @@ This proposal has two distinct parts (or you can think of them as two separate p
 
 The `import()` refers to the code splitting and the template directive `lwc:dynamic` refers to the usage of a component that is unknown at compile time in the template.
 
-## Mental model
+### Mental model
 
 > If we could snapshot, at a given point in time, the metadata of an app and precompute all server side generated components (if any); then the whole application would be a big monolithic and static component tree, on which routes and every other pivot are simply just if/else branches.
 
 Though idealistic it is conceptually sound (and even technically achievable). It allows us to then **decide when we really need those branches** and when to trim them. Each of those branches would be lazy loaded and dynamically created.
 
-## Proposal by example
+### Proposal by example
 
 Let's imagine we need to build a chart component (`lightning-chart`).
 
@@ -197,11 +208,11 @@ export default class Chatter extends LightningElement {
 
 By doing **dynamic imports** we are making the dependencies **soft** (not part of the dependency tree), meaning that will be loaded at runtime (a network call may be made). That being said, by forcing some invariants (described below) in the way we use those dynamic imports we could gather a lot of metadata at compile time that will allows us to optimize **when** those resource can be prefetched (see Annex for pivots proposal).
 
-## Guiding Principles
+### Guiding Principles
 
 We want to avoid ad-hoc solutions and proprietary non-standard ways to define dynamic component loading. We want to build an API that is future proof, whenever more things land into the spec for modules.
 
-## General Invariants
+### General Invariants
 
 Note that the invariants defined below are not necessarily constraints on LWC in general but rather explicitly defined for the Lightning Platform use cases:
 
@@ -217,7 +228,7 @@ Note that the invariants defined below are not necessarily constraints on LWC in
 
 You will notice that this follows the same pattern as what we have done for `@wire`: Bring the ability to understand and resolve dependencies at compile, build and design time.
 
-## API
+### API
 
 Below is the API and its ergonomics for dynamically loading a module. It has very similar mental model to the HTML `is` attribute proposal (which we can't use since Safari will not implement it in the foreseeable future): An arbitrary tag name on which you can assign any constructor.
 
@@ -277,7 +288,7 @@ export default class LazyTest extends LightningElement {
 
 As you can see in bold from the implementation details above we have transformed the *lwc:lazy* directive into a condition, and we have abstracted the dynamic import mechanism into a high order loader call provisioned by the application container (this will be configurable).
 
-### API invariants
+#### API invariants
 
 * Dynamic imports can't be a top level await - It must be on a block statement.
 * You may only use your own namespace for the tag name of the lazy component.
@@ -303,7 +314,7 @@ export async function example3() {
 }
 ```
 
-### Metadata
+#### Metadata
 
 The compiler add to its metadata all of the parsed dynamic imports, its source value and the hints (queryString parameters), here is an example of the output:
 
@@ -316,11 +327,11 @@ The compiler add to its metadata all of the parsed dynamic imports, its source v
 }
 ```
 
-# Drawbacks
+## Drawbacks
 
 The biggest drawback of this feature is the historic abuse of dynamic component creation in the Lightning Platform. We will add guardrails to prevent developers from shooting themselves in the foot.
 
-# Alternatives
+## Alternatives
 
 We considered several non-standard alternatives but we came to the conclusion that they would put us on the wrong path in the long term.
 

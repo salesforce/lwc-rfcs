@@ -1,13 +1,20 @@
-# RFC: Server Side Rendering
+---
+title: Server Side Rendering
+status: DRAFTED
+created_at: 2019-02-10
+updated_at: 2019-02-10
+pr: https://github.com/salesforce/lwc-rfcs/pull/17
+---
 
-## Status
-
-- Start Date: 2019-02-10
-- RFC PR: https://github.com/salesforce/lwc/pull/1048
+# Server Side Rendering
 
 ## Summary
 
 This RFC defines the infrastructure pieces for the various platforms running LWC to be able to do server side rendering (SSR) without explicit coordination with components' authors.
+
+## Back Pointers
+
+Original PR: https://github.com/salesforce/lwc/pull/1048
 
 ## Motivation
 

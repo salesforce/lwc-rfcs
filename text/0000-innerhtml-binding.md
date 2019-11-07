@@ -1,5 +1,3 @@
-https://github.com/salesforce/lwc-rfcs/pull/15
-
 ---
 title: InnerHTML Bindings for SSR
 status: DRAFTED

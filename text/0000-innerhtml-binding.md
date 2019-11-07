@@ -1,15 +1,23 @@
-- Start Date: 2019-10-03
-- RFC PR: (leave this empty)
-- Lightning Web Component Issue: (leave this empty)
+https://github.com/salesforce/lwc-rfcs/pull/15
 
-# Summary
+---
+title: InnerHTML Bindings for SSR
+status: DRAFTED
+created_at: 2019-10-03
+updated_at: 2019-10-03
+pr: https://github.com/salesforce/lwc-rfcs/pull/15
+---
+
+# InnerHTML Bindings for SSR
+
+## Summary
 
 Applications dealing with rich content, like commerce apps, need to render 
 this content as raw HTML, typically coming from a database or a CMS. Today, 
 the data binding capability always escapes the HTML for security reasons,
 which makes the rich content data not rendered as expected.
 
-# Basic example
+## Basic example
 
 The following template render some HTML content as innerHTML  
 
@@ -21,7 +29,7 @@ function createMarkup() { return {__html: 'First &middot; Second'}; };
 </template>
 ```
 
-# Motivation
+## Motivation
 
 It is common in customer facing apps to render rich content coming from a
 CMS or equivalent.  
@@ -40,7 +48,7 @@ Having to act on the DOM is also not user friendly compared to a binding
 facility.  
 
 
-# Detailed design
+## Detailed design
 
 It seems that there is a consensus among the most popular libraries to expose the
 innerHTML property of an element, although the exposed name for this property varies:
@@ -79,13 +87,13 @@ some content defined, like bellow:
 ```
 
 
-# Drawbacks
+## Drawbacks
 
 - It might open security breaches if not used appropriately. The proposed API forces the developer to know what he/she is doing and avoids mistaken assignment.  
 - Locker might prevent this assignment. To be verified.
 
 
-# Alternatives
+## Alternatives
 
 Different syntaxes for the `innerHTML` attribute are possible, but they finally lead to
 the same results. It is then more a matter of preference and consistency.  
@@ -97,12 +105,12 @@ value. The proposed syntax makes sure that the `innerHTML` binding always applie
 content of an element.
 
 
-# Adoption strategy
+## Adoption strategy
 
 Because the attribute uses the reserved `lwc:` prefix, there is not backward compatibility
 issue, and there is no potential name conflicts.
 
 
-# How we teach this
+## How we teach this
 
 inner HTML or raw HTML binding are the industry adopted terms for such a feature.

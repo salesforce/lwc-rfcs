@@ -1,12 +1,18 @@
-- Start Date: 2019-10-28
-- RFC PR: (leave this empty)
-- Lightning Web Component Issue: (leave this empty)
+---
+title: DOM Directive Reform
+status: DRAFTED
+created_at: 2019-10-28
+updated_at: 2019-10-28
+pr: https://github.com/salesforce/lwc-rfcs/pull/17
+---
 
-# Summary
+# DOM Directive Reform
+
+## Summary
 
 This RFC describes the formalization of the `lwc:dom` directive in LWC Templates. Specifically, it defines how to lift existing restrictions on `lwc:dom="manual"` and introduces `lwc:dom="synthetic-portal"` as a way to support legacy systems.
 
-# Quick recap on the `lwc:dom="manual"` directive
+## Quick recap on the `lwc:dom="manual"` directive
 
 This directive, which is LWC specific (hence the prefix), is intended to help with the following issues:
 
@@ -18,7 +24,7 @@ These are the main three reasons why this directive was introduced. The determin
 
 Additionally, as a precaution, we decided to support `lwc:dom="manual"` in leaf elements only, and do not support it at all in custom elements or slot elements, and reevaluate if we could lift part of that restriction in the future.
 
-# Motivation
+## Motivation
 
 There are 3 main motivations for this reform:
 
@@ -28,7 +34,7 @@ There are 3 main motivations for this reform:
 
 3. The formalization of this feature can lead to performance improvements, specifically, the considerations with respect to what elements need to be keyed, and which one can be safely ignored.
 
-# Basic example
+## Basic example
 
 This RFC lift some restrictions on the existing implementation and introduces the concept of `synthetic-portal`:
 
@@ -49,13 +55,13 @@ This RFC lift some restrictions on the existing implementation and introduces th
 </template>
 ```
 
-# Why do we need to lift restrictions for `lwc:dom="manual"`?
+## Why do we need to lift restrictions for `lwc:dom="manual"`?
 
 One of uses cases is the use of a graph library that can connect elements (visually) where the nodes in the graph are controlled via the template declarative mechanism, while the edges are manually generated and inserted by a 3rd party library.
 
 __Note:__ the restriction about custom elements stays the same, this directive cannot be used in `<slot>` elements or custom elements.
 
-# Why do we need `lwc:dom="synthetic-portal"`?
+## Why do we need `lwc:dom="synthetic-portal"`?
 
 It turns out that in Aura platform, we have many Aura components that were designed to work inside an Aura flexipage, which means they can make assumptions about the page, about the structure of the page. Many of those assumptions will not work if they are ever used inside a LWC flexipage (we call this RRH - raptorized record home). This happens to be a very important piece of the salesforce platform. Additionally, any library or legacy system that assumes a regular dom structure without shadow dom boundaries will suffer similar consequences.
 
@@ -63,7 +69,7 @@ Until today, we have ignored this problem, but now that LWC Flexipages are here,
 
 We are proposing to solve this problem by providing the correct hint via the template directive `lwc:dom="synthetic-portal"`, which could be used by LWC to support the interactions with the portal. At the same time, it can be used by Synthetic Shadow polyfill to implement the proper semantics for the portal.
 
-# `lwc:dom="manual"` vs `lwc:dom="synthetic-portal"`
+## `lwc:dom="manual"` vs `lwc:dom="synthetic-portal"`
 
 When using `lwc:dom="manual"`:
 
@@ -79,17 +85,17 @@ When using `lwc:dom="synthetic-portal"`:
 * does not work in native at all (we should decide if we should throw or just let it be)
 * elements can be found via global query selectors (because they belong to `document.body`)
 
-# Detailed design
+## Detailed design
 
 ## Detailed design about lifting restriction for leaf elements only for `lwc:dom="manual"` directive
 
 TBD
 
-## Detailed design of `lwc:dom="synthetic-shadow"` directive
+### Detailed design of `lwc:dom="synthetic-shadow"` directive
 
 TBD
 
-## Performance optimizations
+### Performance optimizations
 
 Considering that `lwc:dom` is only useful when running in synthetic shadow, it is a no-op on native shadow, which means no perf penalty. However, when in synthetic shadow, we must take into consideration few things:
 
@@ -125,28 +131,28 @@ At any given time, you can check if `p` qualifies as shadowed or not by running 
 
 Note: similar performance optimization can be applied to many other areas of the synthetic shadow patches.
 
-# Drawbacks
+## Drawbacks
 
 Why should we *not* do this? Please consider:
 
 - `lwc:dom="manual"` is simply a no-op when using native shadow, but `lwc:dom="synthetic-portal"` does not work when using native shadow, that difference could be misleading.
 - `lwc:dom="synthetic-portal"` is not getting us closer to use native shadow, in fact it could derail us from ever activating native shadow because features will be built on top of a feature that will never work in native shadow.
 
-# Alternatives
+## Alternatives
 
 No apparent alternative has been identified.
 
-# Adoption strategy
+## Adoption strategy
 
 The changes described in this RFC are backward compatible.
 
-# How we teach this
+## How we teach this
 
 The restriction of `lwc:dom="manual"` that will be lifted do not require a change in the mental model on how this feature is used. No side-effects were identified when combining declarative and manual elements. The only thing needed is to update the documentation to remove the restriction, and maybe adding an example that showcases the combination of declarative and manual elements.
 
 On the other hand, the `lwc:dom="synthetic-portal"` must be documented, and probably gated.
 
-# Unresolved questions
+## Unresolved questions
 
 * Should `lwc:dom="synthetic-portal"` be gated or restricted for very specific cases?
 * Should we include a generated global key for `lwc:host="generated-global-key-value"` in the queries, or using `[lwc:host]` is sufficient?

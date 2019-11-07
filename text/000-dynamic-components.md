@@ -2,7 +2,7 @@
 title: Dynamic Components
 status: DRAFTED
 created_at: 2019-07-01
-updated_at: 2019-07-01
+updated_at: 2019-11-06
 pr: https://github.com/salesforce/lwc-rfcs/pull/10
 ---
 

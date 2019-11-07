@@ -3,7 +3,7 @@ title: Server Side Rendering
 status: DRAFTED
 created_at: 2019-02-10
 updated_at: 2019-02-10
-pr: https://github.com/salesforce/lwc-rfcs/pull/17
+pr: https://github.com/salesforce/lwc-rfcs/pull/2
 ---
 
 # Server Side Rendering

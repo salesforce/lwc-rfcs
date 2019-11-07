@@ -1,13 +1,20 @@
-# RFC: node-reactions
+---
+title: Server Side Rendering
+status: DRAFTED
+created_at: 2019-02-12
+updated_at: 2019-05-24
+pr: https://github.com/salesforce/lwc-rfcs/pull/2
+---
 
-- Status: **Under Review**
-- Start Date: 2019-07-15
-- RFC PR: https://github.com/salesforce/lwc/pull/1431
-- Lightning Web Component Issue: (leave this empty)
+# Node Reactions
 
 ## Summary
 
 node-reactions provides a way to react to lifecycle of a DOM element. The library accepts lifecycle callbacks per DOM element and invokes them synchronously when the lifecycle event occurs. The primary focus of this RFC facilitate reactions to the connectedness of a node.
+
+## Back Pointers
+
+Original PR: https://github.com/salesforce/lwc/pull/1431
 
 ## Basic example
 

@@ -20,7 +20,7 @@ Let's look at a very simple scenario: We have a repository of LWC components we 
 
 Here is how the structure of the repo looks like  you can take a look at [ a real implementation implementation and test here](https://github.com/salesforce/lwc/pull/1602/files#diff-5cfc908f1b15979cf59306304092ddb5):
 
-```
+```markup
 rootDir
 ├── src/
 │   └── modules/
@@ -249,14 +249,18 @@ This type of resolution tells the resolver to find an npm package with that name
 Here is the algoritm for module resolution (the instructions are not in a rigurous specification format for brevity and time)
 
 ```
-  Let `rootDir` be the initial path for the application, `initModules` the list of ModuleRecords to be resolved and ModuleRecordEntryList an empty array.
+  Let `rootDir` be the initial path for the application, `initModules` 
+  the list of ModuleRecords to be resolved and ModuleRecordEntryList 
+  an empty array.
   
   1. Load the LWC configuration file in the rootDir
     1.1 Search for `lwc.config.js`, if it exist read it.
     1.2 If lwc.config.js is not found search in package.json
     (If both are found the configuration file has precedence).
 
-  2. Merge all the ModuleRecords found in the config if any with the list of initModules. If an alias with the same name exist pick initModules over the ones resolved in the config.
+  2. Merge all the ModuleRecords found in the config with 
+  the list of initModules. If an alias with the same name 
+  exist pick initModules over the ones resolved in the config.
 
   3. For each ModuleRecord:
 
@@ -264,14 +268,18 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
 
     3.2 Resolve ModuleRecord entry:
 
-        3.2.1 If is an AliasModuleRecord validate the path and add create a ModuleRecordEntry with: 
+        3.2.1 If is an AliasModuleRecord validate the path and add create 
+        a ModuleRecordEntry with: 
           - `specifier` as the `name` value.
           - `scope` with the closest configuration path.
           - `entry` with the `path` value.
 
-        3.2.2 If is a DirModuleRecord validate the path and find of the modules that match the structure [namespace]/[componentName]/[componentName.{html|css|js|ts}]
+        3.2.2 If is a DirModuleRecord validate the path and find of the 
+        modules that match the structure:
+        [namespace]/[componentName]/[componentName.{html|css|js|ts}]
 
-        3.2.3 If is a NpmModuleRecord, validate that the package is installed and GoTo 1. recursively merging all the ModuleRecordEntries.
+        3.2.3 If is a NpmModuleRecord, validate that the package is installed 
+        and GoTo 1. recursively merging all the ModuleRecordEntries.
 
     3.3 Return all the ModuleRecordEntries collected.
 ```
@@ -294,11 +302,11 @@ This algorithm can be used and integrated with tools like Webpack or rollup, in 
 ## Alternatives
 
 We discussed different module resolution alteratives previously, but to summarize:
-  - We need a custom module resolution to: 
-    1) Support the 1:N relationship on packages
-    2) Have different build steps
-    3) Align with standards in different host environments
 
+  - We need a custom module resolution to: 
+    - Support the 1:N relationship on packages
+    - Have different build steps
+    - Align with standards in different host environments
   - Our module resolution strategy is based on 3 types of module records
     - Other alternative semantics can be discussed as part of this RFC as long as it fullfill the invariants described in this doc.
 

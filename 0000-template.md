@@ -1,17 +1,23 @@
-- Start Date: (fill me in with today's date, YYYY-MM-DD)
-- RFC PR: (leave this empty)
-- Lightning Web Component Issue: (leave this empty)
+---
+title: Short Title
+status: DRAFTED
+created_at: YYYY-MM-DD
+updated_at: YYYY-MM-DD
+pr: (leave this empty until the PR is created)
+---
 
-# Summary
+# Short Title
+
+## Summary
 
 Brief explanation of the feature.
 
-# Basic example
+## Basic example
 
 If the proposal involves a new or changed API, include a basic code example.
 Omit this section if it's not applicable.
 
-# Motivation
+## Motivation
 
 Why are we doing this? What use cases does it support? What is the expected
 outcome?
@@ -21,7 +27,7 @@ the motivation could be used to develop alternative solutions. In other words,
 enumerate the constraints you are trying to solve without coupling them too
 closely to the solution you have in mind.
 
-# Detailed design
+## Detailed design
 
 This is the bulk of the RFC. Explain the design in enough detail for somebody
 familiar with Lightning Web Components to understand, and for somebody familiar with the
@@ -29,7 +35,7 @@ implementation to implement. This should get into specifics and corner-cases,
 and include examples of how the feature is used. Any new terminology should be
 defined here.
 
-# Drawbacks
+## Drawbacks
 
 Why should we *not* do this? Please consider:
 
@@ -41,11 +47,11 @@ Why should we *not* do this? Please consider:
 
 There are tradeoffs to choosing any path. Attempt to identify them here.
 
-# Alternatives
+## Alternatives
 
 What other designs have been considered? What is the impact of not doing this?
 
-# Adoption strategy
+## Adoption strategy
 
 If we implement this proposal, how will existing Lightning Web Components developers adopt it? Is
 this a breaking change? Can we write a codemod? Should we coordinate with

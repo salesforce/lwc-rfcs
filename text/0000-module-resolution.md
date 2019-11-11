@@ -72,7 +72,7 @@ This means that from a developers perspective you just import the module you nee
 
 An important topic to understand first is how module resolution works today in different technologies and host environments.
 
-JavaScript did not had built-in support for modules, but the community has created impressive work-arounds over the years. The two most important (and unfortunately incompatible) standards are: CommonJS (used fundamentally by Node - with some extra semantics) and AMD (Asyncronous module definition), used by RequireJs and a lot of other bundlers.
+JavaScript did not have built-in support for modules, but the community has created impressive work-arounds over the years. The two most important (and unfortunately incompatible) standards are: CommonJS (used fundamentally by Node - with some extra semantics) and AMD (Asynchronous Module Definition), used by RequireJs and a lot of other bundlers.
 
 Note that there are other non-standard formats, loaders and tools like UMD, SystemJS, IIFE, etc, which are interesting for you know and understand but are out of the scope for this proposal.
 
@@ -86,7 +86,7 @@ Just to put all of this in a simple example:
 
 ```js
 // This will be resolved by looking a node_modules/ folder "foo-bar" 
-// recursively upwards, and the check the package.kson to find the entry point. 
+// recursively upwards, and the check the package.json to find the entry point.
 const x = require('foo-bar') // This is using CommonJS syntax
 
 // This indicates that we are exporting a default function 
@@ -99,7 +99,10 @@ module.exports = function () { return x() }; // This is using CommonJS syntax
 
 At the end of July 2014, TC39 (Javascript standarization comitee) had another meeting, during which the last details of the ECMAScript 6 (ES6) module syntax were finalized. [Here is the specification text](https://www.ecma-international.org/ecma-262/6.0/#sec-imports).
 
-The fundamental goal for ECMAScript 6 modules was to create a standard format that all users from the previous formats where comfortable and happy about, and lacked none of the caveats and issues - and since was part of the standar a lot of things could be improved like 1) The structure which can be statically analyzed (for static checking, optimizations, etc.) 2) Support for cyclic dependencies in a much better way.
+The fundamental goal for ECMAScript 6 modules was to create a standard format that all users from the previous formats were comfortable and happy about, and lacked none of the caveats and issues - and since was part of the standard a lot of things could be improved like
+
+1. The structure which can be statically analyzed (for static checking, optimizations, etc.)
+2. Better support for cyclic dependencies
 
 Here is how ES6 modules look like:
 
@@ -122,9 +125,9 @@ As a final note, remember that the resolution of ES6 can be done in multiple way
 
 ## Why we need our own module resolution
 
-Web Components are composed of multiple pieces (CSS, HTML and JS) and there is no canonical or standard way to bundle them natively yet (altough there are several proposals to standarize the way by which each of this pieces can interoperate and be integrated in the future see [CSS modules](https://github.com/w3c/webcomponents/issues/759), [HTML templates](https://github.com/w3c/webcomponents/issues/839)) hence we must build a future-proof, standard compliant way to do so while we help the standarization pieces to land.
+Web Components are composed of multiple pieces (CSS, HTML and JS) and there is no canonical or standard way to bundle them natively yet. Although there are several proposals to standarize the way by which each of these pieces can interoperate and be integrated in the future (see [CSS modules](https://github.com/w3c/webcomponents/issues/759), [HTML templates](https://github.com/w3c/webcomponents/issues/839)), we must build a future-proof, standards compliant way to do so while we help the standardization pieces to land.
 
-Even when we have all this pieces become available (and without going into too much detail here), it is likely that we will have to do some preprocessing or bundling anyway, which mean that we will have to take over the resolution one way or another - wether is build time to collapse mutliple pieces in on, or at runtime by using import-maps with some extra semantics on top. Moreover remember that a give package might contain many components (1:N) relationship, so will always have to have a configuration on where to find those components.
+Even when all these pieces become available (and without going into too much detail here), it is likely that we will have to do some preprocessing or bundling anyway, which mean that we will have to take over the resolution one way or another - whether at build time to collapse multiple pieces in on, or at runtime by using import-maps with some extra semantics on top. Moreover remember that a give package might contain many components (1:N) relationship, so we'll always have to have a configuration on where to find those components.
 
 To summarize: We will always need an abstraction layer which dictates where a particular module specifier must be resolved from (adapted to different host environments).
 
@@ -134,7 +137,7 @@ In order to resolve modules in LWC that work on different host environments (Sal
 
 ### LWC configuration
 
-A configuration file will be located at the root of the project, optionally at the component namespace level and in the future (this is yet to be spec out) at the module bundle level, where specificitiy will be resolved from inner to outer (merging upwards - similar to node_modules).
+A configuration file will be located at the root of the project, optionally at the component namespace level and in the future (this is yet to be spec out) at the module bundle level, where specificity will be resolved from inner to outer (merging upwards - similar to node_modules).
 
 At the package root level there are two ways on which you can add a configuration file: Creating a `lwc.config.json` or adding an `lwc` key to package.json (this is mostly for simplicity and easy of use - specially when publishing a package). Here are some examples:
 
@@ -162,7 +165,7 @@ At the package root level there are two ways on which you can add a configuratio
 
 Its important that **any plugin, tool or project honor this configuration**, otherwise the resolution will not work correctly in most environments.
 
-Moreover, note that this type of configuraiton is not something new, many tools use an equivalent configuration (babel, lerna, rollup, webpack, ...)
+Moreover, note that this type of configuration is not something new, many tools use an equivalent configuration (babel, lerna, rollup, webpack, ...)
 
 ### Module resolution configuration
 
@@ -293,7 +296,7 @@ This schema allows us to add
 
 Its an invariant of the module resolution system to allow for multiple versions of multiple components within a particular application configuration. As the modules are resolved, we keep track of the context on which those modules appear, basically who is the importer (and its path). You can check again the [basic example](#basic_example) on the top.
 
-This concept of scope matches the [current specification of import maps](https://github.com/WICG/import-maps#multiple-versions-of-the-same-module) which will allows us to create the equivalent resolution for the browser.
+This concept of scope matches the [current specification of import maps](https://github.com/WICG/import-maps#multiple-versions-of-the-same-module) which will allow us to create the equivalent resolution for the browser.
 
 ## Resolving modules at build time.
 

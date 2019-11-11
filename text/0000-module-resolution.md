@@ -214,7 +214,7 @@ This type of resolution maps a given module specifier to a particular path withi
 This type of resolution allows to specify a folder that contain LWC modules. The structure of the folder its very specific (LWC has a very opinionated module structure). It must contain a namespace folder, then a folder per module bundle (moduleName) and then a moduleEntry file that matches the name of the bundle (the entry must be of type .css, .html, .js or .ts)
 
 ::: note
-  The enforcement of the folder structure is something that the core LWC teams wants to enforce as a convention. There is no technical limitation on the compiler or other tools to resolve different folder structures. However we do want to provide and enforce as much as possible a canonical way so we can in the future keep iterating, improving and expanding the ergonomics of it.
+  The folder structure is something that the core LWC teams wants to enforce as a convention. There is no technical limitation on the compiler or other tools to resolve different folder structures. However we do want to provide and enforce as much as possible a canonical way so we can in the future keep iterating, improving and expanding the ergonomics of it.
 :::
 
 

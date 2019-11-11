@@ -272,6 +272,12 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
   3. For each ModuleRecord:
 
     3.1  Validate that its a valid ModuleRecord type, skip it otherwise.
+    3.1.1 For `AliasModuleRecord` `path` and `name` keys must exist.
+    3.1.2 For `DirModuleRecord` the dir key must exist and the 
+    value must match an existing folder on the file system.
+    3.1.3 For `NpmModuleRecord` the npm key must exist and its value 
+    must not have a leading `/` or `./`. Also the npm package must
+    be resolvable from Node's perspective.
 
     3.2 Resolve ModuleRecord entry:
 

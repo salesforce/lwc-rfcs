@@ -275,20 +275,21 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
 
     3.2 Resolve ModuleRecord entry:
 
-        3.2.1 If is an `AliasModuleRecord` validate the path and add create 
-        a ModuleRecordEntry with: 
+        3.2.1 If is an `AliasModuleRecord` validate the path and add
+        create a ModuleRecordEntry with:
           - `specifier` as the `name` value.
           - `scope` with the closest configuration path.
           - `entry` with the `path` value.
 
-        3.2.2 If is a `DirModuleRecord` validate the path and find of the 
-        modules that match the structure:
+        3.2.2 If is a `DirModuleRecord` validate the path and find of 
+        the modules that match the structure:
         [namespace]/[componentName]/[componentName.{html|css|js|ts}]
 
-        3.2.3 If is a `NpmModuleRecord`, validate that the npm package is 
-        installed and can be resolved (by using Node `node_modules` 
-        algorithm). `GoTo 1` recursively merging all the 
-        ModuleRecordEntries collecting the scope as packages are traversed.
+        3.2.3 If is a `NpmModuleRecord`, validate that the npm package
+        is installed and can be resolved (by using Node `node_modules` 
+        algorithm). Then `GoTo 1` recursively merging all the 
+        ModuleRecordEntries collecting the scope forEach as npm 
+        packages are traversed.
 
     3.3 Return all the ModuleRecordEntries collected.
 ```

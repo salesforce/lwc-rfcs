@@ -285,8 +285,9 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
         modules that match the structure:
         [namespace]/[componentName]/[componentName.{html|css|js|ts}]
 
-        3.2.3 If is a NpmModuleRecord, validate that the package is installed 
-        and GoTo 1. recursively merging all the ModuleRecordEntries.
+        3.2.3 If is a NpmModuleRecord, validate that the npm package is 
+        installed and can be resolved (by using Node `node_modules` 
+        algo) and `GoTo 1` recursively merging all the ModuleRecordEntries.
 
     3.3 Return all the ModuleRecordEntries collected.
 ```

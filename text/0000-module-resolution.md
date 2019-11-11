@@ -2,7 +2,7 @@
 title: Module resolution
 status: DRAFTED
 created_at: 2019-11-08
-updated_at: 2019-11-08
+updated_at: 2019-11-11
 pr: https://github.com/salesforce/lwc/pull/1602
 ---
 

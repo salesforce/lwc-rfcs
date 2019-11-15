@@ -91,7 +91,7 @@ This case is more complicated because of all the invariants that involves, but w
 1. `cmp.expr == null` (expr result is `null` or `undefined`) This is the more complicated codepath, and the one that deserves more attention: 
     1. Given that we always set the property, the attribute is always going to be set to `true` or `false` 
     2. Since the spellcheck attribute is **true-by-default**, for `undefined` or `null`, we will set it to boolean `true`.
-    3. Setting the attribute to `true` change the browser default behavior which is inherited, see [Drawbacks](#Drawbacks) section for details.
+    3. Setting the attribute to `true` change the browser default behavior which is inherited, see [Drawbacks](##Drawbacks) section for details.
 2. `cmp.expr != null` This case is relatively simple, the correct spellcheck value will be: 
 3. cmp.expr().toString().toLowerCase() !== "false"
 
@@ -113,7 +113,7 @@ With this solution, Table B becomes:
 
 There is one specific case in which the proposed solution to expression values fall short:
 
-In case **[1.b](https://salesforce.quip.com/MXkLAgFBp8jb#IUOACAUYwGM)**, since the `spellcheck` attribute is set to true change, the browser default behavior is inherited (meaning the attribute should not to be present) it leaves one uncovered case in which a parent element has set the `spellcheck` attribute to `false`, and explicitly setting the attribute to `true` will override this inherited behavior:
+In case **1.b**, since the `spellcheck` attribute is set to true change, the browser default behavior is inherited (meaning the attribute should not to be present) it leaves one uncovered case in which a parent element has set the `spellcheck` attribute to `false`, and explicitly setting the attribute to `true` will override this inherited behavior:
 
 ```html
 <template>

@@ -18,7 +18,7 @@ As the LWC ecosystem organically grows both internally at Salesforce and externa
 
 Let's look at a very simple scenario: We have a repository of LWC components we want to open source. We want to use other 3party packages as the foundation for my components, in this case `@ui/components@2.0.0` and `fancy-components@1.0.0`. Its important to note that the `fancy-components` package is using internally `@ui/components@1.0.0`, which is a different version of the package I'm using.
 
-Here is how the structure of the repo looks like  you can take a look at [ a real implementation implementation and test here](https://github.com/salesforce/lwc/pull/1602/files#diff-5cfc908f1b15979cf59306304092ddb5):
+Here is how the structure of the repo looks like  you can take a look at [a real implementation implementation and test here](https://github.com/salesforce/lwc/pull/1602/files#diff-5cfc908f1b15979cf59306304092ddb5):
 
 ```markup
 rootDir
@@ -74,11 +74,11 @@ An important topic to understand first is how module resolution works today in d
 
 JavaScript did not have built-in support for modules, but the community has created impressive work-arounds over the years. The two most important (and unfortunately incompatible) standards are: CommonJS (used fundamentally by Node - with some extra semantics) and AMD (Asynchronous Module Definition), used by RequireJs and a lot of other bundlers.
 
-Note that there are other non-standard formats, loaders and tools like UMD, SystemJS, IIFE, etc, which are interesting for you know and understand but are out of the scope for this proposal.
+Note that there are other non-standard formats, loaders and tools like UMD, SystemJS, IIFE, etc, which are interesting for you to know and understand but are out of the scope for this proposal.
 
 ### Node.js resolution
 
-If you ever used Node, you know that in order to import a module you need to use the `require()` method, and if you want to export something to some other module or file you must use `module.exports`. That is know nas [CommonJS format](https://en.wikipedia.org/wiki/CommonJS). Now if you want to import a 3party package how does that works? Well Node decided to implement its own resolution by looking at the content of a the node_modules folder based on some dependencies defined on `package.json`. You can look at the full algorithm [here](https://nodejs.org/docs/latest/api/modules.html#modules_all_together).
+If you ever used Node, you know that in order to import a module you need to use the `require()` method, and if you want to export something to some other module or file you must use `module.exports`. That is known as [CommonJS format](https://en.wikipedia.org/wiki/CommonJS). Now if you want to import a 3rd party package how does that works? Well Node decided to implement its own resolution by looking at the content of a the node_modules folder based on some dependencies defined on `package.json`. You can look at the full algorithm [here](https://nodejs.org/docs/latest/api/modules.html#modules_all_together).
 
 All of this being said after years of very hard work, Node is finnaly addopting ES6 modules (which we will see in the next section) since LTS v12 and they are hoping to [fully transition to it soon](https://twitter.com/MylesBorins/status/1189618753065144322)
 
@@ -262,8 +262,8 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
   
   1. Load the LWC configuration file in the rootDir
     1.1 Search for `lwc.config.js`, if it exist read it.
-    1.2 If lwc.config.js is not found search in package.json
-    (If both are found the configuration file has precedence).
+    1.2 If `lwc.config.js` is not found search in `package.json`
+    (If both are found the `lwc.config.js` file takes precedence).
 
   2. Merge all the ModuleRecords found in the config with 
   the list of initModules. If an alias with the same name 
@@ -287,16 +287,20 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
           - `scope` with the closest configuration path.
           - `entry` with the `path` value.
 
-        3.2.2 If is a `DirModuleRecord` validate the path and find of 
+        3.2.2 Else if is a `DirModuleRecord` validate the path and find of 
         the modules that match the structure:
-        [namespace]/[componentName]/[componentName.{html|css|js|ts}]
+        [namespace]/[componentName]/[componentName.{html|css|js|ts}] and create a 
+        ModuleRecordEntry with:
+          - `specifier` be `[namespace]/[componentName]`
+          - `scope` be the closest configuration path
+          - `entry` be `[dir]/[namespace]/[componentName]/[componentName.{html|css|js|ts}]`
 
-        3.2.3 If is a `NpmModuleRecord`, validate that the npm package
+        3.2.3 Else if is a `NpmModuleRecord`, validate that the npm package
         is installed and can be resolved (by using Node `node_modules` 
         algorithm). Then `GoTo 1` recursively merging all the 
         ModuleRecordEntries collecting the scope forEach as npm 
         packages are traversed.
-
+3.2.4 Otheriwse throw an invalid ModuleRecord error
     3.3 Return all the ModuleRecordEntries collected.
 ```
 
@@ -347,7 +351,7 @@ Its important to understand the previous state of the art on how different platf
 
 ### Ecosystem
 
-Developers must learn about `lwc.config.json` for their package or component to be distributed discoverable and used by 3parties (via npm or other forms of registry).
+Developers must learn about `lwc.config.json` for their package or component to be distributed discoverable and used by third-parties (via npm or other forms of registry).
 
 Note that in the Salesforce platform developers already familiar with our metadata file which hold information about the component, altough this will be irrelevant for them.
 

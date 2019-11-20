@@ -86,14 +86,14 @@ With this solution Table A becomes:
 
 ### Case (B) Expression Values:
 
-This case is more complicated because of all the invariants that involves, but we can group them in 2 general cases to be handled:
+This case is more complicated because of all the invariants that involves, but we can group them in 2 general cases to be handled on custom elmements:
 
 1. `cmp.expr == null` (expr result is `null` or `undefined`) This is the more complicated codepath, and the one that deserves more attention: 
     1. Given that we always set the property, the attribute is always going to be set to `true` or `false` 
     2. Since the spellcheck attribute is **true-by-default**, for `undefined` or `null`, we will set it to boolean `true`.
     3. Setting the attribute to `true` change the browser default behavior which is inherited, see [Drawbacks](##Drawbacks) section for details.
 2. `cmp.expr != null` This case is relatively simple, the correct spellcheck value will be: 
-3. cmp.expr().toString().toLowerCase() !== "false"
+    1. `cmp.expr.toString().toLowerCase() !== "false"`
 
 With this solution, Table B becomes:
 

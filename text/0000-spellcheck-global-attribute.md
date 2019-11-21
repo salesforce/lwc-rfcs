@@ -43,7 +43,7 @@ Because `spellcheck` is an enumerable attribute that reflects into the boolean p
 
 The following tables shows a comparison between rendering a regular `HTMLElement` (with the correct behavior) and `LightningElement` (with the incorrect behavior) using the current LWC version (`v1.1.11` as of 2019/11/20): 
 
-**Table A:** Static string value, case (a): `<textarea spellcheck="staticValue">` vs `<c-foo spellcheck="staticValue">`
+**Table A:** Static string value, `<textarea spellcheck="staticValue">` vs `<c-foo spellcheck="staticValue">`
 
 |Value\Rendered Element	|textarea	|c-foo	|textarea.spellcheck / c-foo.spellcheck	|
 |---	|---	|---	|---	|
@@ -51,7 +51,7 @@ The following tables shows a comparison between rendering a regular `HTMLElement
 |`"false"` (case insensitive)	|spellcheck="false"	|spellcheck="true"	|false / true	|
 |`"any other string"`	|spellcheck="any other string"	|spellcheck="true"	|true / true	|
 
-**Table B:** Expression value, case (b): `<textarea spellcheck={expr}>` vs `<c-foo spellcheck={expr}>`
+**Table B:** Expression value, `<textarea spellcheck={expr}>` vs `<c-foo spellcheck={expr}>`
 
 |Value\Rendered Element	|textarea	|c-foo	|textarea.spellcheck / c-foo.spellcheck	|
 |---	|---	|---	|---	|
@@ -118,7 +118,7 @@ With this solution, Table B becomes:
 
 There is one specific case in which the proposed solution falls short:
 
-In the case of **1.2**, `spellcheck` attribute is set to true change, the browser default behavior is inherited (meaning the attribute should not to be present) it leaves one uncovered case in which a parent element has set the `spellcheck` attribute to `false`, and explicitly setting the attribute to `true` will override this inherited behavior:
+In the case of **1.2**, when the `spellcheck` attribute is set to true, it changes the browser default behavior, which is inherited (meaning the attribute should not to be present) and leaves one uncovered case in which a parent element has set the `spellcheck` attribute to `false`, and explicitly setting the attribute to `true` will override this inherited behavior:
 
 ```html
 <template>
@@ -146,30 +146,19 @@ will render this html chunk:
 </div>
 ```
 
-In the rendered chunk, `c-foo.spellcheck` will return `true`, but the correct behavior is the one from the `textarea`, in which `textarea.spellcheck` is going to be false, the inherited value from the div.
+In the rendered chunk, `c-foo.spellcheck` will return `true`, but the correct behavior is the one from the `textarea`, in which `textarea.spellcheck` is going to be `false`, the inherited value from the div.
 
 ## Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
+We evaluated the alternative of fixing the issue at runtime by overwritting the `spellcheck` property descriptor for custom elements. This approach was dismissed because results in the same differences  between custom element and built-in element when programatically setting the `spellcheck` property.
 
 ## Adoption strategy
 
-If we implement this proposal, how will existing Lightning Web Components developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
+Component developers will not notice any difference in usage.
 
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing Lightning Web Components patterns?
-
-Would the acceptance of this proposal mean the Lightning Web Components documentation must be
-re-organized or altered? Does it change how Lightning Web Components is taught to new developers
-at any level?
-
-How should this feature be taught to existing Lightning Web Components developers?
+This RFC is implementation specific. The only thing needed is to update the documentation adding a note that mention the limitations for the `spellcheck` attribute when used on custom elements (see [Drawbacks](##Drawbacks) section)
 
 # Unresolved questions
 
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?

@@ -1,9 +1,9 @@
 ---
-title: Server Side Rendering
+title: Node Reactions
 status: DRAFTED
 created_at: 2019-02-12
 updated_at: 2019-05-24
-pr: https://github.com/salesforce/lwc-rfcs/pull/2
+pr: https://github.com/salesforce/lwc-rfcs/pull/11
 ---
 
 # Node Reactions
@@ -197,4 +197,3 @@ The usage of this library in LWC will be an implementation detail of the engine.
 3. When a node is moved to a different subtree, invoke its disconnectedCallback first and then the connectedCallback: https://jsbin.com/qawacil/edit?html,js,output
 4. All callbacks for a given node is processed first before moving down the subtree: https://jsbin.com/qawacil/edit?html,js,output
 5. In native shadow, callbacks in subtree are invoked even in closed shadow mode.
-

@@ -23,9 +23,15 @@ The following template render some HTML content as innerHTML
 function createMarkup() { return {__html: 'First &middot; Second'}; };
 
 <template>
-    <div lwc:innerHTML={createMarkup}/>
+    <div lwc:inner-html={createMarkup}/>
 </template>
 ```
+
+The directive is named `inner-html` as it mimics what the DOM `innerHTML`
+property does. As such, it can be used on any tag where the `innerHTML`
+property is available. The HTML fragment inserted is not processed by the LWC
+compiler and thus LWC components won't be created unless they are exposed as
+custom elements to the browser.
 
 ## Motivation
 
@@ -35,11 +41,12 @@ CMS or equivalent.
 As of today, and according to the LWC documentation, this capability is 
 supported by acting directly with the DOM within `renderedCallback()`.
 The templating mechanism does not provide any binding capability that renders
-some content as raw HTNL.  
+some content as raw HTML.  
 
-This breaks with SSR, as `renderedCallback()` and DOM manipulation won't be
-allowed when a component is rendered on the server. Moreover, even if it was
-possible, it would make the client side hydration more complex as the content
+As a side effect, this also breaks with SSR, as `renderedCallback()` and DOM 
+manipulation won't be allowed when a component is rendered on the server.
+Moreover, even if it was possible, it would make the client side hydration 
+more complex as the content
 is not generated as part of the VDOM.  
 
 Having to act on the DOM is also not user friendly compared to a binding
@@ -65,7 +72,7 @@ that does not sanitize the content:
 
 ```html
 <template>
-    <div lwc:innerHTML={getUserName()}/>
+    <div lwc:inner-html={getUserName()}/>
 </template>
 ```
 
@@ -78,17 +85,41 @@ some content defined, like bellow:
 
 ```html
 <template>
-    <div lwc:innerHTML={myHTML()}>
+    <div lwc:inner-html={myHTML()}>
       Adding content when innerMTML is defined leads to a compilation error
     </div>
 </template>
 ```
 
+### Validity
+
+The `lwc:inner-html` attribute can be set on any tag in an LWC template with the
+following restrictions:
+
+  - The host element cannot contain both declarative markup and the `lwc:inner-html`
+  attribute.  
+  - The `lwc:inner-html` attribute cannot be applied to LWC components, as their
+  content is defined by a template.  
+  - The `lwc:inner-html` attribute cannot be applied to the <slot> tag, as its content
+  comes from a slot.  
+
+
+### Implementation details
+
+From an implementation standpoint, the HTML fragment is kept in the host element
+attribute. When the VDOM comparison finds that this attribute has changed, then 
+it updates the DOM element content by assigning it to the element.innerHTML property.
+
 
 ## Drawbacks
 
-- It might open security breaches if not used appropriately. The proposed API forces the developer to know what he/she is doing and avoids mistaken assignment.  
-- Locker might prevent this assignment. To be verified.
+  - It might open security breaches if not used appropriately. The proposed API forces 
+  the developer to know what he/she is doing and avoids mistaken assignment.  
+  - Locker might prevent this assignment. To be verified.  
+
+Note: the security issue is *not* different from setting the HTML with a DOM operation
+in `renderedCallback()`. If DOM manipulation is secured by locker, then this should
+benefit from it.  
 
 
 ## Alternatives

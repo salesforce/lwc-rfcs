@@ -100,7 +100,7 @@ following restrictions:
   attribute.  
   - The `lwc:inner-html` attribute cannot be applied to LWC components, as their
   content is defined by a template.  
-  - The `lwc:inner-html` attribute cannot be applied to the <slot> tag, as its content
+  - The `lwc:inner-html` attribute cannot be applied to the `<slot>` tag, as its content
   comes from a slot.  
 
 

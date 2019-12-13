@@ -11,7 +11,7 @@ Global HTML Attributes and public props are often a source of confusion for for 
 ## TL;DR
 - `static observableAttributes` and `attributeChangedCallback` removal
 - Allow Component authors to define public getter/setter for global HTML attributes
-- Opt-out of global HTML attributes reflection by declaring a getter/setter.
+- Opt-out of global HTML attributes reflection by declaring a public getter/setter or a public field.
 - `data-` and `aria-` attributes can no longer be accessed inside of components. They only reflect back to the DOM.
 
 ## Attribute reactivity

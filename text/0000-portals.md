@@ -46,7 +46,7 @@ One non-trivial example of such usage:
   </div>
 </body>
 ```
-since we wouldn't want for a user to specify the portal each and every time one would use a dialog, more realistically -- `<x-dialog>` would have a default behaviour based on the @Context, which can provide whether scoping is enabled or not, the name of the scoped portal and the name of the global portal.
+since we wouldn't want for a user to specify the portal each and every time one would use a dialog, more realistically -- `<x-dialog>` would have a default behaviour based on the `@Context`, which can provide whether scoping is enabled or not, the name of the scoped portal and the name of the global portal.
 
 ## Motivation
 
@@ -61,10 +61,10 @@ and modal implementation (including faux-modals that are scoped to tabs and are 
 
 ## Detailed design
 
-(not an actual detail designed just adding some possible requirements)
+(not an actual detail design, just adding some possible requirements)
 - Instead of being inserted at its natural position in the template, the element would be inserted in the destination portal,if one exists.
 - When the host element is disconnected, the portalled element should also be disconnected. 
-- The portalled component should still be @Context aware 
+- The portalled component should still be `@Context` aware 
 
 ## Drawbacks
 

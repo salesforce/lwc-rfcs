@@ -21,6 +21,8 @@ This becomes problematic when one wants to present a popup/tooltip/dialog/dropdo
 
 Having a custom element be inserted out of its natural dom tree hierarchy would enable one to have greater control over the stacking context, allowing a predictalbe popup and modal implementation (including faux-modals that are scoped to tabs and are not per-se global).
 
+Side-note: Modal scoping means that a modal would be tied to a tab (the backdrop only appears inside the tab, and the modal is centered against the tab content) and only blocks the content of the tab, and nothing outside of it (focus trapping still works as with a true modal, but there is a key that allows one to escape the modal). When using Lightning Console in Salesforce, all modals by default are scoped, so this is a very important use-case to capture.
+
 ## Basic example
 
 The proposal suggests two new APIs:
@@ -31,13 +33,13 @@ One non-trivial example of such usage:
 
 ```xhtml
 <body>
-  <div lwc:portal-definition="global-modals"></div>
+  <div id="global-modals"></div>
 
-  <div lwc:portal-definition="popups"></div>
+  <div id="popups"></div>
   ...
   <div id="tabs">
     <div id="tab-1">
-      <div lwc:portal-definition="tab1-modals"></div>
+      <div id="tab1-modals"></div>
 
       <div>
          <x-dialog lwc:portal="global-modals">Global Modal</x-foo>
@@ -45,7 +47,7 @@ One non-trivial example of such usage:
       </div>  
     </div>  
     <div id="tab-2">
-      <div lwc:portal-definition="tab2-modals"></div>
+      <div id="tab2-modals"></div>
 
       <div>
          <x-dialog lwc:portal="global-modals">Global Modal</x-foo>
@@ -61,19 +63,21 @@ since we wouldn't want for a user to specify the portal each and every time one 
 
 (not an actual detailed design, just adding some possible requirements)
 
-- When a portal is defined, the name must be unique.
-- Once a portal is defined, it cannot be changed (ie. `lwc:portal` can't be removed and the name is immutable). 
-- When an element that defined a portal is removed, any element inserted into it gets added back into their natural dom position. 
-- An element can't both define a portal, and define a destination portal (ie. no `lwc:portal-define` and `lwc:portal` attributes simultaneously). 
-- Instead of being inserted at its natural position in the template, the element would be inserted in the destination portal, if one exists.
+- If a custom element has `lwc:portal` attribute on it, and its value is an existing global id, instead of being inserted at its natural position in the template, the element would be inserted in the element with the defined global id.
 - When an element's destination portal doesn't exist, but later is inserted in the DOM, any elements that have already rendered stay in their original location, as if the portal doesn't exist.
 - When the host element is disconnected, the portalled element should also be disconnected. 
 - The portalled component should still be `@Context` aware 
+- The portalled element should only be allowd at the top root of the template, this way any CSS issues are avoided
+- Any CSS defined should apply to the content of the portalled element
+- An element can't portal to itself (`lwc:portal` matches the `id`)
+
 
 ## Drawbacks
 
 - new API
 - additional complexity in LWC
+- more complexity around event propagation
+- issues with CSS unless the portalled element is forced to be at the top root of the template
 
 ## Security
 

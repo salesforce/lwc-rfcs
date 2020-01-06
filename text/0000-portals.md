@@ -25,9 +25,7 @@ Side-note: Modal scoping means that a modal would be tied to a tab (the backdrop
 
 ## Basic example
 
-The proposal suggests two new APIs:
-1) A way to define where in the DOM the element would be inserted (eg. `lwc:portal-definition` attribute on an element)
-2) A way to define the destination portal of an element (eg. `lwc:portal` attribute on an element)
+The proposal suggests one new API -- a way to define the destination of an element (position in the DOM where the component would be rendered in). The api in question is a new attribute -- `lwc:portal` that accepts a string that should match the global document id of the element that would contain the rendered element.
 
 One non-trivial example of such usage:
 

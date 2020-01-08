@@ -17,7 +17,7 @@ The LWC engine has been designed from the beginning to run in an environment wit
 
 ## Scope
 
-LWC SSR support is a broad subject, this proposal only focusses on a subset of it. This proposal covers the following topics:
+LWC SSR support is a broad subject, this proposal only focuses on a subset of it. This proposal covers the following topics:
 
 - How to evaluate the existing LWC engine module in a javascript context without DOM access.
 - What LWC APIs should be exposed in both environments.
@@ -25,7 +25,7 @@ LWC SSR support is a broad subject, this proposal only focusses on a subset of i
 
 The following topics are considered out of the scope of this proposal:
 
-- How the LWC component tree rendered on the server gets serialized and sent to the browser.
+- How the LWC component tree rendered on the server gets serialized to HTML and sent to the browser.
 - How the serialized component tree gets rehydrated when processed by the browser.
 
 ## Motivation
@@ -40,7 +40,7 @@ Distributing multiple versions of the LWC engine offers the capability to expose
 
 The existing `@lwc/engine` will be replaced by 3 new packages:
 
-- `@lwc/engine-core`: Core logic shared by the different runtime including the rendering engine and the reactivity mechanism. This package should never be consumed directly in an application. This package is agnostic on the underlying rendering medium. The only provide APIs for building custom renderers.
+- `@lwc/engine-core`: Core logic shared by the different runtimes including the rendering engine and the reactivity mechanism. This package should never be consumed directly in an application. This package is agnostic on the underlying rendering medium. It only provides APIs for building custom runtimes.
 - `@lwc/engine-dom`: Runtime that can be used to render LWC component trees in a DOM environment. This package is built on top of `@lwc/engine-core`.
 - `@lwc/engine-server`: Runtime used that can be used to render LWC component trees as strings. This package is built on top of `@lwc/engine-core`.
 

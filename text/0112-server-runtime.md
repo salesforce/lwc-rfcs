@@ -112,14 +112,14 @@ This package injects the native DOM APIs into the `@lwc/engine-core` rendering e
 This package exposes the following APIs:
 
 - `createElement(name: string, options: { is: typeof LightningElement }): ServerHTMLElement`: This method creates a new LWC component tree. It follows the same signature as the `createElement` API from `@lwc/engine-dom`. Instead of returning a native `HTMLElement`, this method returns a `ServerHTMLElement` with the public properties, aria reflected properties and HTML global attributed.
-- `renderToString(element: ServerHTMLElement): string`: This method creates an LWC component tree synchronously and serialize it to string. It accepts a single parameter, a `ServerHTMLElement` returned by `createElement` and returns the serialized string.
+- `renderToString(element: ServerHTMLElement): string`: This method creates an LWC component tree synchronously and serializes it to HTML. It accepts a single parameter, a `ServerHTMLElement` returned by `createElement` and returns the serialized string.
 
-This package injects mock DOM APIs in the `@lwc/engine-core` rendering engine. Those DOM APIs produces a lightweight DOM structure that can be serialized into a string by the `renderToString` method. As described in the Appendix, this package is also in charge of attaching on the global object a mock `CustomEvent`.
+This package injects mock DOM APIs in the `@lwc/engine-core` rendering engine. Those DOM APIs produce a lightweight DOM structure. This structure can then be serialized into a string containing the HTML serialization of the element's descendants. As described in the Appendix, this package is also in charge of attaching on the global object a mock `CustomEvent`.
 
 ## Drawbacks
 
 - Requires a complete rewrite of the current `@lwc/engine`
-- Might require substantial changes to the existing tools (jest preset, rollup plugins, ...) to load the right engine depending on the environment.
+- Might require substantial changes to the existing tools (jest preset, rollup plugins, etc.) to load the right engine depending on the environment.
 
 ## Alternatives
 

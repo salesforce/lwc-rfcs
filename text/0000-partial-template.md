@@ -81,11 +81,12 @@ conditional blocks of `if:true` that could lend themselves to unnecessary rerend
 
 ## Adoption strategy
 
-Since this is not a breaking change an an enhancement the adoption should be smooth as devs
-are informed this feature was added and can now reorganize existing templates.
+Since this is not a breaking change and purely an enhancement to an existing syntax developers
+adoption will be optional. If they decide to reorganize existing components they'll go in with
+expectations partials are the way going forward to make complex templates more readable.
 
 In the examples above we may want to recommend reoganization of existing components if one was
-currently nesting components.
+currently heavily nesting components.
 
 # How we teach this
 

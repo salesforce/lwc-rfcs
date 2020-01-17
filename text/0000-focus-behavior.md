@@ -16,15 +16,15 @@ general, anything that is click focusable or sequentially focusable is
 programmatically focusable, and focus behavior for clicks and sequential
 navigation can depend on the user agent and system settings. For example,
 Safari will not apply focus on buttons when clicked, but it will apply focus on
-buttons when the focus method is invoked[1].
+buttons when the focus method is invoked [1].
 
 As such, the set of click focusable and sequentially focusable elements is not
 something that we can know a priori. What we do know when observing our
 supported user agent matrix is that, the set of _potentially_ focusable
 elements is the same. This proposal makes the assumption that it is acceptable
 for the framework to introduce shadow semantics via various focus management
-polyfills as long as the set of all potentially focusable elements are
-considered while managing focus.
+polyfills as long as we don't prevent the user from reaching a focusable
+element.
 
 ## Motivation
 
@@ -60,8 +60,9 @@ probably be improved. We should go through the exercise of checking it against
 the results of focusable elements listed on [this test
 page](https://boom-bath.glitch.me/tabindex.html).
 
-We will also need to refactor the logic a bit so that we include all elements
-with tabindex values for the click and programmatic cases.
+The set of click focusable and programmatic focusable elements is a superset of
+the set of sequentially focusable elements, and should include all elements
+with tabindex values of -1.
 
 ### Programmatic focus
 
@@ -119,8 +120,7 @@ when comparing synthetic and native Shadow DOM. For example, in LWC's synthetic
 shadow, a Safari user would have to tab through all focusable areas of a
 component regardless of whether they configured their system to skip certain
 elements. In native shadow, the same user with the same system configuration
-and the same component would be tabbing through a smaller set of focusable
-areas.
+would be tabbing through a smaller set of focusable areas.
 
 ## Alternatives
 
@@ -132,13 +132,13 @@ better align the framework with specifications.
 Existing LWC components that have already implemented a focus method can
 optionally remove their implementation in favor of the one provided by the
 framework. Keeping the existing implementation in place will not break existing
-functionality. This is why we recommended that users implement their own focus
-method until the specs around this area became well-defined!
+functionality. Our recommendation that users implement their own focus method
+until the specs around this area became well-defined, has paid off!
 
 # How we teach this
 
-There is nothing unique to LWC to teach. Developers can reference the [WHATWG
-interaction specification] to learn how focus works.
+There is nothing unique to LWC that we need to teach. Developers can reference
+the [WHATWG interaction specification] to learn how focus works.
 
 # Unresolved questions
 

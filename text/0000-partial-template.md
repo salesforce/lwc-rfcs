@@ -32,10 +32,6 @@ export default class Example extends LightningElement {
 
 ## Motivation
 
-In investigating performance issues in components that are used hundreds of times on a
-page it was noted that creating reusable child components; while organizationally nice,
-were not as performant as inlining the HTML into the template;
-
 In other instances it was noted that large conditonal blocks of HTML could be more organized
 into seperate template files.
 
@@ -63,7 +59,7 @@ get dynamicTemplate() {
 Why should we *not* do this? Please consider:
 
 - Static analysis. Analyzing the template can give us a lot of information, but with something
-  like this, it makes it harder
+  like this, it makes it more difficult.
 - Conditionally swapping out partial templates could be performantly bad in themselves negating
   the benfit if we're not able to optimize for this.
 - Recursion good/bad.
@@ -72,10 +68,24 @@ Why should we *not* do this? Please consider:
 
 ## Alternatives
 
-The other design choice would be to compile time import via an include syntax.
+Partials imported via the `template` tag and `lwc:partial` attribute.
+
+- Introduce `lwc:partial="./file.html"` for compiled time content.
+- Scoped `{variables}` within templates passed via attributes.
+- Question: Would `lwc:partial={templateUrl}` not work? What about `lwc:partial={template}` via
+  an `import`.
 
 ```
-<template lwc:include="./template.html"></template>
+// foo.html
+<template><p>Value: {value}</p></template>
+
+// component.html
+<template>
+      <h1>Before</h1>
+      <template lwc:partial="./foo" value={myBeforeValue}></template>
+      <h2>After</h1>
+      <template lwc:partial="./foo" value={myAfterValue}></template>
+</template>
 ```
 
 This syntax greatly cuts down on what would be possible and introduces verbose

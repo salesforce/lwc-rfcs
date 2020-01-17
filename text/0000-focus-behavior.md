@@ -1,9 +1,9 @@
-
+---
 title: Focus Behavior
 status: DRAFTED
 created_at: 2020-01-15
 updated_at: 2020-01-15
-pr: (leave this empty until the PR is created)
+pr:
 ---
 
 # Focus Behavior

@@ -62,6 +62,8 @@ get dynamicTemplate() {
 
 Why should we *not* do this? Please consider:
 
+- Static analysis. Analyzing the template can give us a lot of information, but with something
+  like this, it makes it harder
 - Conditionally swapping out partial templates could be performantly bad in themselves negating
   the benfit if we're not able to optimize for this.
 - Recursion good/bad.

@@ -13,10 +13,10 @@ pr: (leave this empty until the PR is created)
 When discussing focus behavior, we need to consider the three ways you can
 focus on elements: click focus, programmatic focus, and sequential focus. In
 general, anything that is click focusable or sequentially focusable is
-programmatically focusable; however, focus behavior for clicks and sequential
+programmatically focusable, and focus behavior for clicks and sequential
 navigation can depend on the user agent and system settings. For example,
-Safari will not apply focus on buttons when clicked, but it will apply focus
-on buttons when the focus method is invoked[^1].
+Safari will not apply focus on buttons when clicked, but it will apply focus on
+buttons when the focus method is invoked[1].
 
 As such, the set of click focusable and sequentially focusable elements is not
 something that we can know a priori. What we do know when observing our
@@ -29,27 +29,24 @@ considered while managing focus.
 ## Motivation
 
 Generally speaking, it is outside the scope of LWC to normalize different
-behaviors across its supported user agent matrix. In the case of focus
-delegation however, the framework does need to make informed decisions to
-normalize focus behaviors since the alternative to that would be to do nothing
-at all, which would result in a broken user experience--especially in the case
-of sequential focus navigation.
+behaviors across its supported user agent matrix. However, in the case of focus
+delegation, the framework does need to make informed decisions to normalize
+focus behaviors in order to avoid a broken user experience. This is especially
+true in the case of sequential focus navigation.
 
-The primary goal when considering any proposal around focus behavior will be to
-minimize differences between its synthetic Shadow DOM and native Shadow DOM
-implementations to facilitate the future transition of components to native
-Shadow DOM.
+The primary goal of this proposal will be to minimize differences between its
+synthetic Shadow DOM and native Shadow DOM implementations to facilitate the
+transition of components to native Shadow DOM.
 
 ## Detailed design
 
-For simplification, subsequent mentions of components assume that said
-component is delegating focus, unless otherwise stated.
+For simplification, unless otherwise stated, it can be assumed that all
+components are delegating focus.
 
 For simplification, subsequent usage of the term "focusable" will refer to
 whether or not an element is programmatically focusable (i.e., whether or not
 an element can receive focus when its focus method is invoked or it has the
-`autofocus` attribute). To be clear, this means that we will be ignoring the
-distinction between the three classifications of focusability.
+`autofocus` attribute).
 
 ```
 focusable = programmatically-focusable = click-focusable ∪ sequentially-focusable
@@ -57,10 +54,14 @@ focusable = programmatically-focusable = click-focusable ∪ sequentially-focusa
 
 ### Focusable elements
 
-The set of focusable elements is currently defined by this [monster selector].
-This has been sufficient for our needs so far but can probably be improved. We
-should go through the exercise of checking it against the results of focusable
-elements listed on [this test page](https://boom-bath.glitch.me/tabindex.html).
+The set of sequentially focusable elements is currently defined by this
+[monster selector]. This has been sufficient for our needs so far but can
+probably be improved. We should go through the exercise of checking it against
+the results of focusable elements listed on [this test
+page](https://boom-bath.glitch.me/tabindex.html).
+
+We will also need to refactor the logic a bit so that we include all elements
+with tabindex values for the click and programmatic cases.
 
 ### Programmatic focus
 
@@ -146,7 +147,7 @@ interaction specification] to learn how focus works.
 
 
 
-[^1]: Safari will actually remove focus from a focused button if you click it.
+[1]: Safari will actually remove focus from a focused button if you click it.
 
 [monster selector]: https://github.com/salesforce/lwc/blob/dec08b50c02cc69141c1833db9406b9d66ce8c1b/packages/%40lwc/synthetic-shadow/src/faux-shadow/focus.ts#L48-L58
 [WHATWG interaction specification]: https://html.spec.whatwg.org/multipage/interaction.html

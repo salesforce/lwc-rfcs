@@ -1,5 +1,5 @@
 ---
-title: portals proposal
+title: Portals
 status: DRAFTED
 created_at: 2019-12-23
 updated_at: 2019-12-23

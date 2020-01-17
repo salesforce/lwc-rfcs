@@ -6,7 +6,7 @@ updated_at: 2020-01-17
 pr: (leave this empty until the PR is created)
 ---
 
-# Short Title
+# Patial Template
 
 ## Summary
 

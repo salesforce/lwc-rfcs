@@ -3,7 +3,7 @@ title: LWC server runtime
 status: DRAFTED
 created_at: 2020-01-06
 updated_at: 2020-01-06
-pr: (leave this empty until the PR is created)
+pr: https://github.com/salesforce/lwc-rfcs/pull/23
 ---
 
 # LWC server runtime

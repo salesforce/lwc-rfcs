@@ -55,9 +55,9 @@ focusable = programmatically-focusable = click-focusable ∪ sequentially-focusa
 ### Focusable elements
 
 The set of sequentially focusable elements is currently defined by this
-[monster selector]. This has been sufficient for our needs so far but can
-probably be improved. We should go through the exercise of checking it against
-the results of focusable elements listed on [this test
+[monster selector]. This has been sufficient for our needs so far but should be
+reviewed and improved [2]. We should go through the exercise of checking it
+against the results of focusable elements listed on [this test
 page](https://boom-bath.glitch.me/tabindex.html).
 
 The set of click focusable and programmatic focusable elements is a superset of
@@ -74,9 +74,9 @@ receive focus. Since there is no DOM API that identifies such an element for
 us, we can instead:
 
 1. Invoke the focus method on the first element in our set of focusable
-   elements, where the set of focusable elements is the set of sequentially
-   focusable elements plus elements with a non-negative tabindex content
-   attribute value.
+   elements, where the set of focusable elements is the union of the set of
+   sequentially focusable elements and the set of elements with a negative
+   tabindex content attribute value.
 1. Verify that the element received focus via `activeElement`.
 1. If the element did not recieve focus then keep invoking the focus method on
    subsequent elements until we verify that focus was transferred.
@@ -148,6 +148,7 @@ the [WHATWG interaction specification] to learn how focus works.
 
 
 [1]: Safari will actually remove focus from a focused button if you click it.
+[2]: The existing `[href]` selector is too broad and will pick up non-focusable elements such as `base` and `link` elements.
 
 [monster selector]: https://github.com/salesforce/lwc/blob/dec08b50c02cc69141c1833db9406b9d66ce8c1b/packages/%40lwc/synthetic-shadow/src/faux-shadow/focus.ts#L48-L58
 [WHATWG interaction specification]: https://html.spec.whatwg.org/multipage/interaction.html

@@ -42,7 +42,7 @@ The existing `@lwc/engine` will be replaced by 3 new packages:
 
 - `@lwc/engine-core`: Core logic shared by the different runtimes including the rendering engine and the reactivity mechanism. This package should never be consumed directly in an application. This package is agnostic on the underlying rendering medium. It only provides APIs for building custom runtimes.
 - `@lwc/engine-dom`: Runtime that can be used to render LWC component trees in a DOM environment. This package is built on top of `@lwc/engine-core`.
-- `@lwc/engine-server`: Runtime used that can be used to render LWC component trees as strings. This package is built on top of `@lwc/engine-core`.
+- `@lwc/engine-server`: Runtime that can be used to render LWC component trees as strings. This package is built on top of `@lwc/engine-core`.
 
 The existing `lwc` package stays untouched and will be used to distribute the different versions of the engine. From the developer perspective, the experience should be identical.
 
@@ -112,7 +112,7 @@ This package injects the native DOM APIs into the `@lwc/engine-core` rendering e
 This package exposes the following APIs:
 
 - `createElement(name: string, options: { is: typeof LightningElement }): ServerHTMLElement`: This method creates a new LWC component tree. It follows the same signature as the `createElement` API from `@lwc/engine-dom`. Instead of returning a native `HTMLElement`, this method returns a `ServerHTMLElement` with the public properties, aria reflected properties and HTML global attributed.
-- `renderToString(element: ServerHTMLElement): string`: This method creates an LWC component tree synchronously and serializes it to HTML. It accepts a single parameter, a `ServerHTMLElement` returned by `createElement` and returns the serialized string.
+- `renderToString(element: ServerHTMLElement): string`: This method synchronously serializes an LWC component tree to HTML. It accepts a single parameter, a `ServerHTMLElement` returned by `createElement` and returns the serialized string.
 
 This package injects mock DOM APIs in the `@lwc/engine-core` rendering engine. Those DOM APIs produce a lightweight DOM structure. This structure can then be serialized into a string containing the HTML serialization of the element's descendants. As described in the Appendix, this package is also in charge of attaching on the global object a mock `CustomEvent`.
 
@@ -146,7 +146,7 @@ TBD
 
 For example, when running in Node.js `lwc` might resolve to `@lwc/engine-server` for SSR purposes, but also to `@lwc/engine-dom` when running test via jest and jsdom.
 
-One way to solve this would be to import the platform-specific APIs from the appropriate module: `createElement` from `@lwc/engine-dom`, `createElement` and `renderToString` from `@lwc/engine-server` and use. Platform-agnostic APIs should be imported from `@lwc` (which becomes an alias to `@lwc/engine-core`).
+One way to solve this would be to import the platform-specific APIs from the appropriate module: `createElement` from `@lwc/engine-dom` and `createElement` and `renderToString` from `@lwc/engine-server`. Platform-agnostic APIs should be imported from `lwc` (which becomes an alias to `@lwc/engine-core`).
 
 ---
 

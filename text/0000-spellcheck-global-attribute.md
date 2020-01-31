@@ -10,7 +10,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/21
 
 ## Summary
 
-When setting the attribute `spellcheck` of a **custom element** in a component template, the rendered element does not reflect correctly the attribute into the DOM. This proposal introduces support for `spellcheck` and alike global attributes when used in LWC custom elements.
+When setting the `spellcheck` attribute of a **custom element** in a component template to `"false"`, the rendered attribute value is `"true"`, which is incorrect.
 
 ## Back-pointers
 
@@ -161,4 +161,3 @@ Component developers will not notice any difference in usage.
 This RFC is implementation specific. The only thing needed is to update the documentation adding a note that mention the limitations for the `spellcheck` attribute when used on custom elements (see [Drawbacks](##Drawbacks) section)
 
 # Unresolved questions
-

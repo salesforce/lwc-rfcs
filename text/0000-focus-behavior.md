@@ -23,8 +23,8 @@ something that we can know a priori. What we do know when observing our
 supported user agent matrix is that, the set of _potentially_ focusable
 elements is the same. This proposal makes the assumption that it is acceptable
 for the framework to introduce shadow semantics via various focus management
-polyfills as long as we don't prevent the user from reaching a focusable
-element.
+polyfills--even if their behavior contradicts user settings--as long as the
+access to all potentially focusable elements is preserved.
 
 ## Motivation
 
@@ -146,9 +146,10 @@ the [WHATWG interaction specification] to learn how focus works.
   value, and contains no focusable elements, is focused?
 
 
-
-[1]: Safari will actually remove focus from a focused button if you click it.
-[2]: The existing `[href]` selector is too broad and will pick up non-focusable elements such as `base` and `link` elements.
-
 [monster selector]: https://github.com/salesforce/lwc/blob/dec08b50c02cc69141c1833db9406b9d66ce8c1b/packages/%40lwc/synthetic-shadow/src/faux-shadow/focus.ts#L48-L58
 [WHATWG interaction specification]: https://html.spec.whatwg.org/multipage/interaction.html
+
+
+[1]: Safari will actually remove focus from a focused button if you click it.
+
+[2]: The existing `[href]` selector is too broad and will pick up non-focusable elements such as `base` and `link` elements.

@@ -2,8 +2,8 @@
 title: Module resolution
 status: DRAFTED
 created_at: 2019-11-08
-updated_at: 2019-11-11
-pr: https://github.com/salesforce/lwc/pull/1602
+updated_at: 2020-02-04
+pr: https://github.com/salesforce/lwc-rfcs/pull/20
 ---
 
 # Module Resolution
@@ -209,19 +209,25 @@ This type of resolution maps a given module specifier to a particular path withi
 
 `AliasModuleRecord` must contain `name` and a `path` keys.
 
+::: note 
+    It is encouraged that the `name` specifier for the modules is of the form `namespace/name`.
+    Moreover the namespace doesn't necesarily have to match the path, altough it is recommended to follow that convention.
+:::
+
 #### DirectoryModuleRecord
 
 This type of resolution allows to specify a folder that contain LWC modules. The structure of the folder its very specific (LWC has a very opinionated module structure). It must contain a namespace folder, then a folder per module bundle (moduleName) and then a moduleEntry file that matches the name of the bundle (the entry must be of type .css, .html, .js or .ts)
 
 ::: note
-  The folder structure is something that the core LWC teams wants to enforce as a convention. There is no technical limitation on the compiler or other tools to resolve different folder structures. However we do want to provide and enforce as much as possible a canonical way so we can in the future keep iterating, improving and expanding the ergonomics of it.
+  The folder structure is something that the core LWC team wants to enforce as a convention. There is no technical limitation on the compiler or other tools to resolve different folder structures. However we do want to provide and enforce as much as possible a canonical way so we can in the future keep iterating, improving and expanding the ergonomics of it.
 :::
-
 
 ```json
 {
     "modules": [
-       { "dir" : "src/modules" }
+        {
+           "dir" : "src/modules"
+        }
     ]
 }
 ```
@@ -244,14 +250,74 @@ This type of resolution tells the resolver to find an npm package with that name
 ```json
 {
     "modules": [
-       { "npm" : "@ui/components" }     
+       { 
+           "npm" : "@ui/components"
+       }     
     ]
 }
 ```
 
 `NpmModuleRecord` must contain `npm` key.
 
-## Algorithm
+## Module resolution and exposure via NPM packages
+
+So far we have covered how are we going to resolve the modules, however we would want to be able to expose a subset of those modules 
+for other developers in the form of an npm package.
+
+### Exposing modules
+In order to expose a module via npm package, it must be explicity declared in the `expose` array property.
+
+```json
+{
+    "modules": [
+       { 
+           "dir" : "src/modules"
+       }     
+    ],
+    "expose": [
+        "ui-foo",
+        "ui-bar",
+        "ltng-buzz",
+    ]
+}
+```
+::: note
+The reason behind explictly having to expose modules is because every module is a **public api** from the point of view of the consumer, hence by default it should be a restricted list so breaking changes (removal of modules) is intentional and explicit.
+:::
+
+
+### Mapping different modules from different packages
+
+When using multiple npm packages, there can be situations where two or more packages might contain the same module specifier (ex. common-utils,
+so we need to introduce a `map` property to be able to change the specifier so we can disambiguate the behaviour.
+
+```json
+{
+    "modules": [
+       { 
+           "npm" : "lwc-modules-foo",
+           "map": {
+               "common-utils": "foo-common-utils"
+           }
+       },
+       { 
+           "npm" : "lwc-modules-bar",
+           "map": {
+               "common-util:": "bar-common-utils"
+           }
+       }     
+    ]
+}
+```
+
+::: warning
+The module resolver will throw if it detects multiple modules with the same name
+:::
+
+
+## Algorithms
+
+### Preload all modules
 
 Here is the algoritm for module resolution (the instructions are not in a rigurous specification format for brevity and time)
 
@@ -304,10 +370,43 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
     3.3 Return all the ModuleRecordEntries collected.
 ```
 
+### Algorithm to resolve a module in iterable way
+
+This algorithm is very similar to the [NodeJS require](https://nodejs.org/api/modules.html#modules_all_together),
+the main difference is that we don't traverse upwards all module paths. 
+
+```
+Lets `importee` be module specifier to be resolved and `importer` the path of the module on 
+which is being imported from.
+
+1. Find the closest lwc.config.js or package.json that contains an "lwc" config by traversing 
+upwards in the file system.
+
+2. Match the current importee againts a ModuleRecord defined in the modules array.
+    2.1 If the ModuleRecord is not found throw since resolution
+
+3. For each ModuleRecord
+    3.1 Match the `importee` to a module specififer:
+        3.1.1 If is an `AliasModuleRecord` validate the path and add
+        match the ModuleRecordEntry with:
+          - `specifier` as the `importee` value.
+          - `entry` with the `importer` value.
+
+        3.1.2 Else if is a `DirModuleRecord` validate the path and find of 
+        the modules that match the structure:
+        [namespace]/[componentName]/[componentName.{html|css|js|ts}] and match a 
+        ModuleRecordEntry with:
+          - `specifier` be `[namespace]/[componentName]`
+          - `entry` be `[dir]/[namespace]/[componentName]/[componentName.{html|css|js|ts}]`
+
+        3.1.3 Else if is a `NpmModuleRecord`, find lwc.config.js or package.json lwc config
+            3.1.3.1 Check that the component is exposed.
+```
+
 #### Future ModuleRecord types
 
 We will not discard adding another types of module resolutions, like for example, find modules directly from git or even from a url.
-This schema allows us to add 
+This schema allows us to add new types as we see fit.
 
 ## Scoping
 

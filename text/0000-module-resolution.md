@@ -210,8 +210,7 @@ This type of resolution maps a given module specifier to a particular path withi
 `AliasModuleRecord` must contain `name` and a `path` keys.
 
 ::: note 
-    It is encouraged that the name specifier for the modules is of the form namespace/name.
-    Moreover the namespace doesn't necesarily have to match the path, altough it is recommended to follow that convention.
+  It is encouraged that the name specifier for the modules is of the form namespace/name. Moreover the namespace doesn't necesarily have to match the path, altough it is recommended to follow that convention.
 :::
 
 #### DirectoryModuleRecord

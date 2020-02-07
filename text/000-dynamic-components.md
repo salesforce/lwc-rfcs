@@ -28,7 +28,7 @@ This RFC introduces a set of principles and invariants required to preserve a re
 
 ```html
 <template>
-    <x-lazy lwc:dynamic={customConstructor}></x-lazy>
+    <x-lazy lwc:dynamic={customCtor}></x-lazy>
 </template>
 ```
 
@@ -43,7 +43,7 @@ export default class DynamicCtor extends LightningElement {
 
     async loadCtor() {
         const ctor = await import("c/customConstructor");
-        this.customCtor = ctor;
+        this.customCtor = ctor.default;
     }
 }
 ```

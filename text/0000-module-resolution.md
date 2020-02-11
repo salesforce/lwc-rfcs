@@ -16,9 +16,9 @@ As the LWC ecosystem organically grows both internally at Salesforce and externa
 
 ## Basic example
 
-Let's look at a very simple scenario: We have a repository of LWC components we want to open source. We want to use other 3party packages as the foundation for my components, in this case `@ui/components@2.0.0` and `fancy-components@1.0.0`. Its important to note that the `fancy-components` package is using internally `@ui/components@1.0.0`, which is a different version of the package I'm using.
+Let's look at a very simple scenario: We have a repository of LWC components we want to open source. We want to use other 3party packages as the foundation for our components, in this case `@ui/components@2.0.0` and `fancy-components@1.0.0`. Its important to note that the `fancy-components` package is using internally `@ui/components@1.0.0`, which is a different version of the package I'm using.
 
-Here is how the structure of the repo looks like  you can take a look at [a real implementation implementation and test here](https://github.com/salesforce/lwc/pull/1602/files#diff-5cfc908f1b15979cf59306304092ddb5):
+Here is how the structure of the repo looks like  you can take a look at [a real implementation and test here](https://github.com/salesforce/lwc/pull/1602/files#diff-5cfc908f1b15979cf59306304092ddb5):
 
 ```markup
 rootDir
@@ -170,7 +170,7 @@ Moreover, note that this type of configuration is not something new, many tools 
 ### Module resolution configuration
 
 The `modules` key on the configuration will hold an Array of `ModuleRecords`. A module record is an object with a specific shape depending on the type of module record it holds. The type will depend on the mode of resolution, we will be defining three types of `ModuleRecords` for now:
-  - AliasModuleRecord: Define an specifier that points to a specific module.
+  - AliasModuleRecord: Define a specifier that points to a specific module.
   - DirectoryModuleRecord: Defines a folder where many namespaced modules can be defined
   - NpmModuleRecord: Defines a set of packages that will hold more modules to be resolved.
 

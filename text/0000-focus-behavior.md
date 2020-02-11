@@ -1,6 +1,7 @@
 ---
 title: Focus Behavior
-status: DRAFTED
+status: ACTIVE
+
 created_at: 2020-01-15
 updated_at: 2020-01-15
 pr: https://github.com/salesforce/lwc-rfcs/pull/25

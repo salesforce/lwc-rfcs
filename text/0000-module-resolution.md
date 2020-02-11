@@ -389,7 +389,7 @@ upwards in the file system.
         3.1.1 If is an `AliasModuleRecord` validate the path and add
         match the ModuleRecordEntry with:
           - `specifier` as the `importee` value.
-          - `entry` with the `importer` value.
+          - `entry` with the `specifier` value.
 
         3.1.2 Else if is a `DirModuleRecord` validate the path and find of 
         the modules that match the structure:

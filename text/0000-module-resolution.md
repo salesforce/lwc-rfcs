@@ -78,7 +78,7 @@ Note that there are other non-standard formats, loaders and tools like UMD, Syst
 
 ### Node.js resolution
 
-If you ever used Node, you know that in order to import a module you need to use the `require()` method, and if you want to export something to some other module or file you must use `module.exports`. That is known as [CommonJS format](https://en.wikipedia.org/wiki/CommonJS). Now if you want to import a 3rd party package how does that works? Well Node decided to implement its own resolution by looking at the content of a the node_modules folder based on some dependencies defined on `package.json`. You can look at the full algorithm [here](https://nodejs.org/docs/latest/api/modules.html#modules_all_together).
+If you ever used Node, you know that in order to import a module you need to use the `require()` method, and if you want to export something to some other module or file you must use `module.exports`. That is known as [CommonJS format](https://en.wikipedia.org/wiki/CommonJS). Now if you want to import a 3rd party package how does that work? Well, Node decided to implement its own resolution by looking at the content of a the node_modules folder based on some dependencies defined on `package.json`. You can look at the full algorithm [here](https://nodejs.org/docs/latest/api/modules.html#modules_all_together).
 
 All of this being said after years of very hard work, Node is finnaly addopting ES6 modules (which we will see in the next section) since LTS v12 and they are hoping to [fully transition to it soon](https://twitter.com/MylesBorins/status/1189618753065144322)
 
@@ -127,7 +127,7 @@ As a final note, remember that the resolution of ES6 can be done in multiple way
 
 Web Components are composed of multiple pieces (CSS, HTML and JS) and there is no canonical or standard way to bundle them natively yet. Although there are several proposals to standarize the way by which each of these pieces can interoperate and be integrated in the future (see [CSS modules](https://github.com/w3c/webcomponents/issues/759), [HTML templates](https://github.com/w3c/webcomponents/issues/839)), we must build a future-proof, standards compliant way to do so while we help the standardization pieces to land.
 
-Even when all these pieces become available (and without going into too much detail here), it is likely that we will have to do some preprocessing or bundling anyway, which mean that we will have to take over the resolution one way or another - whether at build time to collapse multiple pieces in on, or at runtime by using import-maps with some extra semantics on top. Moreover remember that a give package might contain many components (1:N) relationship, so we'll always have to have a configuration on where to find those components.
+Even when all these pieces become available (and without going into too much detail here), it is likely that we will have to do some preprocessing or bundling anyway, which means that we will have to take over the resolution one way or another - whether at build time to collapse multiple pieces in on, or at runtime by using import-maps with some extra semantics on top. Moreover remember that a give package might contain many components (1:N) relationship, so we'll always have to have a configuration on where to find those components.
 
 To summarize: We will always need an abstraction layer which dictates where a particular module specifier must be resolved from (adapted to different host environments).
 
@@ -186,7 +186,7 @@ In previous draft versions, `module` entries used to be just *strings* which had
 }
 ```
 
-On the example below, it will be impossible to know if `just-string` is the name of an npm package, or a name of a folder that contains components, hence creationg resolution ambiguity.
+On the example below, it will be impossible to know if `just-string` is the name of an npm package, or a name of a folder that contains components, hence creating resolution ambiguity.
 
 We considered other alternatives such as forcing specific prefix like `npm:package-name` or require a final slash (ex. `folder-name/`) for folders, but we believed that those were more cumbersome to learn and future-proof, so standarizing on an consistent object shape as ModuleRecord was a preferable and superior approach.
 
@@ -260,7 +260,7 @@ This type of resolution tells the resolver to find an npm package with that name
 
 ## Module resolution and exposure via NPM packages
 
-So far we have covered how are we going to resolve the modules, however we would want to be able to expose a subset of those modules 
+So far we have covered how we are going to resolve the modules, however we would want to be able to expose a subset of those modules 
 for other developers in the form of an npm package.
 
 ### Exposing modules
@@ -326,9 +326,10 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
   an empty array.
   
   1. Load the LWC configuration file in the rootDir
-    1.1 Search for `lwc.config.js`, if it exist read it.
+    1.1 Search for `lwc.config.json`, if it exist read it.
     1.2 If `lwc.config.js` is not found search in `package.json`
-    (If both are found the `lwc.config.js` file takes precedence).
+    (If both are found the `lwc.config.json` file takes precedence).
+    1.3 Error if not config can't be resolved in rootDir
 
   2. Merge all the ModuleRecords found in the config with 
   the list of initModules. If an alias with the same name 
@@ -336,10 +337,10 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
 
   3. For each ModuleRecord:
 
-    3.1  Validate that its a valid ModuleRecord type, skip it otherwise.
-    3.1.1 For `AliasModuleRecord` `path` and `name` keys must exist.
-    3.1.2 For `DirModuleRecord` the dir key must exist and the 
-    value must match an existing folder on the file system.
+    3.1  Validate that its a valid ModuleRecord type, throw Error otherwise.
+        3.1.1 For `AliasModuleRecord` `path` and `name` keys must exist.
+        3.1.2 For `DirModuleRecord` the dir key must exist and the 
+            value must match an existing folder on the file system.
     3.1.3 For `NpmModuleRecord` the npm key must exist and its value 
     must not have a leading `/` or `./`. Also the npm package must
     be resolvable from Node's perspective.
@@ -365,7 +366,8 @@ Here is the algoritm for module resolution (the instructions are not in a riguro
         algorithm). Then `GoTo 1` recursively merging all the 
         ModuleRecordEntries collecting the scope forEach as npm 
         packages are traversed.
-3.2.4 Otheriwse throw an invalid ModuleRecord error
+
+        3.2.4 Otheriwse throw an invalid ModuleRecord error
     3.3 Return all the ModuleRecordEntries collected.
 ```
 
@@ -377,6 +379,8 @@ the main difference is that we don't traverse upwards all module paths.
 ```
 Lets `importee` be module specifier to be resolved and `importer` the path of the module on 
 which is being imported from.
+
+0. If importee starts with `/` or `.`, exit early since importee does not require resolution
 
 1. Find the closest lwc.config.js or package.json that contains an "lwc" config by traversing 
 upwards in the file system.
@@ -416,6 +420,10 @@ This concept of scope matches the [current specification of import maps](https:/
 ## Resolving modules at build time.
 
 This algorithm can be used and integrated with tools like Webpack or rollup, in fact we have created both the `@lwc/module-resolver` and the `@lwc/rollup-plugin` packages that we officially support. Other projects in the ecosystem such as `create-lwc-app` also leverage those primitives.
+
+::: note
+    If the LWC module resolution algorithm doesn't match, tools might decide to fallback to standard Node resolution (or equivalent host resolution algorithm).
+::: 
 
 ## Alternatives
 

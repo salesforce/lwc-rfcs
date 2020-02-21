@@ -83,7 +83,31 @@ With this solution Table A becomes:
 |`"false"` (case insensitive)	|spellcheck="false"	|spellcheck="false"	|false / false	|
 |`"any other string"`	|spellcheck="any other string"	|spellcheck="true"	|true / true	|
 
-### Dynamic Values (via template expressions):
+### Dynamic Values (via template expressions)
+
+Since it is highly unlikely that the spellcheck will be set via a template expression, and some drawbacks were found, we decided to only implement the [Static Values](###Static-values) part of it for now, and reconsider the implementation of the dynamic part if we feel the need for it in the future.
+
+For complete analysis on setting dynamic values via template expressions to the spellcheck attribute, refer to [Appendix A](#Appendix-A).
+
+## Alternatives
+
+We evaluated the alternative of fixing the issue at runtime by overwritting the `spellcheck` property descriptor for custom elements. This approach was dismissed because results in the same differences  between custom element and built-in element when programatically setting the `spellcheck` property.
+
+
+
+## Adoption strategy
+
+Component developers will not notice any difference in usage.
+
+# How we teach this
+
+This RFC is implementation specific. The only thing needed is to update the documentation adding a note that mention the limitations for setting the spellcheck attribute on custom elements via template expressions.
+
+# Unresolved questions
+
+# Appendix A
+
+## A.1 Dynamic Values (via template expressions):
 
 This case is more complicated because of all the invariants that it involves, but we can group them in 2 general cases that can be handled differently for custom elements:
 
@@ -114,7 +138,7 @@ With this solution, Table B becomes:
 |`"any other string"`	|spellcheck="any other string"	|spellcheck="true"	|true / true	|
 |object like	|spellcheck="val.toString()"	|spellcheck="true"	|true / true	|
 
-## Drawbacks
+### Drawbacks
 
 There is one specific case in which the proposed solution falls short:
 
@@ -147,17 +171,3 @@ will render this html chunk:
 ```
 
 In the rendered chunk, `c-foo.spellcheck` will return `true`, but the correct behavior is the one from the `textarea`, in which `textarea.spellcheck` is going to be `false`, the inherited value from the div.
-
-## Alternatives
-
-We evaluated the alternative of fixing the issue at runtime by overwritting the `spellcheck` property descriptor for custom elements. This approach was dismissed because results in the same differences  between custom element and built-in element when programatically setting the `spellcheck` property.
-
-## Adoption strategy
-
-Component developers will not notice any difference in usage.
-
-# How we teach this
-
-This RFC is implementation specific. The only thing needed is to update the documentation adding a note that mention the limitations for the `spellcheck` attribute when used on custom elements (see [Drawbacks](##Drawbacks) section)
-
-# Unresolved questions

@@ -1,6 +1,6 @@
 ---
 title: Module resolution
-status: DRAFTED
+status: ACCEPTED
 created_at: 2019-11-08
 updated_at: 2020-02-04
 rfc: https://github.com/salesforce/lwc-rfcs/pull/20

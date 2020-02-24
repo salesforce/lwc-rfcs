@@ -1,6 +1,6 @@
 ---
 title: Error Codes II
-status: draft
+status: drafted
 created_at: 2018
 ---
 

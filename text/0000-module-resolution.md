@@ -3,7 +3,9 @@ title: Module resolution
 status: DRAFTED
 created_at: 2019-11-08
 updated_at: 2020-02-04
-pr: https://github.com/salesforce/lwc-rfcs/pull/20
+rfc: https://github.com/salesforce/lwc-rfcs/pull/20
+implementation: https://github.com/salesforce/lwc/pull/1602
+champion: Diego Ferreiro Val (@diervo)
 ---
 
 # Module Resolution

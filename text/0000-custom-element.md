@@ -27,7 +27,7 @@ This proposal provides a high-level API (an abstraction layer) for authors to ac
 
 ```js
 import XFoo from 'x/foo';
-customElements.define('x-foo', XFoo.CustomElement);
+customElements.define('x-foo', XFoo.CustomElementConstructor);
 // using tagName `x-foo`:
 document.body.appendChild(document.createElement('x-foo'));
 ```
@@ -48,7 +48,7 @@ Cons:
 
 ### Implementation Details
 
-`LightningElement.CustomElement` is a static getter that can be accessed by any Constructor extending `LightningElement`. This getter can rely on the `this` value, which points to the sub class. This can be used in a Map to link the LWC to the Custom Element. This is very similar to the trick we use in  `LightningContextElement.Provider` for context.
+`LightningElement.CustomElementConstructor` is a static getter that can be accessed by any Constructor extending `LightningElement`. This getter can rely on the `this` value, which points to the sub class. This can be used in a Map to link the LWC to the Custom Element. This is very similar to the trick we use in  `LightningContextElement.Provider` for context.
 
 As a consequence of this change, the existing experimental API can be removed.
 

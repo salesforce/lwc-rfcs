@@ -14,7 +14,7 @@ Facilitate the registration of LWC Constructor as Custom Elements.
 
 ## Motivation
 
-As today, the way to generate a qualifying Custom Element from a LWC Constructor, is via an experimental API: `buildCustomElementConstructor()`. Since this is a primary use case for LWC, we want to make it more ergonomic, and simpler. Additionally, the experimental API allow you to generate more than one Custom Element per LWC Constructors, which does not align with the web components semantics.
+As of today, the way to generate a qualifying Custom Element from a LWC Constructor, is via an experimental API: `buildCustomElementConstructor()`. Since this is a primary use case for LWC, we want to make it more ergonomic, and simpler. Additionally, the experimental API allow you to generate more than one Custom Element per LWC Constructors, which does not align with the web components semantics.
 
 ## Goals
 
@@ -23,7 +23,7 @@ As today, the way to generate a qualifying Custom Element from a LWC Constructor
 
 ## Proposal
 
-This proposal provides a high-level API (an abstraction layer) for authors to access the custom element associate to a LWC Constructor:
+This proposal provides a high-level API (an abstraction layer) for authors to access the custom element associated to a LWC Constructor:
 
 ```js
 import XFoo from 'x/foo';

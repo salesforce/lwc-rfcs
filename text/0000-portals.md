@@ -40,42 +40,54 @@ One non-trivial example of such usage:
       <div id="tab1-modals"></div>
 
       <div>
-         <x-dialog lwc:portal="global-modals">Global Modal</x-foo>
-         <x-dialog lwc:portal="tab1-modals">Scoped Modal</x-foo>
+         <x-dialog global>Global Modal</x-foo>
+         <x-dialog>Scoped Modal</x-foo>
       </div>  
     </div>  
     <div id="tab-2">
       <div id="tab2-modals"></div>
 
       <div>
-         <x-dialog lwc:portal="global-modals">Global Modal</x-foo>
-         <x-dialog lwc:portal="tab2-modals">Scoped Modal</x-foo>
+         <x-dialog global>Global Modal</x-foo>
+         <x-dialog>Scoped Modal</x-foo>
       </div>  
     </div>  
   </div>
 </body>
 ```
-since we wouldn't want for a user to specify the portal each and every time one would use a dialog, more realistically -- `<x-dialog>` would have a default behaviour based on the `@Context`, which can provide whether scoping is enabled or not, the name of the scoped portal and the name of the global portal. This dynamic choice would indicate that support for dynamically specifying the portal may be needed.
+where `x-dialog`'s body is
+```
+<template>
+  <template lwc:portal={portalName}>
+    <section role="dialog" ...>
+    ...
+    <slot>
+    </slot>
+    ...
+    <slot name="footer">
+    </slot>
+    </section>
+  </template>
+</template>
+```
 
 ## Detailed design
 
 (not an actual detailed design, just adding some possible requirements)
 
-- If a custom element has `lwc:portal` attribute on it, and its value is an existing global id, instead of being inserted at its natural position in the template, the element would be inserted in the element with the defined global id.
+- If a `<template>` element has `lwc:portal` attribute on it, and its value is an existing global id, instead of being inserted at its natural position in the template, the element would be inserted in the element with the defined global id inside a custom element `<portal-target>`.
 - When an element's destination portal doesn't exist, but later is inserted in the DOM, any elements that have already rendered stay in their original location, as if the portal doesn't exist.
 - When the host element is disconnected, the portalled element should also be disconnected. 
-- The portalled component should still be `@Context` aware 
-- The portalled element should only be allowd at the top root of the template, this way any CSS issues are avoided
-- Any CSS defined should apply to the content of the portalled element
-- An element can't portal to itself (`lwc:portal` matches the `id`)
+- There can be only one top-root `<template>` with `lwc:portal` defined (basically can only have `<template><template lwc:portal>...</template></template>` in a component. 
+- CSS defined does not apply to the portalled content
+- Events from portalled content don't bubble back up to the original component.
+- An element can't portal to itself (`lwc:portal` matches the `id`) or to content inside it.
 
 
 ## Drawbacks
 
 - new API
 - additional complexity in LWC
-- more complexity around event propagation
-- issues with CSS unless the portalled element is forced to be at the top root of the template
 
 ## Security
 
@@ -93,7 +105,7 @@ existing stacking context. It's unlikely that proposal would support any kind of
 ## Adoption strategy
 
 It's not a breaking change, but it does introduce new API, adoption would initially be from component libraries with
-support for modals and popups.
+support for modals/dialogs/prompts and popups.
 
 ## How we teach this
 
@@ -101,10 +113,9 @@ This would allow implementation of components that can ignore the current stacki
 
 ## Unresolved questions
 
-1. How would `querySelector` work ?
+1. How would `this.template.querySelector` work ?
 2. Is the definiton of the portal immutable (can you change its name, what if it gets removed?)
 3. Can the destional portal be changed ?
 4. What if the portal doesn't exist
 5. What if there are more than 1 portal definition with the same name
 6. Should there be implicit/reserved portals ? (eg. `body` which always implies the `<body>` element of the document) 
-7. Should the events bubble out of the portalled component to the host element ?

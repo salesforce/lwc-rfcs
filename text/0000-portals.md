@@ -56,7 +56,7 @@ One non-trivial example of such usage:
 </body>
 ```
 where `x-dialog`'s body is
-```
+```html
 <template>
   <template lwc:portal={portalName}>
     <section role="dialog" ...>

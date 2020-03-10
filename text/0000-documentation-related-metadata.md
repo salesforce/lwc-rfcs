@@ -10,9 +10,10 @@ pr: (leave this empty until the PR is created)
 
 ## Summary
 
-Component authors need a way to provide documentation-related metadata— metadata that is only useful for documentation purposes and not runtime behavior. This is information such as component categorization, and it usually takes the format of key-value pairs.
+Component authors need a way to provide documentation-related metadata-- metadata that is only useful for documentation purposes and not runtime behavior. This includes information like component categorization. This metadata is usually comprised of key-value pairs and will be put in the documentation markdown file, `docs/module.md`.
 
 ## Basic example
+Example documentation markdown file:
 
 ```markdown
 ---
@@ -25,15 +26,15 @@ descriptive documentation...
 
 ## Motivation
 
-As part of our path towards allowing customers to add documentation for their modules, there's a need for customers to be able to add documentation-related metadata that will be useful for tooling and documentation purposes. For example, component categories and experiences are displayed in the Component Library documentation website and used for filtering.
+As part of our path towards allowing customers to add documentation for their modules, there's a need for customers to be able to add documentation-related metadata. This metadata will be useful for tooling and documentation purposes. For example, component categories and experiences are displayed in the Component Library documentation website and used for filtering.
 
 In addition, for Salesforce-authored modules there's a need to put component authors in control of this metadata. Currently a hardcoded list of metadata is maintained for a hardcoded list of components, which is a roadblock for teams creating new components or wishing to update the values.
 
-There needs to be a standard way to specify certain documentation-related key-value pairs that balances component-author ownership with 
+There needs to be a standard way to specify certain documentation-related key-value pairs that balances component-author ownership with a standard representation. 
 
 ## Detailed design
 
-Key-value pairs will be placed as [frontmatter](https://github.com/jonschlinkert/gray-matter#what-does-this-do) (in YAML format) in the module markdown file that lives under __docs__. For example, this could be the content for `input/__docs__/input.md`:
+Key-value pairs will be placed as [frontmatter](https://github.com/jonschlinkert/gray-matter#what-does-this-do) (in YAML format) in the module markdown file that lives under `__docs__`. For example, this could be the content for `input/__docs__/input.md`:
 
 ```markdown
 ---
@@ -48,18 +49,51 @@ descriptive documentation...
 
 The following information can be specified in the frontmatter:
 
-* __category__  `string`
+* __category__  `string` \
     The main category for the component. Only one may be specified. Salesforce will maintain a list of recognized categories in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library](https://developer.salesforce.com/docs/component-library/overview/components) for other ways this information can be used.
-* __experience__  `string[]`
+* __experience__  `string[]` \
     One or more Salesforce experiences that the component works in. Salesforce will maintain a list of recognized categories in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library](https://developer.salesforce.com/docs/component-library/overview/components) for other ways this information can be used.
-* __isSubComponent__  `boolean`
+* __isSubComponent__  `boolean` \
     This denotes that the component is only intended for use inside of another component, for example lightning-breadcrumb is only used inside of lightning-breadcrumbs. The Component Library may use this information to automatically cross-link pages or provide [component grouping](https://gus.lightning.force.com/lightning/r/a07B0000006HrUNIA0/view).
-* __deprecated__  `boolean`
+* __deprecated__  `boolean` \
     This does not impact runtime behavior at all. The Component Library may use this information to provide filtering capabilities or special UX treatment. Is there another value that we can use for this already (in js-meta.xml)? Does it make more sense to use the @deprecated tag from JSDoc? Also, should we have another field for the replacement component?
+
+#### Recognized Categories
+
+The following category values will be documented as recognized by Salesforce:
+
+* Analytics
+* API
+* Buttons
+* Data Entry
+* Displaying Data
+* Feed
+* Files
+* Forms
+* Layout
+* Logic
+* Messaging
+* Navigation
+* Process/Workflow
+* Service
+* Visual
+
+#### Recognized Experiences
+
+The following experience values will be documented as recognized by Salesforce:
+
+* All
+* Communities
+* Lightning
+* Mobile
+* Lightning Out
+* Standalone
+* Snapins
+
 
 ### Parsing
 
-Please note the following implementation is already in place, but is included here for completion. Also now is a good time to address any concerns before opening up usage on the platform.
+_Please note the following implementation is already in place, but is included here for completion. Also now is a good time to address any concerns before opening up usage on the platform._
 
 The frontmatter will be parsed by the platform compiler using [greymatter](https://github.com/jonschlinkert/gray-matter) and included in the documentation section of the compiler output:
 
@@ -67,7 +101,7 @@ The frontmatter will be parsed by the platform compiler using [greymatter](https
 export interface PlatformBundleDoc {
     classDescription?: string;
     html?: string;
-    *metadata?: DocumentationMetadata;*
+    metadata?: DocumentationMetadata;
 }
 
 export interface DocumentationMetadata {
@@ -89,25 +123,15 @@ Another downside of being agnostic (and not whitelisting/validating the allowed 
 
 ## Drawbacks
 
-
-Why should we *not* do this? Please consider:
-
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people Lightning Web Components
-- integration of this feature with other existing and planned features
-- cost of migrating existing Lightning Web Components applications (is it a breaking change?)
-
-There are tradeoffs to choosing any path. Attempt to identify them here.
-
 ## Alternatives
 
-- While this information could continue to live apart from the module bundle as it is today, it is not a sustainable approach and does not work for the platform.
+- While this information could continue to live apart from the module bundle as it is today, that's not a sustainable approach and does not work for the platform.
+- This data could be written as custom JSDoc tags in the js file, but those tags would be non-standard. This information feels better suited to the documentation file.
 
 ### Rejected Fields
 
-* __image__
-    The Component Library uses images for components on the home page. The map from component to image is currently hardcoded. This field is rejected because there's a good chance these images are going away and they pose many complications.
+* __image__ \
+    The Component Library uses images for components on the home page. The map from component to image is currently hardcoded. If we want to allow the platform to specify similar images then a field here is one solution, but it poses many complications for the implementation details. Also such images are of limited use in other contexts outside of the Component Library, which may not always use such images even itself.
 
 ## Adoption strategy
 
@@ -124,16 +148,8 @@ In general, every developer creating public components will need to make sure of
 3. The component has one or more examples.
 4. The component has JSDoc on public members.
 
-Separate RFCs will be filed for opening up other related documentation features to the platform such as examples, and supporting events, non-component modules, and more.
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing Lightning Web Components patterns?
-
-Would the acceptance of this proposal mean the Lightning Web Components documentation must be
-re-organized or altered? Does it change how Lightning Web Components is taught to new developers
-at any level?
-
-How should this feature be taught to existing Lightning Web Components developers?
+Separate RFCs will be filed for opening up other related documentation features to the platform such as examples, events, non-component modules, and more.
 
 # Unresolved questions
 
-As mentioned above, is this the correct format to signify deprecation?
+As mentioned above, is this really the correct format to signify deprecation?

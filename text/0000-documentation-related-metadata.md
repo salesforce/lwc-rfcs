@@ -92,7 +92,6 @@ The following experience values will be documented as recognized by Salesforce:
 * Standalone
 * Snapins
 
-
 ### Parsing
 
 _Please note the following implementation is already in place, but is included here for completion. That said, now is a good time to address any concerns before opening up usage on the platform._
@@ -113,7 +112,7 @@ export interface DocumentationMetadata {
 
 In Aura this information will be placed on the ModuleDefinition as a `Map<String, Object>`.
 
-#### Value Agnostic
+#### Field Agnostic
 
 The platform-compiler will be agnostic to the fields and their meanings. Correct YAML grammar will be enforced, but downstream code such as the Component Library will be responsible for determining which fields are applicable and which values may need further processing, such as splitting the experience field on commas.
 

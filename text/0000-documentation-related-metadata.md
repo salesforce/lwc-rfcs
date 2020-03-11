@@ -10,9 +10,9 @@ pr: (leave this empty until the PR is created)
 
 ## Summary
 
-Component authors need a way to provide documentation-related metadata-- metadata that is only useful for documentation purposes and not runtime behavior. This includes information like component categorization and supported Salesforce experiences.
+Component authors need a way to provide documentation-related metadata-- metadata that is specifically useful for documentation purposes and not runtime behavior. This includes information like component categorization and supported Salesforce experiences.
 
-This metadata is usually comprised of key-value pairs and will be put in the documentation markdown file, `docs/module.md`.
+This metadata is comprised of key-value pairs and will be put in the documentation markdown file, `docs/module.md`.
 
 ## Basic example
 Example documentation markdown file with documentation metadata:
@@ -28,13 +28,13 @@ descriptive documentation...
 
 ## Motivation
 
-As part of our path towards allowing customers to add documentation for their modules, there's a need for customers to be able to add documentation-related metadata. This metadata will be useful for tooling and documentation purposes. For example, component categories and experiences are displayed in the Component Library documentation website and used for filtering. This metadata could also be used for linting in the LSPs.
+As part of our path towards allowing customers to add documentation for their modules, customers need to be able to add documentation-related metadata. This metadata will be useful for tooling and reference materials. For example, component categories and experiences are displayed in the Component Library documentation website and also used for filtering lists. This metadata can also be used for linting in the LSPs.
 
-In addition, for existing Salesforce-authored modules there's a need to put component authors in control of this metadata. Currently a hardcoded list is maintained which is a roadblock for teams creating new components or wishing to update the values.
+In addition, for existing Salesforce-authored modules there's a need to put component authors in control of this metadata. Currently a hardcoded list is maintained by a single team which is a roadblock for other teams creating new components or wishing to update the values.
 
 ## Detailed design
 
-Key-value pairs will be placed as [frontmatter](https://github.com/jonschlinkert/gray-matter#what-does-this-do) (in YAML format) in the module markdown file that lives under `__docs__`. For example, this could be the content for `input/__docs__/input.md`:
+Key-value pairs will be placed as [frontmatter](https://github.com/jonschlinkert/gray-matter#what-does-this-do) (in YAML format) in the module markdown file that lives under `__docs__` in the module bundle. For example, this could be the content for `input/__docs__/input.md`:
 
 ```markdown
 ---
@@ -58,7 +58,7 @@ The following keys will be recognized in the frontmatter:
 * __isSubComponent__  `boolean` \
     This denotes that the component is only intended for use inside of another component, for example `lightning-breadcrumb` is only used inside of `lightning-breadcrumbs`. The Component Library may use this information to automatically cross-link pages or provide [component grouping](https://gus.lightning.force.com/lightning/r/a07B0000006HrUNIA0/view) and this information could be used for linting.
 * __deprecated__  `boolean` \
-    This does not impact runtime behavior. The Component Library may use this information to provide filtering capabilities or special UX treatment. Is there an existing way deprecation is already specified? Does it make more sense to use the @deprecated tag from JSDoc? Also, should we have another field for the replacement component?
+    This does not impact runtime behavior. The Component Library may use this information to provide filtering capabilities or special UX treatment. Is there an existing way deprecation is already specified? Does it make more sense to use the `@deprecated` tag from JSDoc? Also, should we have another field for the replacement component?
 
 #### Recognized Categories
 
@@ -110,7 +110,7 @@ export interface DocumentationMetadata {
 }
 ```
 
-In Aura this information will be placed on the ModuleDefinition as a `Map<String, Object>`.
+In Aura this information will be placed on the ModuleDefinition as a `Map<String, String>`.
 
 #### Field Agnostic
 
@@ -121,8 +121,6 @@ The benefit of this approach is flexibility and reduced overhead on the platform
 The downside is that content-based errors (such as using an unrecognized category) won’t be caught until further downstream. This can be mitigated somewhat with linting.
 
 Another downside of being agnostic (and not validating the allowed fields) is that the future introduction of new fields may “conflict” with existing fields. That is, a component author could add any arbitrary field, even if Salesforce does not use or display that field, which could conflict with Salesforce’s use of that field name later. This should be rare, however, and since this data does not affect runtime behavior the impact is minimal. Customers will have time to make any necessary updates at their convenience.
-
-## Drawbacks
 
 ## Alternatives
 
@@ -136,7 +134,7 @@ Another downside of being agnostic (and not validating the allowed fields) is th
 
 ## Adoption strategy
 
-Currently we maintain a hardcoded list of categories and experiences for lightning base components. This information will be transferred to the individual source files and be maintained by the component owners going forward. 
+Currently we maintain a hardcoded list of categories and experiences for lightning base components and other exposed components. This information will be transferred to the individual component bundles and be maintained by the component owners going forward. 
 
 This is also part of the effort to enable platform developers to create documentation for their components, in which we should allow them to provide the same categorization information as we do for Salesforce components.
 

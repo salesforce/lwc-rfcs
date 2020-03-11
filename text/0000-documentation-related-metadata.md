@@ -28,7 +28,7 @@ descriptive documentation...
 
 ## Motivation
 
-As part of our path towards allowing customers to add documentation for their modules, customers need to be able to add documentation-related metadata. This metadata will be useful for tooling and reference materials. For example, component categories and experiences are displayed in the Component Library documentation website and also used for filtering lists. This metadata can also be used for linting in the LSPs.
+As part of our path towards enabling customers to document their modules, customers need to be able to add documentation-related metadata. This metadata will be useful for tooling and reference materials. For example, component categories and experiences are displayed in the Component Library documentation website and also used for filtering lists. This metadata can also be used for linting in the LSPs.
 
 In addition, for existing Salesforce-authored modules there's a need to put component authors in control of this metadata. Currently a hardcoded list is maintained by a single team which is a roadblock for other teams creating new components or wishing to update the values.
 

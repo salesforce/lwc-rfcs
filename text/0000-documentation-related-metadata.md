@@ -1,9 +1,11 @@
 ---
 title: Documentation-related Metadata
 status: DRAFTED
-created_at: 2020-03-10
-updated_at: 2020-03-10
-pr: (leave this empty until the PR is created)
+created_at: 2020-03-11
+updated_at: 2020-03-11
+rfc: https://github.com/salesforce/lwc-rfcs/pull/26
+champion: Nathan McWilliams (@mysticflute) | Lightning Tooling Team
+implementation: 226-228
 ---
 
 # Documentation-related Metadata

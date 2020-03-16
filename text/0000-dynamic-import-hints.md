@@ -12,7 +12,12 @@ updated_at: 2020-03-16
 This RFC suggests authoring syntax for specifying dynamic import hints and describes its metadata shape.
 
 ## Motivation
-The Hints in dynamic components allows component authors to declare the hint context by parameterizing dynamic imports. The values from the hints can be used to optimize dependency resolution and pre-fetching.
+Using hints allow component authors to declare the component preload context by parameterizing dynamic imports. The values from the hints can be used to optimize dependency resolution and pre-fetching.
+
+## Hint Invariants
+* hint values must be globally available and resolvable on the server side 
+* hint values must be statically verifiable
+* hint values must be finite and enumerable (ex: no Math.random())
 
 ## Detailed design
 
@@ -28,7 +33,7 @@ Hint comment ex:
 /* @salesforce/client/formFactor=Small */
 ```
 
-Dynamic Import with Hint ex:
+Dynamic import with a hint ex:
 ```js
 export async function example1() {
     loadedModule = await import("lightning-foo"/* @salesforce/client/formFactor=Small */);
@@ -38,16 +43,12 @@ export async function example1() {
 ### Reasons
 The hint syntax in a form of a comment was selected for the following reasons:
 * complies with ‘what you write is what you see’ concept - an originally authored code remains untouched
-* eliminates any additional code transformations at compiler time
+* eliminates any additional code transformations at compile time
 * eliminates any additional processing during module resolution at runtime (to strip out or pre-process module name)
 
-### Hint Invariants
-* hint values must be globally available and resolvable on the server side 
-* hint values must be statically verifiable
-* hint values must be finite and enumerable (ex: no Math.random())
 
 ### Dynamic Import Metadata
-The proposed metadata format will include a dynamically imported component name and a hint object, which in-itself contains the original query and a hint value. A hint value will be an array of objects with raw hint query, expected hint condition, and hint resource information.
+The proposed metadata format will include dynamically imported component name and a hint object, which in-itself contains the original query and a hint value. A hint value will be an array of objects with raw hint query, expected hint condition, and hint resource information.
 
 Proposed Shape
 ```js
@@ -72,8 +73,8 @@ Proposed Shape
 
 ## Other Options Considered
 
-### Hints as query parameters
-The authoring hints syntax is a query paramter to the dynamic import value:
+### Hints as a query attached to the component name
+The hint syntax is a parameterized query appended to the component name:
 ```js
 export async function example1() {
     loadedModule = await import("lightning-foo*?*@salesforce/client/formFactor=Small");
@@ -87,10 +88,10 @@ export async function example1() {
 *Cons:*
 
 * requires transform to remove the query 
-* Using a query string syntax to discover modules to prefetch doesn't align with the way standard import() works. JavaScript VM caches modules by URL (including the query string), this means that lightning-foo lightning-foo?1 and lightning-foo?2 are 3 different JavaScript module instances. 
+* using a query string syntax to discover modules to prefetch doesn't align with the way standard import() works. JavaScript VM caches modules by URL (including the query string), this means that lightning-foo lightning-foo?1 and lightning-foo?2 are 3 different JavaScript module instances. 
 
-### Hints as proprietery function
-The authoring hints syntax is expressed via a proprietery lwc function, where the first parameter is a component name and the second parameter is a query object - hintImport(cmpName, queryObj). At compile time, the function will be transformed into a regular import without a string. Note, the hint is consumed by metadata parser only, which is traversed outside of the compilation sequence on the original source. Therefore, it is safe to have a ‘throw-away’ wrapper that will be eliminated at compiler time.  
+### Hints via proprietary LWC function
+The hint syntax is expressed via a proprietary lwc function, where the first parameter is a component name and the second parameter is a query object - hintImport(cmpName, queryObj). At compile time, the function will be transformed into a regular import without a string. Note, the hint is consumed by metadata parser only, which is traversed outside of the compilation sequence on the original source. Therefore, it is safe to have a ‘throw-away’ wrapper that will be eliminated at compiler time.  
 
 ```js
 import formFactor from '@salesforce/client/formFactor';

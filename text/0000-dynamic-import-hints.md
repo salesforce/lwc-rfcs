@@ -69,3 +69,59 @@ Proposed Shape
   }]
 }
 ```
+
+## Other Options Considered
+
+### Hints as query parameters
+The authoring hints syntax is a query paramter to the dynamic import value:
+```js
+export async function example1() {
+    loadedModule = await import("lightning-foo*?*@salesforce/client/formFactor=Small");
+}
+```
+
+*Pros:*
+
+* intuitive syntax 
+
+*Cons:*
+
+* requires transform to remove the query 
+* Using a query string syntax to discover modules to prefetch doesn't align with the way standard import() works. JavaScript VM caches modules by URL (including the query string), this means that lightning-foo lightning-foo?1 and lightning-foo?2 are 3 different JavaScript module instances. 
+
+### Hints as proprietery function
+The authoring hints syntax is expressed via a proprietery lwc function, where the first parameter is a component name and the second parameter is a query object - hintImport(cmpName, queryObj). At compile time, the function will be transformed into a regular import without a string. Note, the hint is consumed by metadata parser only, which is traversed outside of the compilation sequence on the original source. Therefore, it is safe to have a ‘throw-away’ wrapper that will be eliminated at compiler time.  
+
+```js
+import formFactor from '@salesforce/client/formFactor';
+import permName from '@salesforce/customPermission/PermName';
+
+export async function example1() {
+    loadedModule = await hintImport(
+        "lightning-foo",
+        {
+            query: "{0} IS Small AND {1} NOT true",
+            fields: [{
+                resource: formFactor,
+                value: "Small",
+            }, {
+                resource: permName,
+                value: true
+            }]
+        }
+    );
+}
+```
+
+*Pros:*
+
+* dedicated syntax
+* full control of the hint shape
+* having to explicitly define a resource reference will allow for ref integrity support if required
+
+*Cons:*
+
+* requires an additional transform
+* requires knowledge of syntax existence
+* maintanance burden
+

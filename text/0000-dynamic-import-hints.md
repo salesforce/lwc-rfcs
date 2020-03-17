@@ -1,9 +1,11 @@
 ---
 title: Dynamic Import Hints and Its Metadata
-status: ACTIVE
-
+status: DRAFTED
 created_at: 2020-03-16
 updated_at: 2020-03-16
+rfc: https://github.com/salesforce/lwc-rfcs/pull/27
+champion: Aliaksandr Papko (@apapko) | LWC Team
+implementation: 228
 ---
 
 # Hints Authoring Syntax and Its Metadata

@@ -8,7 +8,7 @@ champion: Aliaksandr Papko (@apapko) | LWC Team
 implementation: 228
 ---
 
-# Hints Authoring Syntax and Its Metadata
+# Hints Syntax and Its Metadata
 
 ## Summary
 This RFC suggests authoring syntax for specifying dynamic import hints and describes its metadata shape.

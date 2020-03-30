@@ -40,7 +40,7 @@ Using hints allows component authors to specify a condition on which a dynamic i
 ## Detailed Design
 
 ### Grammar
-There will be grammar restriction in place for hints so that the compiler can parse  component modules, gather metadata and provide that as part of compilation result.
+There will be grammar restrictions in place for hints so that the compiler can parse component modules, gather metadata and provide that as part of the compilation result.
 
 #### Hint Syntax
 A hint is expressed as a comment inside a dynamic import expression. The hint syntax is either a line comment or a block comment with a *key* and *value* pair. The key and value will be separated by a colon(`:`) and delimited using double quotes(`"`).
@@ -141,7 +141,7 @@ Dynamic imports hint metadata gathering happens during component compilation. An
 
 Additional validation and post processing of the gathered metadata is out of the scope of this RFC. That logic will be the responsibility of the application framework that consumes the metadata.
 
-Similarly, any design time validations of the hint grammar should be handled by linting code. For example, on salesforce platform, allowed hint keys might be restricted to only `@salesforce` scoped specifiers. The hint values will be validated based on the relevant value for the specifier. An ESLint rule will enforce this restriction via the [eslint-plugin-lwc](https://github.com/salesforce/eslint-plugin-lwc).
+Similarly, static analysis of dynamic import hints can be handled by linting module code. For example, on salesforce platform, allowed hint keys might be restricted to only `@salesforce` scoped specifiers. The hint values will be validated based on the relevant value for the specifier. An ESLint rule will enforce this restriction via the [eslint-plugin-lwc](https://github.com/salesforce/eslint-plugin-lwc).
 
 ### Reasons
 The hint syntax in the form of a comment was selected for the following reasons:

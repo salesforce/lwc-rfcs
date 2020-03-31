@@ -34,13 +34,12 @@ Using hints allows component authors to specify a condition on which a dynamic i
 
 ## Hint Invariants
 * Hint key and value are string literals
-* Hint key and value must be statically verifiable i.e. no curly braces to implicitly refer to a variable and such
 * Hints do not influence the outcome of the compilation phase. It only produces additional metadata for the application framework to consume.
 
 ## Detailed Design
 
 ### Grammar
-There will be grammar restrictions in place for hints so that the compiler can parse component modules, gather metadata and provide that as part of the compilation result.
+This section defines the grammar to be followed for hints so that the compiler can parse component modules, gather hints metadata and provide that as part of the compilation result.
 
 #### Hint Syntax
 A hint is expressed as a comment inside a dynamic import expression. The hint syntax is either a line comment or a block comment with a *key* and *value* pair. The key and value will be separated by a colon(`:`) and delimited using double quotes(`"`).
@@ -71,23 +70,20 @@ export async function loadFoo() {
 #### Static Semantics
 * Both key and value have to be string literal
 * Is case sensitive
-* Key and value have to be delimited with a double quote to be explicit about the literal value
+* Key and value have to be delimited with a double quote(`"`) to be explicit about the literal value. Single quote(`'`) is not considered a valid delimiter.
 * Spaces before and after the colon(`:`) is optional
 * Hint phrase can have leading and trailing spaces
 
 ##### Hint Key:
-* First character is an alphabet, can be uppercase or lower case. Can also start with `@` character
-* Cannot contain any special characters except for underscore(`_`), hyphen(`-`), dot(`.`) and forward slash(`/`)
-* Begins and ends with a double quote(`"`)
-* Cannot contain spaces, cannot be delimited by a single quote(`'`)
+* Cannot contain spaces(to allow usage as object keys)
+* Cannot combine multiple string literals using operators(i.e `"KEY1" & "KEY2": "true"` will not qualify as a valid hint).
 
 ##### Hint Value:
-* Can contain alphanumeric characters
-* Can contain space, underscore(`_`), hyphen(`-`), at sign(`@`), forward slash(`/`)
-* Cannot combine multiple values using operators(i.e `"KEY": "LARGE"&"SMALL"` or `"KEY": "LARGE && SMALL"` will not qualify as a valid hint)
+* Can contain space(s)
+* Cannot combine multiple string literals using operators(i.e `"KEY": "LARGE" & "SMALL"` will not qualify as a valid hint).
 
-##### Mutiple Hints:
-When multiple hint comments are specifed for a single dynamic import statement, only the fist hint is considered.
+##### Multiple Hints:
+When multiple hint comments are specified for a single dynamic import statement, only the first hint is considered.
 Example:
 ```js
 import("c-bar-mobile"
@@ -99,6 +95,7 @@ In the above example, only the `formFactor` hint is considered.
 
 #### Semantics
 The [_ModuleSpecifier_](http://www.ecma-international.org/ecma-262/6.0/index.html#sec-imports) of the import statement should be a string literal. The compiler cannot analyze data about a module name that will be discovered or learned at runtime. For example, in the following case no hint metadata will be gathered:
+
 ```js
 const bar = '/modules/my-module.js';
 function foo() {
@@ -125,11 +122,12 @@ import("c-bar-mobile"/* "KEY": "1"*/);
 Invalid
 ```js
 import("c-bar-mobile"/* "KEY SUBKEY": "SMALL"*/);
-import("c-bar-mobile"/* "😀": "1"*/);
 import("c-bar-mobile"/* @salesforce/client/formFactor = SMALL*/);
 
-import("c-bar-mobile" /* "@salesforce/client/formFactor": "SMALL && LARGE"*/);
+// Operators
+import("c-bar-mobile" /* "@salesforce/client/formFactor": "SMALL" && "LARGE"*/);
 import("c-bar-mobile" /* "@salesforce/client/formFactor": "SMALL" && "@salesforce/client/formFactor": "LARGE"*/);
+import("c-bar-mobile" /* "@salesforce/userPermission/ViewSetup" && "@salesforce/userPermission/EditSetup": "true"*/);
 
 // Dynamic module name specifier
 const bar = 'module-name';
@@ -137,11 +135,11 @@ import(bar/* "@salesforce/client/formFactor": "SMALL" */)
 ```
 
 #### Separation of Concern
-Dynamic imports hint metadata gathering happens during component compilation. An invariant of this process is that the metadata collection will **not** fail due to a bad hint. This could be due to a hint not following specified grammar or not using a well understood hint value.
+Dynamic imports hint metadata gathering happens during component compilation. An invariant of this process is that the metadata collection will **not** fail due to a bad hint. This could be due to a hint not following specified grammar.
 
 Additional validation and post processing of the gathered metadata is out of the scope of this RFC. That logic will be the responsibility of the application framework that consumes the metadata.
 
-Similarly, static analysis of dynamic import hints can be handled by linting module code. For example, on salesforce platform, allowed hint keys might be restricted to only `@salesforce` scoped specifiers. The hint values will be validated based on the relevant value for the specifier. An ESLint rule will enforce this restriction via the [eslint-plugin-lwc](https://github.com/salesforce/eslint-plugin-lwc).
+Similarly, static analysis of dynamic import hints can be handled by linting module code. For example, on the salesforce platform, allowed hint keys might be restricted to only `@salesforce` scoped specifiers. The hint values will be validated based on the relevant value for the specifier. An ESLint rule will enforce this restriction via the [eslint-plugin-lwc](https://github.com/salesforce/eslint-plugin-lwc).
 
 ### Reasons
 The hint syntax in the form of a comment was selected for the following reasons:
@@ -163,7 +161,7 @@ export interface SourceLocation {
 }
 
 export interface DynamicImportHint {
-    rawValue: string; // Trimmed hint phrase
+    rawValue: string; // Leading and trailing spaces of hint phrase trimmed
     hintKey: string;
     hintValue: string;
     location: SourceLocation;
@@ -245,7 +243,7 @@ export async function example1() {
 
 * Requires an additional transform
 * Requires knowledge of syntax existence
-* Maintanance burden
+* Maintenance burden
 
 ## Future work
 * Support for multiple hints for a dynamic import statement, with usage of operators to combine hints and hint values

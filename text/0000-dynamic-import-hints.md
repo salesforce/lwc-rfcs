@@ -39,7 +39,7 @@ Using hints allows component authors to specify a condition on which a dynamic i
 ## Detailed Design
 
 ### Grammar
-This section defines the grammar to be followed for hints so that the compiler can parse component modules, gather hints metadata and provide that as part of the compilation result.
+This section defines the grammar to be followed for expressing hints. The grammar establishes a contract between the component and the compiler to facilitate hint recognition by the compiler, gathering the metadata and providing that as part of the compilation result.
 
 #### Hint Syntax
 A hint is expressed as a comment inside a dynamic import expression. The hint syntax is either a line comment or a block comment with a *key* and *value* pair. The key and value will be separated by a colon(`:`) and delimited using double quotes(`"`).

@@ -1,8 +1,8 @@
 ---
 title: Dynamic Import Hints and Its Metadata
-status: DRAFTED
+status: APPROVED
 created_at: 2020-03-16
-updated_at: 2020-03-22
+updated_at: 2020-03-31
 rfc: https://github.com/salesforce/lwc-rfcs/pull/27
 champion: Aliaksandr Papko (@apapko) | LWC Team
 implementation: https://git.soma.salesforce.com/lwc/lwc-api/pull/42 & https://git.soma.salesforce.com/lwc/lwc-platform/pull/361

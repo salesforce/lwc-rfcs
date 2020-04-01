@@ -124,11 +124,6 @@ Invalid
 import("c-bar-mobile"/* "KEY SUBKEY": "SMALL"*/);
 import("c-bar-mobile"/* @salesforce/client/formFactor = SMALL*/);
 
-// Operators
-import("c-bar-mobile" /* "@salesforce/client/formFactor": "SMALL" && "LARGE"*/);
-import("c-bar-mobile" /* "@salesforce/client/formFactor": "SMALL" && "@salesforce/client/formFactor": "LARGE"*/);
-import("c-bar-mobile" /* "@salesforce/userPermission/ViewSetup" && "@salesforce/userPermission/EditSetup": "true"*/);
-
 // Dynamic module name specifier
 const bar = 'module-name';
 import(bar/* "@salesforce/client/formFactor": "SMALL" */)

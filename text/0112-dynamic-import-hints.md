@@ -1,6 +1,6 @@
 ---
 title: Dynamic Import Hints and Its Metadata
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2020-03-16
 updated_at: 2020-03-31
 rfc: https://github.com/salesforce/lwc-rfcs/pull/27
@@ -157,14 +157,15 @@ export interface SourceLocation {
 
 export interface DynamicImportHint {
     rawValue: string; // Leading and trailing spaces of hint phrase trimmed
-    hintKey: string;
-    hintValue: string;
+    key: string;
+    value: string;
     location: SourceLocation;
 }
 
 export interface DynamicImportMetadata {
     moduleName: string;
-    file: string;
+    moduleNameType: 'string' | 'unresolved';
+    location: SourceLocation;
     hints: DynamicImportHint[];
 }
 ```
@@ -174,12 +175,12 @@ Example:
 {
     dynamicImports: [{
         moduleName: 'lightning-foo',
-        file: 'foo.js',
+        location: {...}, // Location of the entire import statement
         hints: [{
             rawValue: '"@salesforce/client/formFactor": "SMALL"',
-            hintKey: '@salesforce/client/formFactor',
-            location: {...},
-            hintValue: 'SMALL',
+            key: '@salesforce/client/formFactor',
+            location: {...}, // Location of the hint comment
+            value: 'SMALL',
         }]
     }]
 }

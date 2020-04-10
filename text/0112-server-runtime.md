@@ -57,7 +57,7 @@ export default class App extends LightningElement {}
 **`client.js`:**
 
 ```js
-import { createElement } from "lwc"; // Aliased to @lwc/engine-dom
+import { createElement } from "@lwc/engine-dom";
 import App from "c/app";
 
 const app = createElement("c-app", { is: App });
@@ -67,7 +67,7 @@ document.body.appendChild(app);
 **`server.js`:**
 
 ```js
-import { createElement, renderToString } from "lwc"; // Aliased to @lwc/engine-server
+import { createElement, renderToString } from "@lwc/engine-server";
 import App from "c/app";
 
 const app = createElement("c-app", { is: App });
@@ -102,19 +102,24 @@ The DOM APIs used by the rendered engine are injected by the runtime depending o
 This package exposes the following APIs:
 
 - `createElement` + reaction hooks
-- `buildCustomElementConstructor`
 - `isNodeFromTemplate`
 
 This package injects the native DOM APIs into the `@lwc/engine-core` rendering engine.
 
 ### `@lwc/engine-server`
 
-This package exposes the following APIs:
+This package exposes the following API:
 
-- `createElement(name: string, options: { is: typeof LightningElement }): ServerHTMLElement`: This method creates a new LWC component tree. It follows the same signature as the `createElement` API from `@lwc/engine-dom`. Instead of returning a native `HTMLElement`, this method returns a `ServerHTMLElement` with the public properties, aria reflected properties and HTML global attributed.
-- `renderToString(element: ServerHTMLElement): string`: This method synchronously serializes an LWC component tree to HTML. It accepts a single parameter, a `ServerHTMLElement` returned by `createElement` and returns the serialized string.
+- `renderComponent(name: string, ctor: typeof LightningElement, props?: Record<string, any>): string`: This method creates an renders an LWC component synchronously to a string.
 
-This package injects mock DOM APIs in the `@lwc/engine-core` rendering engine. Those DOM APIs produce a lightweight DOM structure. This structure can then be serialized into a string containing the HTML serialization of the element's descendants. As described in the Appendix, this package is also in charge of attaching on the global object a mock `CustomEvent`.
+When a component is rendered using `renderComponent`, the following restriction applies: 
+  - each created component will execute the following life-cycle hooks once `constructor`, `connectedCallback` and `render`
+  - properties and methods annotated with `@wire` will not be invoked
+  - component reactivity is disabled
+
+Another API might be created to accommodate wire adapter invocation and asynchronous data fetching on the server.
+
+This package injects mock DOM APIs in the `@lwc/engine-core` rendering engine. Those DOM APIs produce a lightweight DOM structure. This structure can then be serialized into a string containing the HTML serialization of the element's descendants. As described in the Appendix, this package is also in charge of attaching on the global object a mock `CustomEvent` and only implements a restricted subset of the event dispatching algorithm on the server (no bubbling, no event retargeting).
 
 ## Drawbacks
 
@@ -132,21 +137,14 @@ There are multiple drawbacks with this approach:
 - Performance: The engine only relies on a limited set of well-known APIs, leveraging a full DOM implementation for SSR would greatly reduce the SSR performance.
 - Predictability: By attaching the DOM interfaces on the global object, those APIs are not only exposed to the engine but also to the component author. Exposing such APIs to the component author might bring unexpected behavior when component code runs on the server.
 
-## Adoption strategy
-
-TBD
-
 ## How we teach this
 
-TBD
+This proposal breaks up the existing `@lwc/engine` package into multiple packages. Because of this APIs that used to be imported from `lwc` might not be present anymore. With this proposal, the `createElement` API will be moving to `@lwc/engine-dom`. This change constitutes a breaking change by itself, so we need to be careful how this change will be released. The good news is that `createElement` is considered as an experimental API and should only used to create the application root and to test components.
 
-## Unresolved questions
+Changing the application root creation consists in a one line change. Therefor it should be pretty straightforward updated as long as it is well documented. Updating all the usages of `createElement` in test will probably require more time. For testing purposes, the `lwc` module will be mapped to the `@lwc/engine-dom` instead of `@lwc/engine-core` for now. We will also add warning messages in the console to promulgate the new pattern. A codemod for test files can also be used rename the `lwc` import in the test files to `@lwc/engine-dom`.
 
-**How to load the right version of the engine when resolving the `lwc` identifier?**
 
-For example, when running in Node.js `lwc` might resolve to `@lwc/engine-server` for SSR purposes, but also to `@lwc/engine-dom` when running test via jest and jsdom.
-
-One way to solve this would be to import the platform-specific APIs from the appropriate module: `createElement` from `@lwc/engine-dom` and `createElement` and `renderToString` from `@lwc/engine-server`. Platform-agnostic APIs should be imported from `lwc` (which becomes an alias to `@lwc/engine-core`).
+Updating the documentation for the newly added server only APIs should be enough.
 
 ---
 

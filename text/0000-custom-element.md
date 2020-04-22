@@ -50,7 +50,7 @@ Cons:
 
 `LightningElement.CustomElementConstructor` is a static getter that can be accessed by any Constructor extending `LightningElement`. This getter can rely on the `this` value, which points to the sub class. This can be used in a Map to link the LWC to the Custom Element. This is very similar to the trick we use in  `LightningContextElement.Provider` for context.
 
-As a consequence of this change, the existing experimental API can be removed.
+As a consequence of this change, the existing experimental API can be deprecated.
 
 ## Adoption strategy
 
@@ -59,7 +59,3 @@ This is a brand new feature, we just need to document it.
 ## How we teach this
 
 * The consumer aspect of it is very straight forward considering that they don't have to learn a new API, just a static field name in LWC Constructors.
-
-## Unresolved questions
-
-* How can users control the shadowRoot's mode?

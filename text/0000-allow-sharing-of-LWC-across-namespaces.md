@@ -102,7 +102,7 @@ __Note__ : isExposed flag has higher precedence over isShared flag.
 - Learning curve as we are introducing new flag.
 - Complex implementation as we have to set precedence logic in the code. 
 
-**Proposal #3** - Granual expose control 
+**Proposal #3** - Granular expose control 
 Add <exposed> tag to existing LightingComponentBundle file. This tag can contain list of namespaces where this components can be accessible. 
 
 
@@ -134,17 +134,22 @@ __Note__ : isExposed flag has higher precedence over shared flag.
 ##### Pros
 - No need to introduce new xml file at namespace level since we are using existing LightingComponentBundle file.
 - Honor isExposed flag.
-- Granual control as we can control sharing of individual LWC. 
+- Granular control as we can control sharing of individual LWC. 
 
 ##### Cons
 - Changing access for all namespace components involves changing all LWC bundle files. Too much of work for the developer.
 - Learning curve as we are introducing new flag.
 - Complex implementation as we have to set precedence logic in the code. 
 
-## Detailed design
+## High level design
 
-**TBD**
+In order to honor the sharing of LWC across namespaces, we will be doing  validation at difference stages viz. 
 
+- Compile Time Validation 
+- Pre run time validation (explained below)
+- Run Time Validation (cmp loading time)
+
+In Order to improve performance of Run time validation we will be adding additional Validation and caching the result. Run time Validator can leverage this info.
 
 
 ## Drawbacks

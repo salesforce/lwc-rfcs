@@ -102,7 +102,7 @@ There exist a few restrictions and ambiguities with the IDL for the config objec
 * every time that `adapter.update()` is invoked, a new config object will be provided as a first argument, no identity is preserved in this case.
 * `adapter.update()` must be invoked initially regardless of the value of the config. e.g.: `@wire(foo, { x: $foo })` will invoke the update even if `this.foo` resolves to `undefined` or was never set.
 * on any change to the values used to generate a wire configuration, `adapter.update()` will be called with the new config object, even if results in the same config values.
-* since now the underlying reactive tracking for wire configuration is using the same reactivity system as LWC, the wire protocol can’t track changes on a wire configuration that depends on class expandos.
+* the reactive tracking for wire configuration can’t track changes on a wire configuration that depends on component's instance "expandos", it only reacts to changes on class' declared fields.
 
 ### Context Provider for Wire Adapters
 

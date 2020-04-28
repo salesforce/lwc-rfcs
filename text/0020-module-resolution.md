@@ -276,9 +276,9 @@ In order to expose a module via npm package, it must be explicity declared in th
        }     
     ],
     "expose": [
-        "ui-foo",
-        "ui-bar",
-        "ltng-buzz",
+        "ui/foo",
+        "ui/bar",
+        "ltng/buzz",
     ]
 }
 ```

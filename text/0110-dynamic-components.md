@@ -163,15 +163,17 @@ The problem is though that maybe some of this dependencies are really heavy. Let
 </template>
 
 <script>
-import chatterDesktop from "lwc-chatter-desktop";
-import chatterPhone from "lwc-chatter-phone";
 import isPhone from "@salesforce/api/isPhone";
 
 export default class Chatter extends LightningElement {
   @track dynamicCtor;
 
-  connectedCallback() {
-    this.dynamicCtor = isPhone ? chatterPhone : chatterDesktop;
+async connectedCallback() {
+    if (isPhone) {
+      dynamicCtor = await import("lwc-chatter-mobile");
+    } else {
+      dynamicCtor = await import("lwc-chatter-desktop");
+    }
   }
 }
 </script>

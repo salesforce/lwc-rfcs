@@ -32,11 +32,11 @@ We will introduce new tag, **namespaceScope** in LightingComponentBundle.xml (**
 
 We will also introduced new xml file called NamespaceBundle.xml. This file is at namespace level. It will enlist namespaces where all the LWCs can be shared. This will allow sharing for LWCs to targeted namespaces. 
 
-For now we will honor isExposed flag and display error for in valid scenarios listed below. However, in the future we will completely rely on Scope tag. 
+For now we will honor isExposed flag and display error for in valid scenarios listed below. However, in the future we will completely rely on namespaceScope tag. 
 
 **Valid Cases**
 
-| Scope    | isExposed       | Comments                                                      |
+| namespaceScope    | isExposed       | Comments                                                      |
 |----------|-----------------|---------------------------------------------------------------|
 | Global   | TRUE            | Open to the world                                             |
 | Targeted | FALSE           | Open to the namespaces listed in the NamespaceBundle.xml file |
@@ -47,7 +47,7 @@ For now we will honor isExposed flag and display error for in valid scenarios li
 
 **Error Cases**
 
-| Scope    | isExposed | Comments                   | Errors             |
+| namespaceScope    | isExposed | Comments                   | Errors             |
 |----------|-----------|----------------------------|--------------------|
 | Global   | FALSE     | Failed during compile time | Compile time error |
 | Targeted | TRUE      | Failed during compile time | Compile time error |

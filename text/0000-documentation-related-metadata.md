@@ -2,10 +2,10 @@
 title: Documentation-related Metadata
 status: DRAFTED
 created_at: 2020-03-11
-updated_at: 2020-03-11
+updated_at: 2020-05-07
 rfc: https://github.com/salesforce/lwc-rfcs/pull/26
 champion: Nathan McWilliams (@mysticflute) | Lightning Tooling Team
-implementation: 226-228
+implementation: 228+
 ---
 
 # Documentation-related Metadata
@@ -58,14 +58,11 @@ The following keys will be recognized in the frontmatter:
 * __category__  `string` \
     The main category for the module. Only one may be specified. Salesforce will maintain a list of recognized categories in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library][component-library] for other ways this information can be used.
 
-[component-library]: https://developer.salesforce.com/docs/component-library/overview/components
 * __experience__  `string[]` \
-    One or more Salesforce experiences that the module works in. Salesforce will maintain a list of recognized experiences in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library](https://developer.salesforce.com/docs/component-library/overview/components) for other ways this information can be used.
+    One or more Salesforce experiences that the module works in. Salesforce will maintain a list of recognized experiences in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library][component-library] for other ways this information can be used.
+
 * __isSubComponent__  `boolean` \
     This denotes that the component is only intended for use inside of another component, for example `lightning-breadcrumb` is only used inside of `lightning-breadcrumbs`. The Component Library may use this information for filtering options, to automatically cross-link pages, or to provide component grouping. Also this information could be used for linting.
-
-* __deprecated__  `boolean` \
-    This does not impact runtime behavior. The Component Library may use this information to provide filtering capabilities or special UX treatment. Is there an existing way deprecation is already specified? Does it make more sense to use the `@deprecated` tag from JSDoc? Also, should we have another field for the replacement component?
 
 #### Recognized Categories
 
@@ -137,6 +134,9 @@ Another downside of being agnostic (and not validating the allowed fields) is th
 * __image__ \
     The Component Library uses images for components on the home page. The map from component to image is currently hardcoded. If we want to allow the platform to specify similar images then a field here is one solution, but it poses many complications for the implementation details. Also such images are of limited use in other contexts outside of the Component Library, which may not always use such images even itself.
 
+* __deprecated__  `boolean` \
+    This does not impact runtime behavior. The Component Library may use this information to provide filtering capabilities or special UX treatment.
+
 ## Adoption strategy
 
 Currently we maintain a hardcoded list of categories and experiences for lightning base components and other exposed components. This information will be transferred to the individual component bundles and be maintained by the component owners going forward. 
@@ -152,8 +152,10 @@ In general, every developer creating public components will need to make sure of
 3. The component has one or more examples.
 4. The component has JSDoc on public members.
 
-Separate RFCs will be filed for opening up other related documentation features to the platform such as examples, events, non-component modules, and more.
-
 # Unresolved questions
 
-As mentioned above, is this really the correct format to signify deprecation?
+1. Is there an existing way deprecation is already specified? Does it make more sense to use the `@deprecated` tag from JSDoc? Also, should we have another field for the replacement component?
+2. Is there an issue with saving files under `__docs__` in the platform?
+3. Should the compiler validate expected values? If not then how will customers discover if they are using a valid value or not? Tooling can be of assistance here.
+
+

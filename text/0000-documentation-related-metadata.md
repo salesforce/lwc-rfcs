@@ -117,9 +117,6 @@ export interface DocumentationMetadata {
 }
 ```
 
-In Aura this information will be placed on the ModuleDefinition as a `Map<String, String>`.
-
-
 #### Field Agnostic
 
 The platform-compiler will be agnostic to the fields and their meanings. Correct YAML grammar will be enforced, but downstream code such as the Component Library will be responsible for determining which fields are applicable and which values may need further processing, such as splitting the experience field on commas.

@@ -56,10 +56,10 @@ LWC compiler itself will not restrict the set of fields a component author could
 The following keys will be recognized in the frontmatter:
 
 * __category__  `string` \
-    The main category for the module. Only one may be specified. Salesforce will maintain a list of recognized categories in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library][component-library] for other ways this information can be used.
+    The main category for the module. Only one may be specified. Salesforce will maintain a list of recognized categories in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library][1] for other ways this information can be used.
 
 * __experience__  `string[]` \
-    One or more Salesforce experiences that the module works in. Salesforce will maintain a list of recognized experiences in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library][component-library] for other ways this information can be used.
+    One or more Salesforce experiences that the module works in. Salesforce will maintain a list of recognized experiences in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library][1] for other ways this information can be used.
 
 * __isSubComponent__  `boolean` \
     This denotes that the component is only intended for use inside of another component, for example `lightning-breadcrumb` is only used inside of `lightning-breadcrumbs`. The Component Library may use this information for filtering options, to automatically cross-link pages, or to provide component grouping. Also this information could be used for linting.
@@ -158,4 +158,4 @@ In general, every developer creating public components will need to make sure of
 2. Is there an issue with saving files under `__docs__` in the platform?
 3. Should the compiler validate expected values? If not then how will customers discover if they are using a valid value or not? Tooling can be of assistance here.
 
-
+[1]: https://developer.salesforce.com/docs/component-library/overview/components

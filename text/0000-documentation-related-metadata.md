@@ -50,7 +50,8 @@ descriptive documentation...
 
 ### Recognized Fields
 
-LWC itself will not restrict the set of fields a component author could add to the frontmatter, however only specific fields will be documented as recognized by the Salesforce platform. Unrecognized fields may be present but they will be ignored.
+LWC compiler itself will not restrict the set of fields a component author could add to the frontmatter, however only specific fields will be documented as recognized by the Salesforce platform. Unrecognized fields may be present but they will be ignored.
+
 
 The following keys will be recognized in the frontmatter:
 

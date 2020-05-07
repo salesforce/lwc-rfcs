@@ -56,7 +56,9 @@ LWC compiler itself will not restrict the set of fields a component author could
 The following keys will be recognized in the frontmatter:
 
 * __category__  `string` \
-    The main category for the module. Only one may be specified. Salesforce will maintain a list of recognized categories in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library](https://developer.salesforce.com/docs/component-library/overview/components) for other ways this information can be used.
+    The main category for the module. Only one may be specified. Salesforce will maintain a list of recognized categories in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library][component-library] for other ways this information can be used.
+
+[component-library]: https://developer.salesforce.com/docs/component-library/overview/components
 * __experience__  `string[]` \
     One or more Salesforce experiences that the module works in. Salesforce will maintain a list of recognized experiences in public documentation and the VS Code extension for code completion/linting. For applications like the Component Library, values that match the whitelist will be displayed on the component’s reference page. Also see the filters on the homepage of the [Component Library](https://developer.salesforce.com/docs/component-library/overview/components) for other ways this information can be used.
 * __isSubComponent__  `boolean` \

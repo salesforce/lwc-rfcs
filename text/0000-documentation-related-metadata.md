@@ -12,7 +12,8 @@ implementation: 226-228
 
 ## Summary
 
-Component authors need a way to provide documentation-related metadata-- metadata that is specifically useful for documentation purposes and not runtime behavior. This includes information like component categorization and supported Salesforce experiences.
+Component authors need a way to provide documentation-related metadata - metadata that is specifically useful for documentation purposes and not runtime behavior. This includes information like component categorization and supported Salesforce experiences.
+
 
 This metadata is comprised of key-value pairs and will be put in the documentation markdown file, `docs/module.md`.
 

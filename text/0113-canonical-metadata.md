@@ -4,8 +4,8 @@ status: DRAFT
 created_at: 2020-05-07
 updated_at: 2020-05-07
 rfc: 
-champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa [@ravijayaramappa](https://github.com/ravijayaramappa)
-implementation: https://git.soma.salesforce.com/lwc/lwc-api/pull/42 & https://git.soma.salesforce.com/lwc/lwc-platform/pull/361
+champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa (@ravijayaramappa)
+implementation:
 ---
 
 # Canonical specification of metadata for LWC modules
@@ -19,7 +19,7 @@ Table of Content:
 * [References](#reference)
 
 # Summary
-> The [dictionary meaning](https://www.merriam-webster.com/dictionary/canonical%20form) of **Canonical form** means `the simplest form of something`. 
+> The [dictionary definition](https://www.merriam-webster.com/dictionary/canonical%20form) of **Canonical form** is `the simplest form of something`. 
 
 This RFC aims to document the metadata collected by statically analyzing the source code of Lightning Web Component(LWC) modules. It documents the standardized shape of metadata.
 
@@ -53,7 +53,7 @@ Since web components are relatively new in the industry, there is no well establ
 [web-component-analyzer](https://www.npmjs.com/package/web-component-analyzer) can analyze web components written in vanilla javascript and other popular web component libraries. It also supports custom-elements-json as an output format.
 
 ## LWC Platform
-Currently, LWC platform gathers metadata as part of the compilation process. This metadata shape and implementation is currently private. This RFC is an attempt to make the metadata shape public as a first step. This [document](https://salesforce.quip.com/DdncANrJA0ko)<sup>*</sup> captured the information collected and the metadata shape currently gathered.
+Currently, LWC platform gathers metadata as part of the compilation process. This metadata shape and implementation is currently private. This RFC is an attempt to make the metadata shape public as a first step. This [document](https://salesforce.quip.com/DdncANrJA0ko)<sup>*</sup> captures the information collected and the metadata shape currently gathered.
 
 # Detailed Design
 

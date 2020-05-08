@@ -11,8 +11,12 @@ implementation: https://git.soma.salesforce.com/lwc/lwc-api/pull/42 & https://gi
 # Canonical specification of metadata for LWC modules
 
 Table of Content:
-Summary
-
+* [Summary](#summary)
+* [Goals](#goals)
+* [Use Cases](#use-cases)
+* [Current State of Art](#current-state-of-art)
+* [Detailed design](#detailed-design)
+* [References](#reference)
 
 # Summary
 > The [dictionary meaning](https://www.merriam-webster.com/dictionary/canonical%20form) of **Canonical form** means `the simplest form of something`. 
@@ -43,7 +47,7 @@ Components depend on static resources such as images, javascript files, css file
 Finally, metadata can facilitate low code development environment by allowing developer to declaratively define component. This metadata can be used to generate component stubs and the developer can add the specific business logic into the stubs thus reducing the amount of manually authored boiler plate code.
 Metadata can also be transformed to generate components in various eco-systems like LWC, native web components etc. This would require adding an additional transformation of the metadata to another format like the custom-elements-json in the case of web components.
 
-# Current state of art
+# Current State of Art
 ## Web Components community
 Since web components are relatively new in the industry, there is no well established standard or format for declaratively defining a web component. [custom-elements-json](https://github.com/webcomponents/custom-elements-json) is making an attempt to define a standard. It is in a very early stage. However there is a ecosystem developing around this standard. 
 [web-component-analyzer](https://www.npmjs.com/package/web-component-analyzer) can analyze web components written in vanilla javascript and other popular web component libraries. It also supports custom-elements-json as an output format.
@@ -212,7 +216,7 @@ These are the entities that will be analzed and metadata gathered about:
     }
 }
 ```
-# Reference
+# References
 
 - [JSON Schema type system](https://salesforce.quip.com/SH2FA614DXQO)<sup>*</sup>
 

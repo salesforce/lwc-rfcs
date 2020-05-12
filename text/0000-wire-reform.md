@@ -100,6 +100,9 @@ There exist a few restrictions and ambiguities with the IDL for the config objec
 * there will be no identity for inline JSON objects when assigned to a property in the config object, e.g.: `@wire(foo, { x: { y: 1 } })` where the value of `x` will be computed every time, instead of cached per instance or per class as today.
 * there will be identity preserved when assigning a reference values in the config object, e.g.: `@wire(foo, { x: someValue })` where the value of `x` will be a reference to `someValue` during the class declaration.
 * every time that `adapter.update()` is invoked, a new config object will be provided as a first argument, no identity is preserved in this case.
+* `adapter.update()` must be invoked initially regardless of the value of the config. e.g.: `@wire(foo, { x: $foo })` will invoke the update even if `this.foo` resolves to `undefined` or was never set.
+* `adapter.update()` will be called when the reactive mechanism detects a mutation on a value that was used to compute the config for a wire declaration, even if result of such computation produces the same config that was produced before. It is a responsibility of the adapter to dedupe such calls.
+* the reactive tracking for wire configuration can’t track changes on a wire configuration that depends on component's instance "expandos", it only reacts to changes on class' declared fields.
 
 ### Context Provider for Wire Adapters
 
@@ -244,6 +247,7 @@ export function invokeApex(...args) {
 * For adapter author, the wire protocol no longer needs registration, which means it is easier to reason about compared to the existing mechanism.
 * The new formalized wire protocol is a lot simpler to reasoning about, and simpler to implement.
 * As for existing adapters based on `@lwc/wire-service`, they can remain the same until after they get refactored and simplified when possible.
+* Testing components using wire: in the current implementation of the wire protocol, rendering a component that uses an invalid wire adapter (ex: `undefined`) never throws; this implementation will break such tests if the wire adapter mocks are not valid. For platform tests, wire-adapter stubs are provided and they will run fine, but for off-platform tests, a valid adapter needs to be provided.
 
 # Unresolved questions
 

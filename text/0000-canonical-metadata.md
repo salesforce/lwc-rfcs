@@ -49,14 +49,14 @@ Metadata can also be transformed to generate components in various eco-systems l
 
 # Current State of Art
 ## Web Components community
-Since web components are relatively new in the industry, there is no well established standard or format for declaratively defining a web component. [custom-elements-json](https://github.com/webcomponents/custom-elements-json) is making an attempt to define a standard. It is in a very early stage. However there is a ecosystem developing around this standard. 
+There is no well established standard or format for declaratively defining a web component. [custom-elements-json](https://github.com/webcomponents/custom-elements-json) is making an attempt to define a standard. It is in a very early stage. However there is a ecosystem developing around this standard. 
 [web-component-analyzer](https://www.npmjs.com/package/web-component-analyzer) can analyze web components written in vanilla javascript and other popular web component libraries. It also supports custom-elements-json as an output format.
 
 ## LWC Platform
 Currently, LWC platform gathers metadata as part of the compilation process. This metadata shape and implementation is currently private. This RFC is an attempt to make the metadata shape public as a first step. This [document](https://salesforce.quip.com/DdncANrJA0ko)<sup>*</sup> captures the information collected and the metadata shape currently gathered. Here is a summary of problems with the current implementation:
 * Replicated type system in java and javascript that is maintained manually
 * Dependency(reference) analysis is done outside of metadata gathering
-* 
+* Change management to accomodate new metadata is cumbersome because the implementation is spread across two repos
 
 # Detailed Design
 
@@ -129,13 +129,17 @@ These are the entities that will be analzed and metadata gathered about:
     "properties": {
         "name": { "type": "string" },
         "namespace": { "type": "string" },
+        "moduleType": { 
+            "type": "string",
+            "enum": [ "Component", "Library", "CssOnly" ]
+        },
         "templates": { 
             "type": "array",
             "items": { "$ref": "#/definitions/HTMLTemplate"}
         },
-        "js": {
+        "scripts": {
             "type": "array",
-            "items": { "$ref": "#/definitions/JSFile"}
+            "items": { "$ref": "#/definitions/Script"}
         },
         "defaultComponentClass": {
             "type": "array",
@@ -194,7 +198,7 @@ These are the entities that will be analzed and metadata gathered about:
                 }
             }
         },
-        "JSFile": {
+        "Script": {
             "type": "object",
             "properties": {
                 "fileType": { "$ref": "#/definitions/FileType" },
@@ -224,10 +228,10 @@ These are the entities that will be analzed and metadata gathered about:
                         { "$ref": "#/definitions/AggregatingExport"}
                     ]
                 },
-                "programmaticEvents": {
+                "domEvents": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ProgrammaticEvent"
+                        "$ref": "#/definitions/DOMEvent"
                     }
                 },
                 "staticResources": {
@@ -243,7 +247,12 @@ These are the entities that will be analzed and metadata gathered about:
             "properties": {
                 "fileType": { "$ref": "#/definitions/FileType" },
                 "fileName": { "type": "string" },
-                "tokens": { "type": "array", "items": { "type": "string" }},
+                "customProperties": { 
+                    "type": "array", 
+                    "items": { 
+                        "$ref": "#/definitions/CSSCustomProperty"
+                    }
+                },
                 "staticResources": {
                     "type": "array",
                     "items": {
@@ -267,7 +276,8 @@ These are the entities that will be analzed and metadata gathered about:
                         }
                     }
                 },
-                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" }
+                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
         "ApiDecorator": {
@@ -281,7 +291,7 @@ These are the entities that will be analzed and metadata gathered about:
             "type": "object",
             "properties": {
                 "name": { "type": "string" },
-                "extends": { "$ref": "#/definitions/Class" },
+                "extends": { "$ref": "#/definitions/ParentClass" },
                 "properties": { 
                     "type": "array",
                     "items": { "$ref": "#/definitions/ClassProperty" },
@@ -291,12 +301,9 @@ These are the entities that will be analzed and metadata gathered about:
                     "type": "array",
                     "items": { "$ref": "#/definitions/ClassMethod" },
                     "default": []
-                }
+                },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
-        },
-        "ClassMemberType": {
-            "type": "string",
-            "enum": [ "property", "method"]
         },
         "ClassMethod": {
             "type" : "object",
@@ -316,11 +323,15 @@ These are the entities that will be analzed and metadata gathered about:
                 "parameterNames": { 
                     "type": "array",
                     "items": {
-                        "types": "string"
+                        "anyOf": [
+                            { "$ref": "#/definitions/DefaultParameters" },
+                            { "$ref": "#/definitions/RestParameters"}
+                        ]
                     }
                 },
                 "returnType": { "type": "string" },
-                "returnValue": { "type": [ "number", "string", "boolean", "null", "object" ] }
+                "returnValue": { "type": [ "number", "string", "boolean", "null", "object" ] },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
         "ClassProperty": {
@@ -345,8 +356,23 @@ These are the entities that will be analzed and metadata gathered about:
                     },
                     "maxItems": 1
                 },
-                "initialValue": { "type": [ "number", "string", "boolean", "null", "object" ] }
+                "initialValue": { "type": [ "number", "string", "boolean", "null", "object" ] },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
+        },
+        "CSSCustomProperty": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "fallbackValue": { "$ref": "#/definitions/CSSCustomPropertyFallback"},
+                "location": { "$ref": "#/definitions/SourceLocation" }
+            }
+        },
+        "CSSCustomPropertyFallback": {
+            "anyOf": [
+                { "type": "string"},
+                { "$ref": "#/definitions/CSSCustomProperty"}
+            ]
         },
         "ComputedValue": {
             "type": "object", 
@@ -379,31 +405,41 @@ These are the entities that will be analzed and metadata gathered about:
             "type": "string",
             "enum": [ "wire", "track", "api" ]
         },
-        "DynamicComponentReference": {
+        "DefaultParameters": {
             "type": "object",
             "properties": {
-                "tagName": { "type": "string" },
-                "ctor": { "$ref": "#/definitions/ComputedValue" },
-                "location": { "$ref": "#/definitions/SourceLocation" },
-                "attributes": { 
-                    "type": "array",
-                    "items" : { "$ref": "#/definitions/ElementAttributeReference" }
-                },
-                "slots": {
-                    "type": "array",
-                    "items": { "$ref": "#/definitions/SlotReference" }
-                },
-                "eventHandlers": {
-                    "type": "array",
-                    "items": { "$ref": "#/definitions/EventHandlerReference" }
+                "type" : { "const": "DefaultParameters" },
+                "name": { "type": "string" },
+                "defaultValue": {"type": [ "number", "string", "boolean", "null", "object" ] }
+            }
+        },
+        "DOMEvent": {
+            "type": "object",
+            "properties": {
+                "eventType":  { "type": "string" },
+                "isCustomEvent": { "type": "boolean" },
+                "options": {
+                    "type": "object",
+                    "properties": {
+                        "bubbles": { "type": "boolean" },
+                        "composed": { "type": "boolean" }
+                    }
                 }
+            },
+            "required": ["eventType"]
+        },
+        "DynamicComponentReference": {
+            "type": "object",
+            "allOf": [{"$ref": "#/definitions/CustomElementReference"}],
+            "properties": {
+                "ctor": { "$ref": "#/definitions/ComputedValue" }
             }
         },
         "DynamicImport": {
             "type" : "object",
             "properties": {
-                "moduleName": { "type": "string" },
-                "moduleNameType": { "type": [ "null", "string"] },
+                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
+                "moduleNameType": { "const": "stringliteral" },
                 "location": { "$ref": "#/definitions/SourceLocation" },
                 "hints": { 
                     "type": "array",
@@ -466,7 +502,8 @@ These are the entities that will be analzed and metadata gathered about:
                             "enum": ["class", "function", "expression"]
                         }
                     }
-                }
+                },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
         "FileType": {
@@ -484,7 +521,8 @@ These are the entities that will be analzed and metadata gathered about:
                     }
                 },
                 "importsList": { "type": [ "array", "string"] },
-                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" }
+                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
         "ModuleReference": {
@@ -504,20 +542,27 @@ These are the entities that will be analzed and metadata gathered about:
             },
             "required": ["name", "type"]
         },
-        "ProgrammaticEvent": {
-            "type": "object",
-            "properties": {
-                "eventType":  { "type": "string" },
-                "isCustomEvent": { "type": "boolean" },
-                "options": {
+        "ParentClass": {
+            "oneOf": [
+                {"$ref": "#/definitions/Class"},
+                {            
                     "type": "object",
                     "properties": {
-                        "bubbles": { "type": "boolean" },
-                        "composed": { "type": "boolean" }
+                        "name": { "type": "string" },
+                        "source": { "$ref": "#/definitions/ModuleReference"}
                     }
                 }
+            ]
+        },
+        "RestParameters": {
+            "type": "object",
+            "properties": {
+                "type": { "const": "RestParameters" },
+                "name": { "type": "string" },
+                "startIndex": { "type": "integer" },
+                "endIndex": { "type": "integer" }
             },
-            "required": ["eventType"]
+            "required": [ "name", "startIndex" ]
         },
         "SlotReference": {
             "type": "object",
@@ -571,7 +616,8 @@ These are the entities that will be analzed and metadata gathered about:
                     "type": "string",
                     "enum": [ "true", "false" ]
                 },
-                "value": { "$ref": "#/definitions/ComputedValue"  }
+                "value": { "$ref": "#/definitions/ComputedValue"  },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
         "TemplateIteratorDirective": {
@@ -589,7 +635,8 @@ These are the entities that will be analzed and metadata gathered about:
                     "type": "string",
                     "enum": [ "manual" ]
                 },
-                "tagName": { "type": "string" }
+                "tagName": { "type": "string" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
         "TrackDecorator": {
@@ -612,6 +659,7 @@ These are the entities that will be analzed and metadata gathered about:
     }
 }
 ```
+
 # Open questions
 * Should gathering metadata about configuration(`*.js-meta.xml`) file in a bundle be in the scope of this RFC?
 * Is documentation(.md) in the scope of this RFC? Will it overlap with [this RFC](https://github.com/salesforce/lwc-rfcs/pull/26)

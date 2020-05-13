@@ -2,7 +2,7 @@
 title: Canonical specification of metadata for LWC modules
 status: DRAFT
 created_at: 2020-05-07
-updated_at: 2020-05-07
+updated_at: 2020-05-13
 rfc: 
 champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa (@ravijayaramappa)
 implementation:
@@ -27,15 +27,15 @@ This RFC aims to document the metadata collected by statically analyzing the sou
 
 - Completeness
 - Eliminate redundancy: There should be only one way to get a desired information about a module.
-- Consitency in property names
+- Consistency in property names
 - Flexibility: Allow for new data to be collected in the future.
 
 # Use Cases
 ## Referential Integrity
-One of the key features of the Salesforce platform is referential integrity capabilities. Referential integrity is how the platform allows a given resource to be safely updated and deleted without adverse cascading effects.
+Referential integrity is how the platform allows a given resource to be safely updated and deleted without adverse cascading effects. For example, a bundle's metadata will include references to external modules imported, custom elements referenced in template and the properties set on such elements. The reference information can be indexed and used to validate if a component's properties can be safely renamed/removed, if a component can be safely deleted or needs to follow a deprecation process.
 
 ## Editor support
-Metadata about components can be used augment standard developer experience in code editors with code completion, attribute name & type validation, peek definition.
+Metadata about components can be used to augment the standard developer experience in code editors with code completion, attribute name & type validation, peek definition, etc.
 
 ## Documentation
 LWC components Metadata can be used to automatically generate documentation about components. Standard javascript documentation formats like JSDoc provided in component can also be gathered as metadata.
@@ -53,7 +53,10 @@ Since web components are relatively new in the industry, there is no well establ
 [web-component-analyzer](https://www.npmjs.com/package/web-component-analyzer) can analyze web components written in vanilla javascript and other popular web component libraries. It also supports custom-elements-json as an output format.
 
 ## LWC Platform
-Currently, LWC platform gathers metadata as part of the compilation process. This metadata shape and implementation is currently private. This RFC is an attempt to make the metadata shape public as a first step. This [document](https://salesforce.quip.com/DdncANrJA0ko)<sup>*</sup> captures the information collected and the metadata shape currently gathered.
+Currently, LWC platform gathers metadata as part of the compilation process. This metadata shape and implementation is currently private. This RFC is an attempt to make the metadata shape public as a first step. This [document](https://salesforce.quip.com/DdncANrJA0ko)<sup>*</sup> captures the information collected and the metadata shape currently gathered. Here is a summary of problems with the current implementation:
+* Replicated type system in java and javascript that is maintained manually
+* Dependency(reference) analysis is done outside of metadata gathering
+* 
 
 # Detailed Design
 
@@ -121,13 +124,159 @@ These are the entities that will be analzed and metadata gathered about:
 ```json
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "A representation of metadata gathered for a LWC bundle file",
+    "description": "A representation of metadata gathered for a LWC bundle",
     "type": "object",
     "properties": {
-        "fileType": { "$ref": "#/definitions/FileType" },
-        "fileName": { "type": "string" }
+        "name": { "type": "string" },
+        "namespace": { "type": "string" },
+        "templates": { 
+            "type": "array",
+            "items": { "$ref": "#/definitions/HTMLTemplate"}
+        },
+        "js": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/JSFile"}
+        },
+        "defaultComponentClass": {
+            "type": "array",
+            "items": { 
+                "$ref": "#/definitions/Class"
+            }
+        },
+        "css": {
+            "$ref": "#/definitions/CSSFile"
+        }
     },
     "definitions": {
+        "HTMLTemplate": {
+            "type": "object",
+            "properties": {
+                "fileType": { "$ref": "#/definitions/FileType" },
+                "fileName": { "type": "string" },
+                "children": {
+                    "type": "array",
+                    "items": { 
+                        "$ref": "#/definitions/CustomElementReference"
+                    }
+                },
+                "staticResources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StaticResourceReference"
+                    }
+                },
+                "dynamicChildren": {
+                    "type": "array",
+                    "items": { 
+                        "$ref": "#/definitions/DynamicComponentReference"
+                    }
+                },
+                "directives": {
+                    "type": "object",
+                    "properties": {
+                        "forEach": {
+                            "type": "array", 
+                            "items": { "$ref" : "#/definitions/TemplateForEachDirective" }
+                        },
+                        "iterator": {
+                            "type": "array", 
+                            "items": { "$ref" : "#/definitions/TemplateIteratorDirective" }
+                        },
+                        "if": {
+                            "type": "array", 
+                            "items": { "$ref" : "#/definitions/TemplateIfDirective" }
+                        },
+                        "lwcDom": {
+                            "type": "array", 
+                            "items": { "$ref" : "#/definitions/TemplateLwcDomDirective" }
+                        }
+                    }
+                }
+            }
+        },
+        "JSFile": {
+            "type": "object",
+            "properties": {
+                "fileType": { "$ref": "#/definitions/FileType" },
+                "fileName": { "type": "string" },
+                "componentClasses": {
+                    "type": "array",
+                    "items": { 
+                        "$ref": "#/definitions/Class"
+                    }
+                },
+                "imports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Import"
+                    }
+                },
+                "dynamicImports": {
+                    "type": "array",
+                    "items": { 
+                        "$ref": "#/definitions/DynamicImport"
+                    }
+                },
+                "exports": {
+                    "type": "array",
+                    "items": [
+                        { "$ref": "#/definitions/Export"},
+                        { "$ref": "#/definitions/AggregatingExport"}
+                    ]
+                },
+                "programmaticEvents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ProgrammaticEvent"
+                    }
+                },
+                "staticResources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StaticResourceReference"
+                    }
+                }
+            }
+        },
+        "CSSFile": {
+            "type": "object",
+            "properties": {
+                "fileType": { "$ref": "#/definitions/FileType" },
+                "fileName": { "type": "string" },
+                "tokens": { "type": "array", "items": { "type": "string" }},
+                "staticResources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StaticResourceReference"
+                    }
+                }
+            }
+        },
+        "AggregatingExport": {
+            "type": "object",
+            "properties": {
+                "exportsList": { 
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": ["class", "function", "expression"]
+                            }
+                        }
+                    }
+                },
+                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" }
+            }
+        },
+        "ApiDecorator": {
+            "type": "object",
+            "properties": {
+                "type": { "const": "api" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
+            }
+        },
         "Class": {
             "type": "object",
             "properties": {
@@ -153,27 +302,108 @@ These are the entities that will be analzed and metadata gathered about:
             "type" : "object",
             "properties": {
                 "name": { "type": "string" },
-                "isStatic": { "type": "boolean"},
-                "decorator": { "$ref": "#/definitions/Decorator" },
+                "accessType": {
+                    "type": "string",
+                    "enum": ["public", "private", "static"]
+                },
+                "decorator": { 
+                    "anyOf": [
+                        {"$ref": "#/definitions/ApiDecorator" },
+                        {"$ref": "#/definitions/TrackDecorator" },
+                        {"$ref": "#/definitions/WireDecorator" }
+                    ]
+                },
+                "parameterNames": { 
+                    "type": "array",
+                    "items": {
+                        "types": "string"
+                    }
+                },
                 "returnType": { "type": "string" },
-                "returnValue": { "type": [ "number", "string", "boolean", "undefined", "null", "unresolved" ] }
+                "returnValue": { "type": [ "number", "string", "boolean", "null", "object" ] }
             }
         },
         "ClassProperty": {
             "type" : "object",
             "properties": {
+                "accessType": {
+                    "type": "string",
+                    "enum": ["public", "private", "static"]
+                },
+                "dataProperty": { "type": "boolean"},
                 "hasGetter": { "type": "boolean"},
                 "hasSetter": { "type": "boolean"},
                 "name": { "type": "string" },
-                "decorator": { "$ref": "#/definitions/Decorator" },
-                "initialValue": { "type": [ "number", "string", "boolean", "undefined", "null", "unresolved" ] }
+                "decorator": { 
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            { "$ref": "#/definitions/TrackDecorator" },
+                            { "$ref": "#/definitions/WireDecorator" },
+                            { "$ref": "#/definitions/ApiDecorator"}
+                        ]
+                    },
+                    "maxItems": 1
+                },
+                "initialValue": { "type": [ "number", "string", "boolean", "null", "object" ] }
+            }
+        },
+        "ComputedValue": {
+            "type": "object", 
+            "properties": {
+                "expression": { "type": "string" },
+                "root": { "$ref": "#/definitions/ClassProperty" }
+            }
+        },
+        "CustomElementReference": {
+            "type": "object",
+            "properties": {
+                "tagName": { "type": "string" },
+                "location": { "$ref": "#/definitions/SourceLocation" },
+                "attributes": { 
+                    "type": "array",
+                    "items" : { "$ref": "#/definitions/ElementAttributeReference" }
+                },
+                "slots": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/SlotReference" }
+                },
+                "eventHandlers": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/EventHandlerReference" }
+                }
+            },
+            "required": [ "tagName", "location" ]
+        },
+        "DecoratorType": {
+            "type": "string",
+            "enum": [ "wire", "track", "api" ]
+        },
+        "DynamicComponentReference": {
+            "type": "object",
+            "properties": {
+                "tagName": { "type": "string" },
+                "ctor": { "$ref": "#/definitions/ComputedValue" },
+                "location": { "$ref": "#/definitions/SourceLocation" },
+                "attributes": { 
+                    "type": "array",
+                    "items" : { "$ref": "#/definitions/ElementAttributeReference" }
+                },
+                "slots": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/SlotReference" }
+                },
+                "eventHandlers": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/EventHandlerReference" }
+                }
             }
         },
         "DynamicImport": {
             "type" : "object",
             "properties": {
                 "moduleName": { "type": "string" },
-                "moduleNameType": { "type": [ "unresolved", "string"] },
+                "moduleNameType": { "type": [ "null", "string"] },
                 "location": { "$ref": "#/definitions/SourceLocation" },
                 "hints": { 
                     "type": "array",
@@ -194,13 +424,107 @@ These are the entities that will be analzed and metadata gathered about:
                 "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
+        "ElementAttributeReference": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "value": { 
+                    "anyOf": [
+                        { "type": [ "null", "string", "boolean"] },
+                        { "$ref": "#/definitions/ComputedValue"}
+                    ]
+                }
+            }
+        },
+        "EventHandlerReference": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "value": { "$ref": "#/definitions/ComputedValue" }
+            }
+        },
+        "Export": {
+            "type": "object",
+            "properties": {
+                "exportsList": { 
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": ["class", "function", "expression"]
+                            }
+                        }
+                    }
+                },
+                "default": { 
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": ["class", "function", "expression"]
+                        }
+                    }
+                }
+            }
+        },
         "FileType": {
             "type": "string",
             "enum": [ "html", "js", "css" ]
         },
-        "DecoratorType": {
-            "type": "string",
-            "enum": [ "wire", "track", "api" ]
+        "Import": {
+            "type": "object",
+            "properties": {
+                "importType": { 
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [ "DefaultBinding", "NamedImports", "NamespacedImport"]
+                    }
+                },
+                "importsList": { "type": [ "array", "string"] },
+                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" }
+            }
+        },
+        "ModuleReference": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "namespace": { "type": "string" },
+                "id": {
+                    "type": "string",
+                    "enum": [ "apexClass", "apexMethod", "apexContinuation", "client", "community", "component", "contentAssetUrl", "customPermission", "dynamicComponent", "slds", "messageChannel", "i18n", "gate", "label", "metric", "module", "internal", "resourceUrl", "schema", "sobjectClass", "sobjectField", "user", "userPermission"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [ "lwc", "salesforce", "internal", "external", "local"]
+                }
+            },
+            "required": ["name", "type"]
+        },
+        "ProgrammaticEvent": {
+            "type": "object",
+            "properties": {
+                "eventType":  { "type": "string" },
+                "isCustomEvent": { "type": "boolean" },
+                "options": {
+                    "type": "object",
+                    "properties": {
+                        "bubbles": { "type": "boolean" },
+                        "composed": { "type": "boolean" }
+                    }
+                }
+            },
+            "required": ["eventType"]
+        },
+        "SlotReference": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string"}
+            },
+            "required": [ "name" ]
         },
         "SourceLocation": {
             "type": "object",
@@ -212,12 +536,90 @@ These are the entities that will be analzed and metadata gathered about:
                 "endLine": { "type": "integer" },
                 "endColumn": { "type": "integer" }
             }
+        },
+        "StaticResourceReference": {
+            "type": "object",
+            "properties": {
+                "type": { "$ref": "#/definitions/StaticResourceType" },
+                "value": { 
+                    "anyOf": [
+                        { "type": "string", "format": "uri" },
+                        { "$ref": "#/definitions/ComputedValue"}
+                    ]
+                },
+                "location": { "$ref": "#/definitions/SourceLocation" }
+            }
+        },
+        "StaticResourceType": {
+            "type": "string",
+            "enum": [ "image", "css", "html", "js", "other"]
+        },
+        "TemplateForEachDirective": {
+            "type": "string",
+            "properties": {
+                "items": { "$ref": "#/definitions/ComputedValue"  },
+                "itemName": { "type": "string"},
+                "indexName": { "type": "string" },
+                "key": {"type": "string" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
+            }
+        },
+        "TemplateIfDirective": {
+            "type": "string",
+            "properties": {
+                "qualifier": {
+                    "type": "string",
+                    "enum": [ "true", "false" ]
+                },
+                "value": { "$ref": "#/definitions/ComputedValue"  }
+            }
+        },
+        "TemplateIteratorDirective": {
+            "type": "string",
+            "properties": {
+                "items": { "$ref": "#/definitions/ComputedValue"  },
+                "key": {"type": "string" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
+            }
+        },
+        "TemplateLwcDomDirective": {
+            "type": "string",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "enum": [ "manual" ]
+                },
+                "tagName": { "type": "string" }
+            }
+        },
+        "TrackDecorator": {
+            "type": "object",
+            "properties": {
+                "type": { "const": "track" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
+            }
+        },
+        "WireDecorator": {
+            "type": "object",
+            "properties": {
+                "type": { "const": "wire" },
+                "location": { "$ref": "#/definitions/SourceLocation" },
+                "adapterId": { "type": "string" },
+                "adapterModule": { "$ref": "#/definitions/ModuleReference" },
+                "adapterConfig": { "type": "object" }
+            }
         }
     }
 }
 ```
+# Open questions
+* Should gathering metadata about configuration(`*.js-meta.xml`) file in a bundle be in the scope of this RFC?
+* Is documentation(.md) in the scope of this RFC? Will it overlap with [this RFC](https://github.com/salesforce/lwc-rfcs/pull/26)
+* Does svg file have any useful metadata?
+
 # References
 
 - [JSON Schema type system](https://salesforce.quip.com/SH2FA614DXQO)<sup>*</sup>
+- [RFC - Canonical View Metadata](https://salesforce.quip.com/ZJ93A0XQZvnU)<sup>*</sup>
 
 <sup>*</sup> _restricted access_

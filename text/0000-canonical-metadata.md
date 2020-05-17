@@ -121,6 +121,371 @@ These are the entities that will be analzed and metadata gathered about:
 
 ## Metadata shape
 
+### TypeScript
+
+```ts
+// The root metadata object for a LWC bundle
+interface BundleMetadata {
+    name?: string;
+    namespace?: string;
+    // Define the type of module that is represented by the given metadata object.
+    moduleType?: "Component" | "Library" | "CssOnly";
+
+    /**
+     * For a component bundle, this property is a reference to the main component class in the bundle.
+     * This class must be the default export of the javascript file. The file must be named the same
+     * as the bundle
+     */
+    defaultComponentClass?: ComponentClass[];
+
+    // Information about HTML template files in the bundle.
+    templates?: HTMLTemplateFile[];
+
+    // Information about javascript files in the bundle.
+    scripts?: ScriptFile[];
+
+    // Information about css files in the bundle.
+    css?: CSSFile[]
+}
+
+// Information about an HTML template file in an LWC bundle.
+interface HTMLTemplateFile {
+    fileType: 'html';
+    fileName: string;
+    // Custom elements referenced in a template.
+    children?: CustomElementReference[];
+    // Static resources referenced in a template. For example: 'src' attribute value of an <img>, <source> tag.
+    staticResources?: StaticResourceReference[];
+    // Custom elements in a template that are dynamically(lazy) loaded.
+    dynamicChildren?: DynamicComponentReference[];
+    // Elements in a template that have special directives.
+    directives?: {
+        forEach?: TemplateForEachDirective[];
+        iterator?: TemplateIteratorDirective[];
+        if?: TemplateIfDirective[];
+        lwcDom?: TemplateLwcDomDirective[];
+    };
+    // Trimmed down AST(Abstract Syntax Tree) of the template.
+    serializedDataBindingAST?: string;
+}
+
+// Information about a custom element referenced in a HTML template.
+interface CustomElementReference {
+    tagName: string;
+    location: SourceLocation;
+    attributes?: ElementAttributeReference[];
+    slots?: SlotReference[];
+    eventHandlers?: EventHandlerReference[];
+}
+
+// Information about an element referenced in the template with a 'lwc:dynamic' attribute.
+interface DynamicComponentReference extends CustomElementReference {
+    ctor: ComputedValue;
+}
+
+// Information about an event handled declaratively in the template.
+interface EventHandlerReference {
+    name: string;
+    value: ComputedValue;
+    location: SourceLocation;
+}
+
+// Metadata about a file authored in javascript(or its variants like TypeScript) in an LWC bundle.
+interface ScriptFile {
+    fileType: "js";
+    fileName: string;
+    // Classes that extends the 'LightningElement' class directly or by extending another component class.
+    componentClasses?: ComponentClass[];
+    // Static import statements in a javascript module.
+    imports?: Import[];
+    // Dynamic import statements in a javascript module, additionally information about hints if provided.
+    dynamicImports?: DynamicImport[];
+    // Export statements in a module including reexporting bindings from another module.
+    exports: [] | [Export] | [Export, ReExport];
+    // DOM Event objects instantiated in a module. Includes Events and CustomEvents.
+    domEvents?: DOMEvent[];
+    /**
+     * Static resources referenced in a module. Includes any static urls referenced in javascript and
+     * resources loaded using the lightning platform resource loader, urls fetched via the salesforce
+     * scoped url resolvers.
+     */
+    staticResources?: StaticResourceReference[];
+}
+
+/**
+ * Information about a component class. A class is considered a component class if it extends
+ * 'LightningElement' class available in the standard 'lwc' module.
+ */
+interface ComponentClass {
+    name?: string;
+    extends: ParentClass;
+    properties?: ClassProperty[];
+    methods?: ClassMethod[];
+    location: SourceLocation;
+}
+
+// Information about a class property of a component class.
+interface ClassProperty {
+    accessType: "public" | "private" | "static";
+    dataProperty?: boolean;
+    hasGetter?: boolean;
+    hasSetter?: boolean;
+    name: string;
+    decorator?: [] | [TrackDecorator | WireDecorator | ApiDecorator];
+    initialValue?: number | string | boolean | null | object | undefined;
+    location: SourceLocation;
+}
+
+// Information about a class method of a component class.
+interface ClassMethod {
+    name: string;
+    accessType: "public" | "private" | "static";
+    decorator?: ApiDecorator | TrackDecorator | WireDecorator;
+    parameterNames?: (DefaultParameters | RestParameters)[];
+    returnType: string;
+    returnValue?:
+    | number
+    | string
+    | boolean
+    | null
+    | object;
+    location: SourceLocation;
+}
+
+// Information about the usage of an '@api' decorator to designate a class member as public.
+interface ApiDecorator {
+    type: 'api';
+    location: SourceLocation;
+}
+
+// Information about an @track decorator usage.
+interface TrackDecorator {
+    type: 'track';
+    location: SourceLocation;
+}
+
+// Information about @wire decorator usage includes information about the data source.
+interface WireDecorator {
+    type: 'wire';
+    location: SourceLocation;
+    adapterId: string;
+    adapterModule?: ModuleReference;
+    adapterConfig?: object;
+}
+
+// Information about a static import statement in a module.
+interface Import {
+    importType?: ("DefaultBinding" | "NamedImports" | "NamespacedImport")[];
+    importsList?: string[] | string;
+    moduleSpecifier: ModuleReference;
+    location: SourceLocation;
+}
+
+// Information about a dynamic import statement in a module.
+interface DynamicImport {
+    moduleSpecifier: ModuleReference;
+    moduleNameType: "string" | "unresolved";
+    location: SourceLocation;
+    hints?: DynamicImportHint[];
+}
+interface DynamicImportHint {
+    // Hint value with leading and trailing spaces of hint phrase trimmed
+    rawValue: string;
+    key: string;
+    value: string;
+    location: SourceLocation;
+}
+
+// Information about a export statement in a module.
+interface Export {
+    exportsList?: {
+        type: "class" | "function" | "expression";
+    }[];
+    default?: {
+        type: "class" | "function" | "expression";
+    };
+    location: SourceLocation;
+}
+
+// Information about an export statement used to reexport bindings imported from another module.
+interface ReExport {
+    exportsList: {
+        name: string
+        type: "class" | "function" | "expression";
+    }[];
+    moduleSpecifier: ModuleReference;
+    location: SourceLocation;
+}
+
+// Information about a dom event instantiated in script.
+interface DOMEvent {
+    eventType: string;
+    isCustomEvent?: boolean;
+    options?: {
+        bubbles?: boolean;
+        composed?: boolean;
+    };
+}
+
+// A parent component class including the 'LightningElement' class provided by the lwc module.
+type ParentClass = ComponentClass
+    | {
+        name?: string;
+        source?: ModuleReference;
+    };
+
+// Metadata about a css file in an LWC bundle.
+interface CSSFile {
+    fileType: 'css';
+    fileName: string;
+    customProperties?: CSSCustomProperty[];
+    staticResources?: StaticResourceReference[];
+}
+
+// Information about css custom property.
+interface CSSCustomProperty {
+    name: string;
+    fallbackValue?: CSSCustomPropertyFallback;
+    location: SourceLocation;
+}
+
+// Information about reference to a static resource in a module. The resource can be a url specified
+// as a string literal or a reference to a computed value.
+interface StaticResourceReference {
+    // The type of static resource loaded, identifiable by the file extension.
+    type: "image" | "css" | "html" | "js" | "other";
+    value: string | ComputedValue;
+    location: SourceLocation;
+}
+
+// Information about a module imported into a module using the 'import' statement.
+interface ModuleReference {
+    name: string;
+    namespace?: string;
+    id?:
+    | "apexClass"
+    | "apexMethod"
+    | "apexContinuation"
+    | "client"
+    | "community"
+    | "component"
+    | "contentAssetUrl"
+    | "customPermission"
+    | "dynamicComponent"
+    | "slds"
+    | "messageChannel"
+    | "i18n"
+    | "gate"
+    | "label"
+    | "metric"
+    | "module"
+    | "internal"
+    | "resourceUrl"
+    | "schema"
+    | "sobjectClass"
+    | "sobjectField"
+    | "user"
+    | "userPermission";
+    type: "lwc" | "salesforce" | "internal" | "external" | "local";
+}
+```
+
+<details>
+<summary>Click to view extended typescript definitions</summary>
+
+```ts
+
+// Information about an expression, surrounded by curly braces, in a HTML template.
+interface ComputedValue {
+    expression: string;
+    root?: ClassProperty;
+}
+
+// Information about css custom property fallback values.
+type CSSCustomPropertyFallback = string | CSSCustomProperty;
+
+// Information about default function parameters. 
+// Also look at parameters represented using rest syntax.
+interface DefaultParameters {
+    type: 'DefaultParameters';
+    name: string;
+    defaultValue?:
+    | number
+    | string
+    | boolean
+    | null
+    | object;
+}
+
+// Information about an element's attribute set in the template.
+interface ElementAttributeReference {
+    name: string;
+    value?: (null | string | boolean) | ComputedValue;
+}
+
+// Information about function parameters received using the rest(...) syntax.
+interface RestParameters {
+    type: 'RestParameters';
+    name: string;
+    startIndex: number;
+    endIndex?: number;
+}
+
+/**
+ * Information about default and named slots being set by the parent component. The parent can
+ * specify a 'slot' attribute in the slotted content in the case of named slot. Slot content that
+ * do not have a 'slot' attribute will be passed as default slot content. The 'name' property in
+ * the SlotReference object will be 'default' for such a case.
+ */
+interface SlotReference {
+    name: string;
+}
+
+// Object to represent the start and end position of a code block.
+interface SourceLocation {
+    fileName: string;
+    startLine?: number;
+    startColumn?: number;
+    endLine?: number;
+    endColumn?: number;
+}
+
+// Information about for:each directive usage to render a list in a html template.
+interface TemplateForEachDirective {
+    items: ComputedValue;
+    itemName?: string;
+    indexName?: string;
+    key?: string;
+    location: SourceLocation;
+}
+
+// Information about if:true or if:false directive usage to perform conditional rendering in a html template.
+interface TemplateIfDirective {
+    qualifier: string;
+    value: ComputedValue | string;
+    location: SourceLocation;
+}
+
+// Information about iterator directive usage in a html template.
+interface TemplateIteratorDirective {
+    items: ComputedValue;
+    key?: string;
+    location: SourceLocation;
+}
+
+// Information about lwc:dom attribute usage in a html template to perform programmatic manipulation of dom tree.
+interface TemplateLwcDomDirective {
+    value: 'manual';
+    tagName: string;
+    location: SourceLocation;
+}
+```
+</details>
+
+### JSONSchema
+<details>
+<summary>Click to view in JSONSchema format</summary>
+
 ```json
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -130,52 +495,65 @@ These are the entities that will be analzed and metadata gathered about:
         "name": { "type": "string" },
         "namespace": { "type": "string" },
         "moduleType": { 
+            "description": "Define the type of module that is represented by the given metadata object.",
             "type": "string",
             "enum": [ "Component", "Library", "CssOnly" ]
         },
         "templates": { 
+            "description": "Information about HTML template files in the bundle.",
             "type": "array",
-            "items": { "$ref": "#/definitions/HTMLTemplate"}
+            "items": { "$ref": "#/definitions/HTMLTemplateFile"}
         },
         "scripts": {
+            "description": "Information about javascript files in the bundle.",
             "type": "array",
-            "items": { "$ref": "#/definitions/Script"}
+            "items": { "$ref": "#/definitions/ScriptFile"}
         },
         "defaultComponentClass": {
+            "description": "For a component bundle, this property is a reference to the main component class in the bundle. This class must be the default export of the javascript file. The file must be named the same as the bundle",
             "type": "array",
             "items": { 
-                "$ref": "#/definitions/Class"
+                "$ref": "#/definitions/ComponentClass"
             }
         },
         "css": {
-            "$ref": "#/definitions/CSSFile"
+            "description": "Information about css files in the bundle.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/CSSFile"
+            }
         }
     },
     "definitions": {
-        "HTMLTemplate": {
+        "HTMLTemplateFile": {
+            "description": "Information about an HTML template file in an LWC bundle.",
             "type": "object",
             "properties": {
-                "fileType": { "$ref": "#/definitions/FileType" },
+                "fileType": { "const": "html" },
                 "fileName": { "type": "string" },
                 "children": {
+                    "description": "Custom elements referenced in a template.",
                     "type": "array",
                     "items": { 
                         "$ref": "#/definitions/CustomElementReference"
                     }
                 },
                 "staticResources": {
+                    "description": "Static resources referenced in a template. For example: 'src' attribute value of an <img>, <source> tag.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/StaticResourceReference"
                     }
                 },
                 "dynamicChildren": {
+                    "description": "Custom elements in a template that are dynamically(lazy) loaded.",
                     "type": "array",
                     "items": { 
                         "$ref": "#/definitions/DynamicComponentReference"
                     }
                 },
                 "directives": {
+                    "description": "Elements in a template that have special directives.",
                     "type": "object",
                     "properties": {
                         "forEach": {
@@ -195,57 +573,71 @@ These are the entities that will be analzed and metadata gathered about:
                             "items": { "$ref" : "#/definitions/TemplateLwcDomDirective" }
                         }
                     }
+                },
+                "serializedDataBindingAST": {
+                    "description": "Trimmed down AST(Abstract Syntax Tree) of the template. ",
+                    "type": "string"
                 }
-            }
+            },
+            "required": [ "fileName", "fileType" ]
         },
-        "Script": {
+        "ScriptFile": {
+            "description": "Metadata about a file authored in javascript(or its variants like TypeScript) in an LWC bundle.",
             "type": "object",
             "properties": {
-                "fileType": { "$ref": "#/definitions/FileType" },
+                "fileType": { "type": "string", enum: ["js"]},
                 "fileName": { "type": "string" },
                 "componentClasses": {
+                    "description": "Classes that extends the 'LightningElement' class directly or by extending another component class.",
                     "type": "array",
                     "items": { 
-                        "$ref": "#/definitions/Class"
+                        "$ref": "#/definitions/ComponentClass"
                     }
                 },
                 "imports": {
+                    "description": "Static import statements in a javascript module.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/Import"
                     }
                 },
                 "dynamicImports": {
+                    "description": "Dynamic import statements in a javascript module, additionally information about hints if provided.",
                     "type": "array",
                     "items": { 
                         "$ref": "#/definitions/DynamicImport"
                     }
                 },
                 "exports": {
+                    "description": "Export statements in a module including reexporting bindings from another module.",
                     "type": "array",
                     "items": [
                         { "$ref": "#/definitions/Export"},
-                        { "$ref": "#/definitions/AggregatingExport"}
+                        { "$ref": "#/definitions/ReExport"}
                     ]
                 },
                 "domEvents": {
+                    "description": "DOM Event objects instantiated in a module. Includes Events and CustomEvents.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/DOMEvent"
                     }
                 },
                 "staticResources": {
+                    "description": "Static resources referenced in a module. Includes any static urls referenced in javascript and resources loaded using the lightning platform resource loader, urls fetched via the salesforce scoped url resolvers.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/StaticResourceReference"
                     }
                 }
-            }
+            },
+            "required": [ "fileName", "fileType", "exports" ]
         },
         "CSSFile": {
+            "description": "Metadata about a css file in an LWC bundle.",
             "type": "object",
             "properties": {
-                "fileType": { "$ref": "#/definitions/FileType" },
+                "fileType": { "const": "css" },
                 "fileName": { "type": "string" },
                 "customProperties": { 
                     "type": "array", 
@@ -259,9 +651,11 @@ These are the entities that will be analzed and metadata gathered about:
                         "$ref": "#/definitions/StaticResourceReference"
                     }
                 }
-            }
+            },
+            "required": [ "fileName", "fileType" ]
         },
-        "AggregatingExport": {
+        "ReExport": {
+            "description": "Information about an export statement used to reexport bindings imported from another module.",
             "type": "object",
             "properties": {
                 "exportsList": { 
@@ -269,6 +663,7 @@ These are the entities that will be analzed and metadata gathered about:
                     "items": {
                         "type": "object",
                         "properties": {
+                            "name": { "type": "string" },
                             "type": {
                                 "type": "string",
                                 "enum": ["class", "function", "expression"]
@@ -278,16 +673,19 @@ These are the entities that will be analzed and metadata gathered about:
                 },
                 "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": ["location", "exportsList", "moduleSpecifier"]
         },
         "ApiDecorator": {
+            "description": "Information about the usage of an '@api' decorator to designate a class member as public.",
             "type": "object",
             "properties": {
                 "type": { "const": "api" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
             }
         },
-        "Class": {
+        "ComponentClass": {
+            "description": "Information about a component class. A class is considered a component class if it extends 'LightningElement' class available in the standard 'lwc' module.",
             "type": "object",
             "properties": {
                 "name": { "type": "string" },
@@ -303,9 +701,11 @@ These are the entities that will be analzed and metadata gathered about:
                     "default": []
                 },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": ["extends", "location"]
         },
         "ClassMethod": {
+            "description": "Information about a class method of a component class.",
             "type" : "object",
             "properties": {
                 "name": { "type": "string" },
@@ -332,9 +732,11 @@ These are the entities that will be analzed and metadata gathered about:
                 "returnType": { "type": "string" },
                 "returnValue": { "type": [ "number", "string", "boolean", "null", "object" ] },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": [ "name", "accessType", "location", "returnType" ]
         },
         "ClassProperty": {
+            "description": "Information about a class property of a component class.",
             "type" : "object",
             "properties": {
                 "accessType": {
@@ -358,30 +760,37 @@ These are the entities that will be analzed and metadata gathered about:
                 },
                 "initialValue": { "type": [ "number", "string", "boolean", "null", "object" ] },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": [ "name", "accessType", "location" ]
         },
         "CSSCustomProperty": {
+            "description": "Information about css custom property.",
             "type": "object",
             "properties": {
                 "name": { "type": "string" },
                 "fallbackValue": { "$ref": "#/definitions/CSSCustomPropertyFallback"},
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": [ "name", "location" ]
         },
         "CSSCustomPropertyFallback": {
+            "description": "Information about css custom property fallback values.",
             "anyOf": [
                 { "type": "string"},
                 { "$ref": "#/definitions/CSSCustomProperty"}
             ]
         },
         "ComputedValue": {
+            "description": "Information about an expression, surrounded by curly braces, in a HTML template.",
             "type": "object", 
             "properties": {
                 "expression": { "type": "string" },
                 "root": { "$ref": "#/definitions/ClassProperty" }
-            }
+            },
+            "required": ["expression"]
         },
         "CustomElementReference": {
+            "description": "Information about a custom element referenced in a HTML template.",
             "type": "object",
             "properties": {
                 "tagName": { "type": "string" },
@@ -401,11 +810,8 @@ These are the entities that will be analzed and metadata gathered about:
             },
             "required": [ "tagName", "location" ]
         },
-        "DecoratorType": {
-            "type": "string",
-            "enum": [ "wire", "track", "api" ]
-        },
         "DefaultParameters": {
+            "description": "Information about default function parameters. Also look at parameters represented using rest syntax.",
             "type": "object",
             "properties": {
                 "type" : { "const": "DefaultParameters" },
@@ -414,6 +820,7 @@ These are the entities that will be analzed and metadata gathered about:
             }
         },
         "DOMEvent": {
+            "description": "Information about a dom event instantiated in script.",
             "type": "object",
             "properties": {
                 "eventType":  { "type": "string" },
@@ -429,6 +836,7 @@ These are the entities that will be analzed and metadata gathered about:
             "required": ["eventType"]
         },
         "DynamicComponentReference": {
+            "description": "Information about an element referenced in the template with a 'lwc:dynamic' attribute.",
             "type": "object",
             "allOf": [{"$ref": "#/definitions/CustomElementReference"}],
             "properties": {
@@ -436,19 +844,22 @@ These are the entities that will be analzed and metadata gathered about:
             }
         },
         "DynamicImport": {
+            "description": "Information about a dynamic import statement in a module.",
             "type" : "object",
             "properties": {
                 "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
-                "moduleNameType": { "const": "stringliteral" },
+                "moduleNameType": { "type": "string", "enum": ["string", "unresolved"] },
                 "location": { "$ref": "#/definitions/SourceLocation" },
                 "hints": { 
                     "type": "array",
                     "items": { "$ref": "#/definitions/DynamicImportHint" },
                     "default": []
                 }
-            }
+            },
+            "required": ["moduleSpecifier", "moduleNameType", "location"]
         },
         "DynamicImportHint": {
+            "description": "",
             "type": "object",
             "properties": {
                 "rawValue": { 
@@ -458,9 +869,11 @@ These are the entities that will be analzed and metadata gathered about:
                 "key": { "type": "string" },
                 "value": { "type": "string" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": ["rawValue", "key", "value", "location"]
         },
         "ElementAttributeReference": {
+            "description": "Information about an element's attribute set in the template.",
             "type": "object",
             "properties": {
                 "name": { "type": "string" },
@@ -470,16 +883,21 @@ These are the entities that will be analzed and metadata gathered about:
                         { "$ref": "#/definitions/ComputedValue"}
                     ]
                 }
-            }
+            },
+            "required": ["name"]
         },
         "EventHandlerReference": {
+            "description": "Information about an event handled declaratively in the template.",
             "type": "object",
             "properties": {
                 "name": { "type": "string" },
-                "value": { "$ref": "#/definitions/ComputedValue" }
-            }
+                "value": { "$ref": "#/definitions/ComputedValue" },
+                "location": { "$ref": "#/definitions/SourceLocation" }
+            },
+            "required": ["name", "value", "location"]
         },
         "Export": {
+            "description": "Information about a export statement in a module.",
             "type": "object",
             "properties": {
                 "exportsList": { 
@@ -504,13 +922,11 @@ These are the entities that will be analzed and metadata gathered about:
                     }
                 },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
-        },
-        "FileType": {
-            "type": "string",
-            "enum": [ "html", "js", "css" ]
+            },
+            "required": ["location"]
         },
         "Import": {
+            "description": "Information about a static import statement in a module.",
             "type": "object",
             "properties": {
                 "importType": { 
@@ -523,16 +939,23 @@ These are the entities that will be analzed and metadata gathered about:
                 "importsList": { "type": [ "array", "string"] },
                 "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": [ "moduleSpecifier", "location" ]
         },
         "ModuleReference": {
+            "description": "Information about a module imported into a module using the 'import' statement.",
             "type": "object",
             "properties": {
                 "name": { "type": "string" },
                 "namespace": { "type": "string" },
                 "id": {
                     "type": "string",
-                    "enum": [ "apexClass", "apexMethod", "apexContinuation", "client", "community", "component", "contentAssetUrl", "customPermission", "dynamicComponent", "slds", "messageChannel", "i18n", "gate", "label", "metric", "module", "internal", "resourceUrl", "schema", "sobjectClass", "sobjectField", "user", "userPermission"
+                    "enum": [ 
+                        "apexClass", "apexMethod", "apexContinuation", "client", "community",
+                        "component", "contentAssetUrl", "customPermission", "dynamicComponent",
+                        "slds", "messageChannel", "i18n", "gate", "label", "metric", "module",
+                        "internal", "resourceUrl", "schema", "sobjectClass", "sobjectField",
+                        "user", "userPermission"
                     ]
                 },
                 "type": {
@@ -543,8 +966,9 @@ These are the entities that will be analzed and metadata gathered about:
             "required": ["name", "type"]
         },
         "ParentClass": {
+            "description": "A parent component class including the 'LightningElement' class provided by the lwc module.",
             "oneOf": [
-                {"$ref": "#/definitions/Class"},
+                {"$ref": "#/definitions/ComponentClass"},
                 {            
                     "type": "object",
                     "properties": {
@@ -555,6 +979,7 @@ These are the entities that will be analzed and metadata gathered about:
             ]
         },
         "RestParameters": {
+            "description": "Information about function parameters received using the rest(...) syntax.",
             "type": "object",
             "properties": {
                 "type": { "const": "RestParameters" },
@@ -565,6 +990,7 @@ These are the entities that will be analzed and metadata gathered about:
             "required": [ "name", "startIndex" ]
         },
         "SlotReference": {
+            "description": "Information about default and named slots being set by the parent component. The parent can specify a 'slot' attribute in the slotted content in the case of named slot. Slot content that do not have a 'slot' attribute will be passed as default slot content. The 'name' property in the SlotReference object will be 'default' for such a case.",
             "type": "object",
             "properties": {
                 "name": { "type": "string"}
@@ -572,6 +998,7 @@ These are the entities that will be analzed and metadata gathered about:
             "required": [ "name" ]
         },
         "SourceLocation": {
+            "description": "Object to represent the start and end position of a code block.",
             "type": "object",
             "required": [ "filename" ],
             "properties": {
@@ -580,12 +1007,18 @@ These are the entities that will be analzed and metadata gathered about:
                 "startColumn": { "type": "integer" },
                 "endLine": { "type": "integer" },
                 "endColumn": { "type": "integer" }
-            }
+            },
+            "required": ["fileName"]
         },
         "StaticResourceReference": {
+            "description": "Information about reference to a static resource in a module. The resource can be a url specified as a string literal or a reference to a computed value.",
             "type": "object",
             "properties": {
-                "type": { "$ref": "#/definitions/StaticResourceType" },
+                "type": { 
+                    "description": "The type of static resource loaded, identifiable by the file extension.",
+                    "type": "string",
+                    "enum": [ "image", "css", "html", "js", "other"]
+                },
                 "value": { 
                     "anyOf": [
                         { "type": "string", "format": "uri" },
@@ -593,13 +1026,11 @@ These are the entities that will be analzed and metadata gathered about:
                     ]
                 },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
-        },
-        "StaticResourceType": {
-            "type": "string",
-            "enum": [ "image", "css", "html", "js", "other"]
+            },
+            "required": ["type", "value", "location"]
         },
         "TemplateForEachDirective": {
+            "description": "Information about for:each directive usage to render a list in a html template.",
             "type": "string",
             "properties": {
                 "items": { "$ref": "#/definitions/ComputedValue"  },
@@ -607,9 +1038,11 @@ These are the entities that will be analzed and metadata gathered about:
                 "indexName": { "type": "string" },
                 "key": {"type": "string" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": ["items", "location"]
         },
         "TemplateIfDirective": {
+            "description": "Information about if:true or if:false directive usage to perform conditional rendering in a html template.",
             "type": "string",
             "properties": {
                 "qualifier": {
@@ -621,14 +1054,17 @@ These are the entities that will be analzed and metadata gathered about:
             }
         },
         "TemplateIteratorDirective": {
+            "description": "Information about iterator directive usage in a html template.",
             "type": "string",
             "properties": {
                 "items": { "$ref": "#/definitions/ComputedValue"  },
                 "key": {"type": "string" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": ["items", "location"]
         },
         "TemplateLwcDomDirective": {
+            "description": "Information about lwc:dom attribute usage in a html template to perform programmatic manipulation of dom tree.",
             "type": "string",
             "properties": {
                 "value": {
@@ -637,16 +1073,20 @@ These are the entities that will be analzed and metadata gathered about:
                 },
                 "tagName": { "type": "string" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": ["value", "tagName", "location"]
         },
         "TrackDecorator": {
+            "description": "Information about an @track decorator usage.",
             "type": "object",
             "properties": {
                 "type": { "const": "track" },
                 "location": { "$ref": "#/definitions/SourceLocation" }
-            }
+            },
+            "required": ["location", "type"]
         },
         "WireDecorator": {
+            "description": "Information about @wire decorator usage includes information about the data source.",
             "type": "object",
             "properties": {
                 "type": { "const": "wire" },
@@ -654,11 +1094,13 @@ These are the entities that will be analzed and metadata gathered about:
                 "adapterId": { "type": "string" },
                 "adapterModule": { "$ref": "#/definitions/ModuleReference" },
                 "adapterConfig": { "type": "object" }
-            }
+            },
+            "required": ["location", "type", "adapterId"]
         }
     }
 }
 ```
+</details>
 
 # Open questions
 * Should gathering metadata about configuration(`*.js-meta.xml`) file in a bundle be in the scope of this RFC?

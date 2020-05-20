@@ -2,10 +2,10 @@
 title: Canonical specification of metadata for LWC modules
 status: DRAFT
 created_at: 2020-05-07
-updated_at: 2020-05-13
+updated_at: 2020-05-19
 rfc: 
 champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa (@ravijayaramappa)
-implementation:
+implementation: 
 ---
 
 # Canonical specification of metadata for LWC modules
@@ -68,7 +68,7 @@ Metadata shape of the various objects we wish to analyse will be represented usi
 This format was also influenced by standardization choices made with in Salesforce UI platform.
 
 ## Entities that will be analyzed
-These are the entities that will be analzed and metadata gathered about:
+These are the entities that will be analyzed and metadata gathered about:
 * HTML Template file
     * Custom element references
         * Tag name
@@ -79,7 +79,7 @@ These are the entities that will be analzed and metadata gathered about:
         * Javascript resource
         * CSS resource
     * Dynamic components
-    * Template directives
+    * Nodes with special directives
         * for:each
         * if
         * iterator
@@ -118,18 +118,20 @@ These are the entities that will be analzed and metadata gathered about:
         * `<link>`
 * CSS file
     * Tokens
+    * Static resources
 
 ## Metadata shape
 
 ### TypeScript
 
+#### Bundle metadata shape
 ```ts
-// The root metadata object for a LWC bundle
 interface BundleMetadata {
+    version: string;
     name?: string;
     namespace?: string;
     // Define the type of module that is represented by the given metadata object.
-    moduleType?: "Component" | "Library" | "CssOnly";
+    moduleType?: "HTML" | "LightningElement" | "CSS" | "Javascript" | "LightningEvent";
 
     /**
      * For a component bundle, this property is a reference to the main component class in the bundle.
@@ -147,40 +149,109 @@ interface BundleMetadata {
     // Information about css files in the bundle.
     css?: CSSFile[]
 }
+```
+Other alternatives:
+- Indexed by file type and file name
+```ts
+interface BundleMetadataOption2 {
+    version: string;
+    name?: string;
+    namespace?: string;
+    moduleType?: "HTML" | "LightningElement" | "CSS" | "Javascript" | "LightningEvent";
 
-// Information about an HTML template file in an LWC bundle.
+    defaultComponentClass?: ComponentClass[];
+
+    templates?: { [key: string]: HTMLTemplateFile[]};
+
+    scripts?: { [key: string]: ScriptFile[]};
+
+    css?: { [key: string]: CSSFile[]};
+}
+```
+
+#### HTML Template file metadata shape
+```ts
+// Root metadata object for an HTML template file
 interface HTMLTemplateFile {
     fileType: 'html';
     fileName: string;
-    // Custom elements referenced in a template.
-    children?: CustomElementReference[];
+    // List of unique components referenced in the template
+    componentReferences?: ComponentReference[];
     // Static resources referenced in a template. For example: 'src' attribute value of an <img>, <source> tag.
     staticResources?: StaticResourceReference[];
-    // Custom elements in a template that are dynamically(lazy) loaded.
-    dynamicChildren?: DynamicComponentReference[];
-    // Elements in a template that have special directives.
-    directives?: {
-        forEach?: TemplateForEachDirective[];
-        iterator?: TemplateIteratorDirective[];
-        if?: TemplateIfDirective[];
-        lwcDom?: TemplateLwcDomDirective[];
-    };
-    // Trimmed down AST(Abstract Syntax Tree) of the template.
-    serializedDataBindingAST?: string;
+    astRoot?: Node; // Template in AST format starting with the root <template> node.
+}
+
+// Represents a component referenced in the template.
+// Use the 'tagName' property for kebab case and 'name' property for the reference in canonical form
+interface ComponentReference extends ModuleReference {
+    // Component reference always has a namespace
+    namespace: string;
+    // No moduleIdentifier for a component
+    moduleIdentifier?: never;
+    // Components are always imported from an external bundle
+    type: 'external';
+    tagName: string;
+}
+
+// Information about a node in the html template
+interface Node {
+    tagName: string;
+    location: SourceLocation;
+    // Any properties set in the template, will include html attributes, public properties
+    attributes?: ElementAttributeReference[];
+    // Event handlers attached declaratively in the template with a 'on' prefix, eg: 'onclick'
+    eventHandlers?: EventHandlerReference[];
+    children?: Node[];
 }
 
 // Information about a custom element referenced in a HTML template.
-interface CustomElementReference {
-    tagName: string;
-    location: SourceLocation;
-    attributes?: ElementAttributeReference[];
+interface CustomElementNode extends Node {
+    // Information about slots set by parent
     slots?: SlotReference[];
-    eventHandlers?: EventHandlerReference[];
+}
+
+/**
+ * Information about default and named slots being set by the parent component. The parent can
+ * specify a 'slot' attribute in the slotted content in the case of named slot. Slot content that
+ * do not have a 'slot' attribute will be passed as default slot content. The 'name' property in
+ * the SlotReference object will be 'default' for such a case.
+ */
+interface SlotReference {
+    name: string;
 }
 
 // Information about an element referenced in the template with a 'lwc:dynamic' attribute.
-interface DynamicComponentReference extends CustomElementReference {
+interface DynamicCustomElementNode extends CustomElementNode {
     ctor: ComputedValue;
+}
+
+// Information about for:each directive usage to render a list in a html template.
+interface TemplateForEachDirective extends Node {
+    tagName: 'template';
+    items: ComputedValue;
+    itemName?: string;
+    indexName?: string;
+    key?: string;
+}
+
+// Information about if:true or if:false directive usage to perform conditional rendering in a html template.
+interface TemplateIfDirective extends Node {
+    tagName: 'template';
+    qualifier: string;
+    value: ComputedValue | string;
+}
+
+// Information about iterator directive usage in a html template.
+interface TemplateIteratorDirective extends Node {
+    tagName: 'template';
+    items: ComputedValue;
+    key?: string;
+}
+
+// Information about lwc:dom attribute usage in a html template to perform programmatic manipulation of dom tree.
+interface TemplateLwcDomDirective extends Node {
+    directiveValue: 'manual'; // enum of all allowed values for lwc:dom attribute
 }
 
 // Information about an event handled declaratively in the template.
@@ -189,12 +260,17 @@ interface EventHandlerReference {
     value: ComputedValue;
     location: SourceLocation;
 }
+```
+Examples:
+_TODO_
 
-// Metadata about a file authored in javascript(or its variants like TypeScript) in an LWC bundle.
+#### Script file metadata shape
+```ts
+// Root Metadata object for a file authored in javascript(or its variants like TypeScript) in an LWC bundle.
 interface ScriptFile {
-    fileType: "js";
+    fileType: 'js';
     fileName: string;
-    // Classes that extends the 'LightningElement' class directly or by extending another component class.
+    // Classes that extend the 'LightningElement' class directly or by extending another component class.
     componentClasses?: ComponentClass[];
     // Static import statements in a javascript module.
     imports?: Import[];
@@ -226,12 +302,16 @@ interface ComponentClass {
 
 // Information about a class property of a component class.
 interface ClassProperty {
-    accessType: "public" | "private" | "static";
+    accessType: 'public' | 'private' | 'static';
+    // True, if the property is an instance property
     dataProperty?: boolean;
+    // True, if the property has a getter
     hasGetter?: boolean;
+    // True, if the property has a setter
     hasSetter?: boolean;
     name: string;
-    decorator?: [] | [TrackDecorator | WireDecorator | ApiDecorator];
+    decorators?: [TrackDecorator | WireDecorator | ApiDecorator];
+    // If the initial value is statically analyzable. If not analyzable, property will be omitted.
     initialValue?: number | string | boolean | null | object | undefined;
     location: SourceLocation;
 }
@@ -239,35 +319,31 @@ interface ClassProperty {
 // Information about a class method of a component class.
 interface ClassMethod {
     name: string;
-    accessType: "public" | "private" | "static";
-    decorator?: ApiDecorator | TrackDecorator | WireDecorator;
+    accessType: 'public' | 'private' | 'static';
+    decorators?: [ApiDecorator | TrackDecorator | WireDecorator];
     parameterNames?: (DefaultParameters | RestParameters)[];
     returnType: string;
-    returnValue?:
-    | number
-    | string
-    | boolean
-    | null
-    | object;
+    // If the return value is statically analyzable. If not analyzable, property will be omitted.
+    returnValue?: number | string | boolean | null | object;
     location: SourceLocation;
 }
 
-// Information about the usage of an '@api' decorator to designate a class member as public.
-interface ApiDecorator {
-    type: 'api';
+interface Decorator {
+    type: string;
     location: SourceLocation;
+}
+// Information about the usage of an '@api' decorator to designate a class member as public.
+interface ApiDecorator extends Decorator {
+    type: 'api';
 }
 
 // Information about an @track decorator usage.
-interface TrackDecorator {
+interface TrackDecorator extends Decorator {
     type: 'track';
-    location: SourceLocation;
 }
 
 // Information about @wire decorator usage includes information about the data source.
-interface WireDecorator {
-    type: 'wire';
-    location: SourceLocation;
+interface WireDecorator extends Decorator {
     adapterId: string;
     adapterModule?: ModuleReference;
     adapterConfig?: object;
@@ -275,7 +351,7 @@ interface WireDecorator {
 
 // Information about a static import statement in a module.
 interface Import {
-    importType?: ("DefaultBinding" | "NamedImports" | "NamespacedImport")[];
+    importType?: ('DefaultBinding' | 'NamedImports' | 'NamespacedImport')[];
     importsList?: string[] | string;
     moduleSpecifier: ModuleReference;
     location: SourceLocation;
@@ -284,7 +360,7 @@ interface Import {
 // Information about a dynamic import statement in a module.
 interface DynamicImport {
     moduleSpecifier: ModuleReference;
-    moduleNameType: "string" | "unresolved";
+    moduleNameType: 'string' | 'unresolved';
     location: SourceLocation;
     hints?: DynamicImportHint[];
 }
@@ -299,10 +375,10 @@ interface DynamicImportHint {
 // Information about a export statement in a module.
 interface Export {
     exportsList?: {
-        type: "class" | "function" | "expression";
+        type: 'class' | 'function' | 'expression';
     }[];
     default?: {
-        type: "class" | "function" | "expression";
+        type: 'class' | 'function' | 'expression';
     };
     location: SourceLocation;
 }
@@ -310,8 +386,8 @@ interface Export {
 // Information about an export statement used to reexport bindings imported from another module.
 interface ReExport {
     exportsList: {
-        name: string
-        type: "class" | "function" | "expression";
+        name: string;
+        type: 'class' | 'function' | 'expression';
     }[];
     moduleSpecifier: ModuleReference;
     location: SourceLocation;
@@ -328,13 +404,68 @@ interface DOMEvent {
 }
 
 // A parent component class including the 'LightningElement' class provided by the lwc module.
-type ParentClass = ComponentClass
+type ParentClass =
+    | ComponentClass
     | {
-        name?: string;
-        source?: ModuleReference;
-    };
+          name?: string;
+          source?: ModuleReference;
+      };
 
-// Metadata about a css file in an LWC bundle.
+// Information about a module imported into a module using the 'import' statement.
+interface ModuleReference {
+    name: string;
+    namespace?: string;
+    moduleIdentifier?:
+        | 'apexClass'
+        | 'apexMethod'
+        | 'apexContinuation'
+        | 'client'
+        | 'community'
+        | 'component'
+        | 'contentAssetUrl'
+        | 'customPermission'
+        | 'dynamicComponent'
+        | 'slds'
+        | 'messageChannel'
+        | 'i18n'
+        | 'gate'
+        | 'label'
+        | 'metric'
+        | 'module'
+        | 'internal'
+        | 'resourceUrl'
+        | 'schema'
+        | 'sobjectClass'
+        | 'sobjectField'
+        | 'user'
+        | 'userPermission';
+    // whether the module reference is the built in lwc module or the @salesforce scoped module or
+    // a local file in the current bundle or an module imported from an external source(eg. a component)
+    type: 'lwc' | '@salesforce' | 'internal' | 'external';
+}
+
+// Information about default function parameters.
+// Also look at parameters represented using rest syntax.
+interface DefaultParameters {
+    type: 'DefaultParameters';
+    name: string;
+    defaultValue?: number | string | boolean | null | object;
+}
+
+// Information about function parameters received using the rest(...) syntax.
+interface RestParameters {
+    type: 'RestParameters';
+    name: string;
+    startIndex: number;
+    endIndex?: number;
+}
+```
+Examples:
+_TODO_
+
+#### CSS file metadata shape
+```ts
+// Root metadata object for a css file
 interface CSSFile {
     fileType: 'css';
     fileName: string;
@@ -349,52 +480,16 @@ interface CSSCustomProperty {
     location: SourceLocation;
 }
 
-// Information about reference to a static resource in a module. The resource can be a url specified
-// as a string literal or a reference to a computed value.
-interface StaticResourceReference {
-    // The type of static resource loaded, identifiable by the file extension.
-    type: "image" | "css" | "html" | "js" | "other";
-    value: string | ComputedValue;
-    location: SourceLocation;
-}
-
-// Information about a module imported into a module using the 'import' statement.
-interface ModuleReference {
-    name: string;
-    namespace?: string;
-    id?:
-    | "apexClass"
-    | "apexMethod"
-    | "apexContinuation"
-    | "client"
-    | "community"
-    | "component"
-    | "contentAssetUrl"
-    | "customPermission"
-    | "dynamicComponent"
-    | "slds"
-    | "messageChannel"
-    | "i18n"
-    | "gate"
-    | "label"
-    | "metric"
-    | "module"
-    | "internal"
-    | "resourceUrl"
-    | "schema"
-    | "sobjectClass"
-    | "sobjectField"
-    | "user"
-    | "userPermission";
-    type: "lwc" | "salesforce" | "internal" | "external" | "local";
-}
+// Information about css custom property fallback values.
+type CSSCustomPropertyFallback = string | CSSCustomProperty;
 ```
+Examples:
+_TODO_
 
 <details>
 <summary>Click to view extended typescript definitions</summary>
 
 ```ts
-
 // Information about an expression, surrounded by curly braces, in a HTML template.
 interface ComputedValue {
     expression: string;
@@ -404,17 +499,12 @@ interface ComputedValue {
 // Information about css custom property fallback values.
 type CSSCustomPropertyFallback = string | CSSCustomProperty;
 
-// Information about default function parameters. 
+// Information about default function parameters.
 // Also look at parameters represented using rest syntax.
 interface DefaultParameters {
     type: 'DefaultParameters';
     name: string;
-    defaultValue?:
-    | number
-    | string
-    | boolean
-    | null
-    | object;
+    defaultValue?: number | string | boolean | null | object;
 }
 
 // Information about an element's attribute set in the template.
@@ -431,58 +521,27 @@ interface RestParameters {
     endIndex?: number;
 }
 
-/**
- * Information about default and named slots being set by the parent component. The parent can
- * specify a 'slot' attribute in the slotted content in the case of named slot. Slot content that
- * do not have a 'slot' attribute will be passed as default slot content. The 'name' property in
- * the SlotReference object will be 'default' for such a case.
- */
-interface SlotReference {
-    name: string;
-}
-
 // Object to represent the start and end position of a code block.
 interface SourceLocation {
     fileName: string;
-    startLine?: number;
-    startColumn?: number;
-    endLine?: number;
-    endColumn?: number;
+    startLine: number;
+    startColumn: number;
+    endLine: number;
+    endColumn: number;
 }
 
-// Information about for:each directive usage to render a list in a html template.
-interface TemplateForEachDirective {
-    items: ComputedValue;
-    itemName?: string;
-    indexName?: string;
-    key?: string;
-    location: SourceLocation;
-}
-
-// Information about if:true or if:false directive usage to perform conditional rendering in a html template.
-interface TemplateIfDirective {
-    qualifier: string;
-    value: ComputedValue | string;
-    location: SourceLocation;
-}
-
-// Information about iterator directive usage in a html template.
-interface TemplateIteratorDirective {
-    items: ComputedValue;
-    key?: string;
-    location: SourceLocation;
-}
-
-// Information about lwc:dom attribute usage in a html template to perform programmatic manipulation of dom tree.
-interface TemplateLwcDomDirective {
-    value: 'manual';
-    tagName: string;
+// Information about reference to a static resource in a module. The resource can be a url specified
+// as a string literal or a reference to a computed value.
+interface StaticResourceReference {
+    // The type of static resource loaded, identifiable by the file extension.
+    type: 'image' | 'css' | 'html' | 'js' | 'other';
+    value: string | ComputedValue;
     location: SourceLocation;
 }
 ```
 </details>
 
-### JSONSchema
+### JSONSchema(outdated - Typescript definitions are up to date)
 <details>
 <summary>Click to view in JSONSchema format</summary>
 

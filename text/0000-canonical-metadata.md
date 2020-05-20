@@ -229,6 +229,7 @@ interface DynamicCustomElementNode extends CustomElementNode {
 // Information about for:each directive usage to render a list in a html template.
 interface TemplateForEachDirective extends Node {
     tagName: 'template';
+    directive: 'for:each';
     items: ComputedValue;
     itemName?: string;
     indexName?: string;
@@ -238,19 +239,21 @@ interface TemplateForEachDirective extends Node {
 // Information about if:true or if:false directive usage to perform conditional rendering in a html template.
 interface TemplateIfDirective extends Node {
     tagName: 'template';
-    qualifier: string;
+    directive: 'if:true' | 'if:false';
     value: ComputedValue | string;
 }
 
 // Information about iterator directive usage in a html template.
 interface TemplateIteratorDirective extends Node {
     tagName: 'template';
+    directive: 'iterator:it';
     items: ComputedValue;
     key?: string;
 }
 
 // Information about lwc:dom attribute usage in a html template to perform programmatic manipulation of dom tree.
 interface TemplateLwcDomDirective extends Node {
+    directive: 'lwc:dom';
     directiveValue: 'manual'; // enum of all allowed values for lwc:dom attribute
 }
 
@@ -261,8 +264,8 @@ interface EventHandlerReference {
     location: SourceLocation;
 }
 ```
-Examples:
-_TODO_
+*Examples:*
+Samples of the metadata for HTML template files can be viewed [here](https://github.com/salesforce/lwc-metadata/pull/1)
 
 #### Script file metadata shape
 ```ts
@@ -493,6 +496,7 @@ _TODO_
 // Information about an expression, surrounded by curly braces, in a HTML template.
 interface ComputedValue {
     expression: string;
+    // TODO: This also needs to account for iterator property, for each item
     root?: ClassProperty;
 }
 

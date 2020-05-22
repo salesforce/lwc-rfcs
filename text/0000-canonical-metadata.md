@@ -131,14 +131,14 @@ interface BundleMetadata {
     name?: string;
     namespace?: string;
     // Define the type of module that is represented by the given metadata object.
-    moduleType?: "HTML" | "LightningElement" | "CSS" | "Javascript" | "LightningEvent";
+    moduleType?: "HTML" | "CSS" | "Javascript";
 
     /**
      * For a component bundle, this property is a reference to the main component class in the bundle.
      * This class must be the default export of the javascript file. The file must be named the same
      * as the bundle
      */
-    defaultComponentClass?: ComponentClass[];
+    defaultComponentClass?: Class[];
 
     // Information about HTML template files in the bundle.
     templates?: HTMLTemplateFile[];
@@ -157,7 +157,7 @@ interface BundleMetadataOption2 {
     version: string;
     name?: string;
     namespace?: string;
-    moduleType?: "HTML" | "LightningElement" | "CSS" | "Javascript" | "LightningEvent";
+    moduleType?: "HTML" | "CSS" | "Javascript";
 
     defaultComponentClass?: ComponentClass[];
 
@@ -179,7 +179,8 @@ interface HTMLTemplateFile {
     componentReferences?: ComponentReference[];
     // Static resources referenced in a template. For example: 'src' attribute value of an <img>, <source> tag.
     staticResources?: StaticResourceReference[];
-    astRoot?: Node; // Template in AST format starting with the root <template> node.
+    // Template in AST format starting with the root <template> node. Note: this is a partial AST
+    astRoot?: Node;
 }
 
 // Represents a component referenced in the template.
@@ -200,8 +201,8 @@ interface Node {
     location: SourceLocation;
     // Any properties set in the template, will include html attributes, public properties
     attributes?: ElementAttributeReference[];
-    // Event handlers attached declaratively in the template with a 'on' prefix, eg: 'onclick'
-    eventHandlers?: EventHandlerReference[];
+    // Event listeners attached declaratively in the template with a 'on' prefix, eg: 'onclick'
+    eventListeners?: DeclarativeEventListener[];
     children?: Node[];
 }
 
@@ -258,9 +259,10 @@ interface TemplateLwcDomDirective extends Node {
 }
 
 // Information about an event handled declaratively in the template.
-interface EventHandlerReference {
-    name: string;
+interface DeclarativeEventListener {
+    type: string;
     value: ComputedValue;
+    // Location includes the event name starting with 'on' and the property assignment ending with '}'
     location: SourceLocation;
 }
 ```
@@ -273,8 +275,8 @@ Samples of the metadata for HTML template files can be viewed [here](https://git
 interface ScriptFile {
     fileType: 'js';
     fileName: string;
-    // Classes that extend the 'LightningElement' class directly or by extending another component class.
-    componentClasses?: ComponentClass[];
+    // List of all class metadata, covers only classes created using the ES6 'class' syntax
+    classes?: Class[];
     // Static import statements in a javascript module.
     imports?: Import[];
     // Dynamic import statements in a javascript module, additionally information about hints if provided.
@@ -283,6 +285,8 @@ interface ScriptFile {
     exports: [] | [Export] | [Export, ReExport];
     // DOM Event objects instantiated in a module. Includes Events and CustomEvents.
     domEvents?: DOMEvent[];
+    // Programmatically added event listeners in a module
+    eventListeners?: ProgrammaticEventListener[];
     /**
      * Static resources referenced in a module. Includes any static urls referenced in javascript and
      * resources loaded using the lightning platform resource loader, urls fetched via the salesforce
@@ -291,44 +295,46 @@ interface ScriptFile {
     staticResources?: StaticResourceReference[];
 }
 
-/**
- * Information about a component class. A class is considered a component class if it extends
- * 'LightningElement' class available in the standard 'lwc' module.
- */
-interface ComponentClass {
+// Information about a class
+interface Class {
     name?: string;
+    // A class is considered a component class if it extends
+    // 'LightningElement' class available in the standard 'lwc' module.
+    isComponentClass: boolean;
+    // A parent can be another class declared locally, imported identifier from an external module
+    // or an expression(think Mixin)
     extends: ParentClass;
     properties?: ClassProperty[];
     methods?: ClassMethod[];
     location: SourceLocation;
 }
 
-// Information about a class property of a component class.
-interface ClassProperty {
+interface ClassMember {
     accessType: 'public' | 'private' | 'static';
+    location: SourceLocation;
+    name: string;
+}
+
+// Information about a class property of a component class.
+interface ClassProperty extends ClassMember {
     // True, if the property is an instance property
     dataProperty?: boolean;
     // True, if the property has a getter
     hasGetter?: boolean;
     // True, if the property has a setter
     hasSetter?: boolean;
-    name: string;
     decorators?: [TrackDecorator | WireDecorator | ApiDecorator];
     // If the initial value is statically analyzable. If not analyzable, property will be omitted.
     initialValue?: number | string | boolean | null | object | undefined;
-    location: SourceLocation;
 }
 
 // Information about a class method of a component class.
-interface ClassMethod {
-    name: string;
-    accessType: 'public' | 'private' | 'static';
+interface ClassMethod extends ClassMember {
     decorators?: [ApiDecorator | TrackDecorator | WireDecorator];
     parameterNames?: (DefaultParameters | RestParameters)[];
     returnType: string;
     // If the return value is statically analyzable. If not analyzable, property will be omitted.
     returnValue?: number | string | boolean | null | object;
-    location: SourceLocation;
 }
 
 interface Decorator {
@@ -379,6 +385,7 @@ interface DynamicImportHint {
 interface Export {
     exportsList?: {
         type: 'class' | 'function' | 'expression';
+        name?: 'string';
     }[];
     default?: {
         type: 'class' | 'function' | 'expression';
@@ -406,11 +413,23 @@ interface DOMEvent {
     };
 }
 
+// Information about an event handled declaratively in the template.
+interface ProgrammaticEventListener {
+    type: string;
+    targetType: 'host' | 'shadowRoot' | 'Node';
+    options?: {
+        capture?: boolean;
+    };
+    location: SourceLocation;
+}
+
 // A parent component class including the 'LightningElement' class provided by the lwc module.
 type ParentClass =
-    | ComponentClass
+    | Class // Another class declared in the same file
+    | Mixin
+    // or a class imported from an external module
     | {
-          name?: string;
+          name: string;
           source?: ModuleReference;
       };
 
@@ -445,6 +464,7 @@ interface ModuleReference {
     // whether the module reference is the built in lwc module or the @salesforce scoped module or
     // a local file in the current bundle or an module imported from an external source(eg. a component)
     type: 'lwc' | '@salesforce' | 'internal' | 'external';
+    location: SourceLocation;
 }
 
 // Information about default function parameters.
@@ -462,12 +482,26 @@ interface RestParameters {
     startIndex: number;
     endIndex?: number;
 }
+
+interface Mixin {
+    // The identifier of the mixin expression
+    identifier: {
+        name: string;
+        source?: string; // If the mixin is imported from another module
+    };
+    arguments: string[]; // We can add more types, starting with class name for now.
+    location: SourceLocation;
+}
 ```
 Examples:
 _TODO_
 
 #### CSS file metadata shape
 ```ts
+// TODO APapko: 
+// Add support for declared properties v/s consumed properties
+// Add a field for dependencies(think imports in the case of slds v3)
+
 // Root metadata object for a css file
 interface CSSFile {
     fileType: 'css';
@@ -496,8 +530,7 @@ _TODO_
 // Information about an expression, surrounded by curly braces, in a HTML template.
 interface ComputedValue {
     expression: string;
-    // TODO: This also needs to account for iterator property, for each item
-    root?: ClassProperty;
+    expressionType: 'ClassMemberExpression' | 'IteratorExpression';
 }
 
 // Information about css custom property fallback values.
@@ -866,9 +899,9 @@ interface StaticResourceReference {
                     "type": "array",
                     "items": { "$ref": "#/definitions/SlotReference" }
                 },
-                "eventHandlers": {
+                "eventListeners": {
                     "type": "array",
-                    "items": { "$ref": "#/definitions/EventHandlerReference" }
+                    "items": { "$ref": "#/definitions/DeclarativeEventListener" }
                 }
             },
             "required": [ "tagName", "location" ]
@@ -949,7 +982,7 @@ interface StaticResourceReference {
             },
             "required": ["name"]
         },
-        "EventHandlerReference": {
+        "DeclarativeEventListener": {
             "description": "Information about an event handled declaratively in the template.",
             "type": "object",
             "properties": {
@@ -1167,8 +1200,11 @@ interface StaticResourceReference {
 
 # Open questions
 * Should gathering metadata about configuration(`*.js-meta.xml`) file in a bundle be in the scope of this RFC?
+  * Dean Moses from Builder Framework team says it is not required.
 * Is documentation(.md) in the scope of this RFC? Will it overlap with [this RFC](https://github.com/salesforce/lwc-rfcs/pull/26)
 * Does svg file have any useful metadata?
+* For a script file, should the metadata gathering be restricted to only ComponentClasses or be more broad and gather metadata about all classes?
+  * Should it collect data about only exported classes?
 
 # References
 

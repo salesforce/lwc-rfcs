@@ -1266,7 +1266,7 @@ interface ScriptMetadata extends FileMetadata {
     declarations: Array<ClassMetadata | FunctionMetadata | VariableMetadata>
 } 
 
-export interface ClassMetadata {
+interface ClassMetadata {
    name: string,
    extends: ExtendsMeta, // id, resource, location of the super 
    classMembers: Array<ClassMember>, // includes private/public props/methods
@@ -1274,13 +1274,17 @@ export interface ClassMetadata {
    events: Array<ClassEvent>,
 }
 
+interface ClassDocumentation {
+    classDescription: string,
+    html: string,
+    metadata: Object,
+}
+
 interface ExtendsMeta {
-{
-        id: string,
-        type: Class | Function
-        resource: 'lwc',
-        location: Location,
-    }
+    id: string,
+    type: Class | Function
+    resource: string,
+    location: Location,
 }
 
 interface ClassMember {
@@ -1291,7 +1295,14 @@ interface ClassMember {
     wire?: WireDependency
 }
 
-export interface ClassProperty {
+interface ClassMemberDocumentation {
+    description: string,
+    defaultValue: string,
+    dataType: string,
+    isRequired: boolean
+}
+
+interface ClassProperty {
     hasGetter: boolean,
     hasSetter: boolean,
     value?: ClassMemberValue,
@@ -1319,7 +1330,7 @@ interface WireDependency {
     
 }
 
-WireTargetAdapter {
+interface WireTargetAdapter {
     name: string;
     reference: string;
 }
@@ -1328,10 +1339,10 @@ WireTargetAdapter {
 ### HTML Metadata
 ```ts
 interface ComponentMetadata implements FileMetadata {
-    attributes: Array<HTMLAtribute>,
+    attributes: Array<HTMLAttribute>,
     properties: Array<HTMLProperty>,
     slots: Array<Slot>
-    staticResources: Array<HTMLReference>, //images, urls, etc
+    staticResources: Array<HTMLReference>, //images, urls, etc with location
     events: Array<HTMLEvent>, // not sure if the even belongs to a js or html meta
 }
 ```

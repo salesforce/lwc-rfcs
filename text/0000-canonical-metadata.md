@@ -138,7 +138,7 @@ interface BundleMetadata {
      * This class must be the default export of the javascript file. The file must be named the same
      * as the bundle
      */
-    defaultComponentClass?: Class[];
+    defaultComponentClass?: Class;
 
     // Information about HTML template files in the bundle.
     templates?: HTMLTemplateFile[];
@@ -275,6 +275,10 @@ Samples of the metadata for HTML template files can be viewed [here](https://git
 interface ScriptFile {
     fileType: 'js';
     fileName: string;
+    // A dictionary lookup for module references by module name in canonical format
+    moduleReferences: {
+        [key: string]: ModuleReference;
+    };
     // List of all class metadata, covers only classes created using the ES6 'class' syntax
     classes?: Class[];
     // Static import statements in a javascript module.
@@ -306,11 +310,14 @@ interface Class {
     extends: ParentClass;
     properties?: ClassProperty[];
     methods?: ClassMethod[];
+    // Location starts with the "class" key word and ends at the closing curly braces of the class body
     location: SourceLocation;
 }
 
 interface ClassMember {
+    type: 'property' | 'method';
     accessType: 'public' | 'private' | 'static';
+    // Location starts with the first character of the member's identifier and ends at the semi-colon in case of a property and closing curly in case of a method
     location: SourceLocation;
     name: string;
 }
@@ -353,8 +360,10 @@ interface TrackDecorator extends Decorator {
 
 // Information about @wire decorator usage includes information about the data source.
 interface WireDecorator extends Decorator {
+    type: "wire";
     adapterId: string;
-    adapterModule?: ModuleReference;
+    // module name in canonical form
+    adapterModule?: string;
     adapterConfig?: object;
 }
 
@@ -362,13 +371,16 @@ interface WireDecorator extends Decorator {
 interface Import {
     importType?: ('DefaultBinding' | 'NamedImports' | 'NamespacedImport')[];
     importsList?: string[] | string;
-    moduleSpecifier: ModuleReference;
+    // module name in canonical form
+    moduleSpecifier: string;
+    // Location starts from the import key word to the end of statement 
     location: SourceLocation;
 }
 
 // Information about a dynamic import statement in a module.
 interface DynamicImport {
-    moduleSpecifier: ModuleReference;
+    // module name in canonical form
+    moduleSpecifier: string;
     moduleNameType: 'string' | 'unresolved';
     location: SourceLocation;
     hints?: DynamicImportHint[];
@@ -387,9 +399,7 @@ interface Export {
         type: 'class' | 'function' | 'expression';
         name?: 'string';
     }[];
-    default?: {
-        type: 'class' | 'function' | 'expression';
-    };
+    default?: boolean;
     location: SourceLocation;
 }
 
@@ -399,7 +409,8 @@ interface ReExport {
         name: string;
         type: 'class' | 'function' | 'expression';
     }[];
-    moduleSpecifier: ModuleReference;
+    // module name in canonical form
+    moduleSpecifier: string;
     location: SourceLocation;
 }
 
@@ -411,6 +422,7 @@ interface DOMEvent {
         bubbles?: boolean;
         composed?: boolean;
     };
+    location: SourceLocation;
 }
 
 // Information about an event handled declaratively in the template.
@@ -425,16 +437,21 @@ interface ProgrammaticEventListener {
 
 // A parent component class including the 'LightningElement' class provided by the lwc module.
 type ParentClass =
-    | Class // Another class declared in the same file
+    | string // Another class declared in the same file
     | Mixin
     // or a class imported from an external module
     | {
           name: string;
-          source?: ModuleReference;
+          // module name in full canonical form, the ModuleReference object can be looked up at 
+          // the root ScriptFile object using this name
+          moduleName?: string;
+          // Location of the parent class identifier
+          location: SourceLocation;
       };
 
 // Information about a module imported into a module using the 'import' statement.
 interface ModuleReference {
+    // Full canonical name, eg. lightning/input, lightning/recordForm
     name: string;
     namespace?: string;
     moduleIdentifier?:
@@ -487,6 +504,7 @@ interface Mixin {
     // The identifier of the mixin expression
     identifier: {
         name: string;
+        // module name in canonical form
         source?: string; // If the mixin is imported from another module
     };
     arguments: string[]; // We can add more types, starting with class name for now.
@@ -494,7 +512,7 @@ interface Mixin {
 }
 ```
 Examples:
-_TODO_
+Samples of the metadata for script files can be viewed [here](https://github.com/salesforce/lwc-metadata/pull/2)
 
 #### CSS file metadata shape
 ```ts
@@ -571,7 +589,7 @@ interface SourceLocation {
 // as a string literal or a reference to a computed value.
 interface StaticResourceReference {
     // The type of static resource loaded, identifiable by the file extension.
-    type: 'image' | 'css' | 'html' | 'js' | 'other';
+    type: 'image' | 'css' | 'html' | 'js' | 'svg' | 'other';
     value: string | ComputedValue;
     location: SourceLocation;
 }

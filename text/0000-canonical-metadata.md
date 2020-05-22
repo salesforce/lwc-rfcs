@@ -1216,6 +1216,135 @@ interface StaticResourceReference {
 ```
 </details>
 
+## Metadata Shape Option 2
+
+The main differences in proposed shape #2:
+- the root object interface:  not only the root object contains metadata for each file, it also describes the shape of an overall bundle/component via interface object, which contains public properties, slots, events or anything that is accessible from the outside of the component/module. The reason for doing so is that individual file metadata doesn't have the notion of other files and therefore cannot make assumption of whether it is a component. 
+- no decorators
+- file metadata revolves around declarations (both internal and external). The reason for this is that we don't know the content of the file, thus the metadata is collected without any assumptions - could be module with few _const_ exports, could be a class, etc.
+
+### TypeScript
+
+#### Root Metadata Object
+```ts
+interface BundleMetadata {
+    success: boolean;
+    version: string;
+    diagnostics: Array<Diagnostic>;
+    entry: string,
+    result: { [name: string]: FileMetadata } // metadata per each source
+    [api or interface]: ComponentInterface, // public methods, events, css properties, exports, slots.
+}
+
+interface BundleInterface {
+    type: 'module' | 'component',
+    attachedEvents: Array<Event>,
+    emittedEvents: Array<Event>,
+    publicProperties: Array<ClassMember>,
+    publicMethods: Array<ClassMember>,
+    slots: Array<Slot>,
+    exports: Array<ClassMetadata | FunctionMetadata | VariableMetadata>
+}
+```
+
+<details>
+<summary>Click to view format</summary>
+#### Root Metadata Object Per File
+```ts
+export interface FileMetadata {
+    path: string,
+    type: 'module' | 'component'| 'css',
+    dependencies: Array<Reference>, // dynamic import is treated as a module dependency type of 'dynamic'
+}
+```
+
+For every source in the bundle there will be a corresponding typed class which extends from the base FileMetadata.
+
+#### Script Metadata (.js|.ts)
+```ts
+interface ScriptMetadata extends FileMetadata {
+    declarations: Array<ClassMetadata | FunctionMetadata | VariableMetadata>
+} 
+
+export interface ClassMetadata {
+   name: string,
+   extends: ExtendsMeta, // id, resource, location of the super 
+   classMembers: Array<ClassMember>, // includes private/public props/methods
+   documentation: ClassDocumentation,
+   events: Array<ClassEvent>,
+}
+
+interface ExtendsMeta {
+{
+        id: string,
+        type: Class | Function
+        resource: 'lwc',
+        location: Location,
+    }
+}
+
+interface ClassMember {
+    name: string,
+    type: string,
+    isPublic: boolean,
+    documentation?: ClassMemberDocumentation,
+    wire?: WireDependency
+}
+
+export interface ClassProperty {
+    hasGetter: boolean,
+    hasSetter: boolean,
+    value?: ClassMemberValue,
+}
+
+interface ClassMethod {
+    hasGetter: boolean,
+    hasSetter: boolean,
+    returnValue?: ClassMemberValue,
+}
+
+interface ClassMemberValue {
+    type: ClassMemberValueType, 
+    value: any,
+    importedName: string,
+}
+
+enum ClassMemberValueType {
+    ARRAY, BOOLEAN, MODULE, NUMBER, NULL, OBJECT, STRING, UNDEFINED, UNRESOLVED,
+}
+
+interface WireDependency {
+    adapter: WireTargetAdapter;
+    params?: { [name: string]: Value }; // value has type and actual value
+    
+}
+
+WireTargetAdapter {
+    name: string;
+    reference: string;
+}
+```
+
+### HTML Metadata
+```ts
+interface ComponentMetadata implements FileMetadata {
+    attributes: Array<HTMLAtribute>,
+    properties: Array<HTMLProperty>,
+    slots: Array<Slot>
+    staticResources: Array<HTMLReference>, //images, urls, etc
+    events: Array<HTMLEvent>, // not sure if the even belongs to a js or html meta
+}
+```
+
+### CSS Metadata 
+```ts
+interface type HTMLMetadata implements FileMetadata {
+    tokens: Array<string>,
+    customProperties: Array<string>,
+}
+```
+</details>
+
 # Open questions
 * Should gathering metadata about configuration(`*.js-meta.xml`) file in a bundle be in the scope of this RFC?
   * Dean Moses from Builder Framework team says it is not required.

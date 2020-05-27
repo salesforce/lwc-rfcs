@@ -1,8 +1,10 @@
 ---
 title: Spellcheck Attribute
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2019/11/15
-updated_at: 2019/11/20
+updated_at: 2020/05/26
+champion: Jose David Rodriguez Velasco (jodarove)
+implementation: https://github.com/salesforce/lwc/pull/1610
 pr: https://github.com/salesforce/lwc-rfcs/pull/21
 ---
 

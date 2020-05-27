@@ -3,7 +3,7 @@ title: Spellcheck Attribute
 status: IMPLEMENTED
 created_at: 2019/11/15
 updated_at: 2020/05/26
-champion: Eugene Kashida (ekashida)
+champion: Jose David Rodriguez Velasco (jodarove)
 implementation: https://github.com/salesforce/lwc/pull/1610
 pr: https://github.com/salesforce/lwc-rfcs/pull/21
 ---

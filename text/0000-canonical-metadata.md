@@ -1217,11 +1217,15 @@ interface StaticResourceReference {
 </details>
 
 ## Metadata Shape Option 2
+Overview:
+The vision is to allow expert users to retrieve file based metadata and for the regular users to retrieve an easy, self-contained metadata object that exposes all publicly available/accessible properties of the current bundle.
 
 The main differences in proposed shape #2:
-- the root object interface:  not only the root object contains metadata for each file, it also describes the shape of an overall bundle/component via interface object, which contains public properties, slots, events or anything that is accessible from the outside of the component/module. The reason for doing so is that individual file metadata doesn't have the notion of other files and therefore cannot make assumption of whether it is a component. 
-- no decorators
-- file metadata revolves around declarations (both internal and external). The reason for this is that we don't know the content of the file, thus the metadata is collected without any assumptions - could be module with few _const_ exports, could be a class, etc.
+- no decorators: external consumer shouldn't be concerned if the class fields are decorated or not. All they need is the information that describes the component's/module's public interface. With that, instead of collecting decorators, each class member will carry 'isPublic' property to indicate its access. 
+- success: an indication of successful collection. If errors occurred during the metadata collection, then 'success' will be false and diagnostics will be reported.
+- diagnostics: even though metadata collection is not responsible for validating the syntax, any unexpected failures during the collection should be handled gracefully and surfaced to the user
+- javascript declarations: file metadata revolves around declarations (both exported and private) - that can be functions, classes, consts, etc. The reason for this is that we don't know the content of the file and cannot make an assumption about its shape, therefore the metadata is collected from declarations.
+- bundle interface: an interpretation of the bundle shape. It is an object that contains public properties, slots, events or anything that is accessible from the outside of the component/module. The reason for doing so is that individual file metadata doesn't have the notion of other files in the bundle and therefore cannot make assumption about an overall shape. With that, the interface is an additional step that attempts to deduce the shape and provide a union of all public properties. 
 
 ### TypeScript
 
@@ -1232,10 +1236,12 @@ interface BundleMetadata {
     version: string;
     diagnostics: Array<Diagnostic>;
     entry: string,
-    result: { [name: string]: FileMetadata } // metadata per each source
-    [api or interface]: ComponentInterface, // public methods, events, css properties, exports, slots.
+    results: { [name: string]: FileMetadata } // metadata for each source
+    [api or interface]: BundleInterface, // public methods, events, css properties, exports, slots.
 }
 
+// A bundle interface, which contains a union of all file-based
+// metadata objects with some wits about inheritance and overrides. 
 interface BundleInterface {
     type: 'module' | 'component',
     attachedEvents: Array<Event>,
@@ -1263,6 +1269,8 @@ For every source in the bundle there will be a corresponding typed class which e
 #### Script Metadata (.js|.ts)
 ```ts
 interface ScriptMetadata extends FileMetadata {
+    fileType: string,
+    fileName: string,
     declarations: Array<ClassMetadata | FunctionMetadata | VariableMetadata>
 } 
 
@@ -1272,6 +1280,7 @@ interface ClassMetadata {
    classMembers: Array<ClassMember>, // includes private/public props/methods
    documentation: ClassDocumentation,
    events: Array<ClassEvent>,
+   listeners: Array<ClassListener> // programmatic or declarative event listeners found in the file
 }
 
 interface ClassDocumentation {
@@ -1302,15 +1311,13 @@ interface ClassMemberDocumentation {
     isRequired: boolean
 }
 
-interface ClassProperty {
+interface ClassProperty extends ClassMember{
     hasGetter: boolean,
     hasSetter: boolean,
     value?: ClassMemberValue,
 }
 
-interface ClassMethod {
-    hasGetter: boolean,
-    hasSetter: boolean,
+interface ClassMethod extends ClassMember {
     returnValue?: ClassMemberValue,
 }
 
@@ -1331,27 +1338,46 @@ interface WireDependency {
 }
 
 interface WireTargetAdapter {
-    name: string;
-    reference: string;
+    adapterId: string;
+    moduleSpecifier: string; // points to the adapter resource
 }
 ```
 
 ### HTML Metadata
 ```ts
-interface ComponentMetadata implements FileMetadata {
-    attributes: Array<HTMLAttribute>,
-    properties: Array<HTMLProperty>,
+interface HTMLMetadata implements FileMetadata {
+    fileType: string,
+    fileName: string,
+    tags: Array<CustomElementMetadata>
     slots: Array<Slot>
     staticResources: Array<HTMLReference>, //images, urls, etc with location
+}
+
+interface CustomElementMetadata {
+    attributes: Array<HTMLAttribute>,
+    properties: Array<HTMLProperty>,
     events: Array<HTMLEvent>, // not sure if the even belongs to a js or html meta
 }
 ```
 
 ### CSS Metadata 
 ```ts
-interface type HTMLMetadata implements FileMetadata {
-    tokens: Array<string>,
-    customProperties: Array<string>,
+interface type CSSMetadata implements FileMetadata {
+    fileType: string,
+    fileName: string,
+    imports: Array<Reference>, // css only module imports
+    customProperties: Array<CssCustomProperty>,
+}
+
+interface CssCustomProperty {
+    external: boolean, // determines if the custom property is defined in the current file
+    name: string,
+    fallback: string,
+    value?: {
+        type: string,
+        value: string,
+        fallback: string
+    }
 }
 ```
 </details>

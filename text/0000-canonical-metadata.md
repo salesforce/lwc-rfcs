@@ -1221,7 +1221,7 @@ Overview:
 The vision is to allow expert users to retrieve file based metadata and for the regular users to retrieve an easy, self-contained metadata object that exposes all publicly available/accessible properties of the current bundle.
 
 The main differences in proposed shape #2:
-- no decorators: external consumer shouldn't be concerned if the class fields are decorated or not. All they need is the information that describes the component's/module's public interface. With that, instead of collecting decorators, each class member will carry 'isPublic' property to indicate its access. 
+- no decorators: external consumer shouldn't be concerned if the class fields are decorated or not. All they need is the information that describes whether the class member is public. With that, instead of collecting decorators, each class member will carry 'isPublic' property to indicate its access. 
 - success: an indication of successful collection. If errors occurred during the metadata collection, then 'success' will be false and diagnostics will be reported.
 - diagnostics: even though metadata collection is not responsible for validating the syntax, any unexpected failures during the collection should be handled gracefully and surfaced to the user
 - javascript declarations: file metadata revolves around declarations (both exported and private) - that can be functions, classes, consts, etc. The reason for this is that we don't know the content of the file and cannot make an assumption about its shape, therefore the metadata is collected from declarations.
@@ -1244,7 +1244,7 @@ interface BundleMetadata {
 // metadata objects with some wits about inheritance and overrides. 
 interface BundleInterface {
     type: 'module' | 'component',
-    attachedEvents: Array<Event>,
+    eventListener: Array<EventListeners>,
     emittedEvents: Array<Event>,
     publicProperties: Array<ClassMember>,
     publicMethods: Array<ClassMember>,
@@ -1259,7 +1259,8 @@ interface BundleInterface {
 ```ts
 export interface FileMetadata {
     path: string,
-    type: 'module' | 'component'| 'css',
+    name: string,
+    type: 'script' | 'html'| 'css',
     dependencies: Array<Reference>, // dynamic import is treated as a module dependency type of 'dynamic'
 }
 ```
@@ -1269,13 +1270,12 @@ For every source in the bundle there will be a corresponding typed class which e
 #### Script Metadata (.js|.ts)
 ```ts
 interface ScriptMetadata extends FileMetadata {
-    fileType: string,
-    fileName: string,
+    type: 'script',
     declarations: Array<ClassMetadata | FunctionMetadata | VariableMetadata>
 } 
 
 interface ClassMetadata {
-   name: string,
+   name?: string, // optional due to anonymous class
    extends: ExtendsMeta, // id, resource, location of the super 
    classMembers: Array<ClassMember>, // includes private/public props/methods
    documentation: ClassDocumentation,
@@ -1311,7 +1311,7 @@ interface ClassMemberDocumentation {
     isRequired: boolean
 }
 
-interface ClassProperty extends ClassMember{
+interface ClassProperty extends ClassMember {
     hasGetter: boolean,
     hasSetter: boolean,
     value?: ClassMemberValue,
@@ -1346,25 +1346,23 @@ interface WireTargetAdapter {
 ### HTML Metadata
 ```ts
 interface HTMLMetadata implements FileMetadata {
-    fileType: string,
-    fileName: string,
     tags: Array<CustomElementMetadata>
     slots: Array<Slot>
-    staticResources: Array<HTMLReference>, //images, urls, etc with location
+    staticResources: Array<HTMLReference>, // images, urls, etc with location
 }
 
 interface CustomElementMetadata {
+ slots: Array<Slot>
     attributes: Array<HTMLAttribute>,
     properties: Array<HTMLProperty>,
-    events: Array<HTMLEvent>, // not sure if the even belongs to a js or html meta
+    listeners: Array<EventListener>, // not sure if the even belongs to a js or html meta
 }
 ```
 
 ### CSS Metadata 
 ```ts
 interface type CSSMetadata implements FileMetadata {
-    fileType: string,
-    fileName: string,
+    type:'css',
     imports: Array<Reference>, // css only module imports
     customProperties: Array<CssCustomProperty>,
 }
@@ -1376,7 +1374,7 @@ interface CssCustomProperty {
     value?: {
         type: string,
         value: string,
-        fallback: string
+        fallback: string | CssCustomProperty
     }
 }
 ```

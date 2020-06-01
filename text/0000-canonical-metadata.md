@@ -1221,7 +1221,7 @@ Overview:
 The vision is to allow expert users to retrieve file based metadata and for the regular users to retrieve an easy, self-contained metadata object that exposes all publicly available/accessible properties of the current bundle.
 
 The main differences in proposed shape #2:
-- no decorators: external consumer shouldn't be concerned if the class fields are decorated or not. All they need is the information that describes the component's/module's public interface. With that, instead of collecting decorators, each class member will carry 'isPublic' property to indicate its access. 
+- no decorators: external consumer shouldn't be concerned if the class fields are decorated or not. All they need is the information that describes whether the class member is public. With that, instead of collecting decorators, each class member will carry 'isPublic' property to indicate its access. 
 - success: an indication of successful collection. If errors occurred during the metadata collection, then 'success' will be false and diagnostics will be reported.
 - diagnostics: even though metadata collection is not responsible for validating the syntax, any unexpected failures during the collection should be handled gracefully and surfaced to the user
 - javascript declarations: file metadata revolves around declarations (both exported and private) - that can be functions, classes, consts, etc. The reason for this is that we don't know the content of the file and cannot make an assumption about its shape, therefore the metadata is collected from declarations.

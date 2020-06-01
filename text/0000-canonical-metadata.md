@@ -1235,33 +1235,58 @@ interface BundleMetadata {
     success: boolean;
     version: string;
     diagnostics: Array<Diagnostic>;
-    entry: string,
+    entry: string;
     results: { [name: string]: FileMetadata } // metadata for each source
-    [api or interface]: BundleInterface, // public methods, events, css properties, exports, slots.
+    interface: BundleInterface; // public methods, events, css properties, exports, slots.
 }
 
-// A bundle interface, which contains a union of all file-based
+interface Diagnostic {
+    message: string;
+    code: number;
+    filename?: string;
+    location?: Location;
+    level: DiagnosticLevel;
+}
+
+enum DiagnosticLevel { Fatal, Error, Warning, Log }
+
+// A bundle interface; which contains a union of all file-based
 // metadata objects with some wits about inheritance and overrides. 
 interface BundleInterface {
-    type: 'module' | 'component',
-    attachedEvents: Array<Event>,
-    emittedEvents: Array<Event>,
-    publicProperties: Array<ClassMember>,
-    publicMethods: Array<ClassMember>,
-    slots: Array<Slot>,
+    type: 'module' | 'component';
+    eventListener: Array<EventListener>;
+    emittedEvents: Array<ClassEvent>;
+    publicProperties: Array<ClassMember>;
+    publicMethods: Array<ClassMember>;
+    slots: Array<SlotMeta>;
     exports: Array<ClassMetadata | FunctionMetadata | VariableMetadata>
 }
 ```
 
 <details>
 <summary>Click to view format</summary>
+
 #### Root Metadata Object Per File
 ```ts
-export interface FileMetadata {
-    path: string,
-    type: 'module' | 'component'| 'css',
+interface FileMetadata {
+    name: string,
+    path: string;
+    type: 'script' | 'html'| 'css',
     dependencies: Array<Reference>, // dynamic import is treated as a module dependency type of 'dynamic'
 }
+
+interface Reference {
+    type: ReferenceType;
+    id: string;
+    namespacedId?: string;
+    file: string;
+    locations: Location[];
+}
+interface ReferenceReport {
+    references: Reference[];
+    diagnostics: Diagnostic[];
+}
+type ReferenceType = 'apexClass' | 'apexMethod' | 'apexContinuation' | 'client' | 'community' | 'component' | 'contentAssetUrl' | 'customPermission' | 'dynamicComponent' | 'slds' | 'messageChannel' | 'i18n' | 'gate' | 'label' | 'metric' | 'module' | 'internal' | 'resourceUrl' | 'schema' | 'sobjectClass' | 'sobjectField' | 'user' | 'userPermission';
 ```
 
 For every source in the bundle there will be a corresponding typed class which extends from the base FileMetadata.
@@ -1269,62 +1294,86 @@ For every source in the bundle there will be a corresponding typed class which e
 #### Script Metadata (.js|.ts)
 ```ts
 interface ScriptMetadata extends FileMetadata {
-    fileType: string,
-    fileName: string,
+    type: 'script';
     declarations: Array<ClassMetadata | FunctionMetadata | VariableMetadata>
 } 
 
+interface FunctionMetadata {
+    name?: string;
+    params?: Array<any>;
+    returnValue?: ClassMemberValue;
+    context?: ClassMemberValue; // invocation context
+}
+
+interface VariableMetadata {
+    name?: string;
+    value?: ClassMemberValue;
+}
+
 interface ClassMetadata {
-   name: string,
-   extends: ExtendsMeta, // id, resource, location of the super 
-   classMembers: Array<ClassMember>, // includes private/public props/methods
-   documentation: ClassDocumentation,
-   events: Array<ClassEvent>,
+   name?: string; // optional due to anonymous class
+   extends: ExtendsMeta; // id; resource; location of the super 
+   classMembers: Array<ClassMember>; // includes private/public props/methods
+   documentation: ClassDocumentation;
+   events: Array<ClassEvent>;
    listeners: Array<ClassListener> // programmatic or declarative event listeners found in the file
 }
 
+interface ClassEvent {
+    name: string;
+    className: string; // class the event is fired from 
+    location: Location;
+}
+
+interface ClassListener {
+    name: string;
+    handlerName: string;
+    className: string; // class the event is fired from 
+    location: Location;
+}
+
 interface ClassDocumentation {
-    classDescription: string,
-    html: string,
-    metadata: Object,
+    classDescription: string;
+    html: string;
+    metadata: Object;
 }
 
 interface ExtendsMeta {
-    id: string,
-    type: Class | Function
-    resource: string,
-    location: Location,
+    id: string;
+    type: 'class' | 'function';
+    resource: string;
+    location: Location;
 }
 
 interface ClassMember {
-    name: string,
-    type: string,
-    isPublic: boolean,
-    documentation?: ClassMemberDocumentation,
+    name: string;
+    type: string;
+    isPublic: boolean;
+    documentation?: ClassMemberDocumentation;
     wire?: WireDependency
 }
 
 interface ClassMemberDocumentation {
-    description: string,
-    defaultValue: string,
-    dataType: string,
+    description: string;
+    defaultValue: string;
+    dataType: string;
     isRequired: boolean
 }
 
-interface ClassProperty extends ClassMember{
-    hasGetter: boolean,
-    hasSetter: boolean,
-    value?: ClassMemberValue,
+interface ClassProperty extends ClassMember {
+    hasGetter: boolean;
+    hasSetter: boolean;
+    value?: ClassMemberValue;
 }
 
 interface ClassMethod extends ClassMember {
-    returnValue?: ClassMemberValue,
+    returnValue?: ClassMemberValue;
 }
 
 interface ClassMemberValue {
-    type: ClassMemberValueType, 
-    value: any,
-    importedName: string,
+    type: ClassMemberValueType; 
+    value: any;
+    importedName: string;
 }
 
 enum ClassMemberValueType {
@@ -1333,7 +1382,7 @@ enum ClassMemberValueType {
 
 interface WireDependency {
     adapter: WireTargetAdapter;
-    params?: { [name: string]: Value }; // value has type and actual value
+    params?: { [name: string]: ClassMemberValue }; // value has type and actual value
     
 }
 
@@ -1341,42 +1390,61 @@ interface WireTargetAdapter {
     adapterId: string;
     moduleSpecifier: string; // points to the adapter resource
 }
+
+interface SlotMeta {
+    name: string;
+    scope: string; // parent element name
+}
 ```
 
 ### HTML Metadata
 ```ts
-interface HTMLMetadata implements FileMetadata {
-    fileType: string,
-    fileName: string,
-    tags: Array<CustomElementMetadata>
-    slots: Array<Slot>
-    staticResources: Array<HTMLReference>, //images, urls, etc with location
+interface HTMLMetadata extends FileMetadata {
+    type: 'html';
+    tags: Array<CustomElementMetadata>;
+    slots: Array<SlotMeta>;
+    staticResources: Array<Reference>, //images, urls, etc with location
 }
 
 interface CustomElementMetadata {
-    attributes: Array<HTMLAttribute>,
-    properties: Array<HTMLProperty>,
-    events: Array<HTMLEvent>, // not sure if the even belongs to a js or html meta
+    attributes: {
+        [name: string]: DependencyParameter;
+    };
+    properties: {
+        [name: string]: DependencyParameter;
+    };
+    events: Array<HTMLEventListener>, // not sure if the even belongs to a js or html meta
+}
+
+interface DependencyParameter {
+    type: 'literal' | 'expression';
+    value: string | boolean;
+}
+
+interface HTMLEventListener {
+    name: string;
+    handlerName: string;
+    tagName: string; // custom element the handle is attached to
+    location: Location;
 }
 ```
 
 ### CSS Metadata 
 ```ts
-interface type CSSMetadata implements FileMetadata {
-    fileType: string,
-    fileName: string,
-    imports: Array<Reference>, // css only module imports
-    customProperties: Array<CssCustomProperty>,
+interface CSSMetadata extends FileMetadata {
+    type: 'css';
+    imports: Array<Reference>; // css only module imports
+    customProperties: Array<CssCustomProperty>;
 }
 
 interface CssCustomProperty {
-    external: boolean, // determines if the custom property is defined in the current file
-    name: string,
-    fallback: string,
+    external: boolean; // determines if the custom property is defined in the current file
+    name: string;
+    fallback: string;
     value?: {
-        type: string,
-        value: string,
-        fallback: string
+        type: string;
+        value: string;
+        fallback: string;
     }
 }
 ```

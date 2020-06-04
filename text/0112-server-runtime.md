@@ -15,26 +15,25 @@ The LWC engine has been designed from the beginning to run in an environment wit
 - `@lwc/engine-dom` exposes LWC APIs available on the browser.
 - `@lwc/engine-server` exposes LWC APIs used for server-side rendering.
 
-## Scope
+>> TODO: Add more details
 
-LWC SSR support is a broad subject, this proposal only focuses on a subset of it. This proposal covers the following topics:
+## Goals
 
-- How to evaluate the existing LWC engine module in a javascript context without DOM access.
-- What LWC APIs should be exposed in both environments.
-- How the LWC engine share the same logic when evaluated in both environments.
+Server Side Rendering (SSR) is a popular technique for rendering pages and components that would usually run in a browser on the server. SSR takes as input a root component and a set of properties and renders an HTML fragment and optionally one or multiple stylesheets. This technique can be used in many different ways: improve initial page render time, generate static website, …
 
-The following topics are considered out of the scope of this proposal:
+Due to the size and complexity of this feature, the rollout of SSR is broken up in 3 different phases and is spread over multiple releases:
+- **Phase 1:** Decouple the LWC engine from the DOM and allow it to run in a JavaScript environment without access to the DOM APIs (like Node.js). As part of this phase the LWC server engine will also generate a prototype version of the serialized HTML (Phase 2).
+- **Phase 2:** Settle on a HTML serialization format
+- **Phase 3:** Rehydrate in a browser the DOM tree resulting of the serialization into an LWC component tree
 
-- How the LWC component tree rendered on the server gets serialized to HTML and sent to the browser.
-- How the serialized component tree gets rehydrated when processed by the browser.
+As part of phase 1, the goal is to provide a capability for LWC to render components transparently on the server. From the component stand point, the LWC SSR and DOM versions provide identical APIs and will run the component in the same fashion on both platforms.
 
-## Motivation
+## Proposal Scope
 
-The first step in enabling SSR support on LWC is to be able to run the engine in a non-DOM-enabled environment. It is currently impossible to evaluate the engine in such environment due to its hard dependencies on DOM APIs.
+This proposal will be only focussing on the phase 1 of the SSR project. The phase 2 and 3 will be covered in subsequent proposals. This proposal cover 2 main aspects of the LWC SSR:
 
-While we want to share as much logic as possible between the different environments and make SSR as transparent as possible for component authors, the runtime behavior and APIs exposed by the engine greatly differs between environments. In this regard, it makes sense to break up the current `@lwc/engine` package into multiple packages specifically tailored for each environment.
-
-Distributing multiple versions of the LWC engine offers the capability to expose different APIs depending on the execution context. On one hand, the current implementation of `createElement` with reaction hooks doesn't make sense in Node.js since there is no DOM tree to attach the created element. In the same way, the `renderToString` method doesn't make sense to ship in a browser.
+- What are the differences between the DOM version and the SSR version of LWC?
+- How to create 2 different implementation of the LWC engine while keeping the core logic shared.
 
 ## Detailed design
 
@@ -145,6 +144,11 @@ Changing the application root creation consists in a one line change. Therefor i
 
 
 Updating the documentation for the newly added server only APIs should be enough.
+
+## Unresolved questions
+
+* **Remove `@lwc/engine-core` on TypeScript `dom` library?** The `@lwc/engine-core` package relies heavily on the ambient DOM TypeScript interfaces provided by the `dom` library. To ensure that the `@lwc/engine-core` is not leveraging any of the DOM APIs we will need to remove the `dom` lib from the `tsconfig.json`. It is currently unclear how all the ambient types can be removed on this package while ensuring the type safety.
+* **How to implement LWC Context for SSR?** Context uses eventing for registration between the provider and the consumer. Since `@lwc/engine-server` will only implement a subset of the DOM eventing, we will need to evaluate how we can replace the current registration mechanism.
 
 ---
 

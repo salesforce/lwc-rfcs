@@ -85,7 +85,7 @@ These are the entities that will be analyzed and metadata gathered about:
         * iterator
         * key
         * lwc:dom="manual"
-    * Event handlers
+    * Event listeners
     * Slots
 * Javascript file
     * Component classes
@@ -104,7 +104,7 @@ These are the entities that will be analyzed and metadata gathered about:
     * Exports
         * Default exports
         * Named exports
-        * Aggregating modules
+        * Re-exports
     * JSDoc
         * Class
         * Properties
@@ -117,12 +117,13 @@ These are the entities that will be analyzed and metadata gathered about:
         * `<img>`
         * `<link>`
 * CSS file
-    * Tokens
+    * Custom property declaration and usage([--*](https://developer.mozilla.org/en-US/docs/Web/CSS/--*))
     * Static resources
+    * CSS imports
 
 ## Definitions
-* Component class: Any class declared using the ES6 class syntax and extending 'LightningElement' binding imported from the built-in 'lwc' module.
-* Static resource: For the purpose of this RFC, any resource referenced by a fully qualified uri will be considered a static resource. This RFC does not attempt to analyze static resource determined at runtime, for example, by the usage salesforce scoped modules like `@salesforce/resourceUrl`.
+* **Component class:** Any class declared using the ES6 class syntax and extending 'LightningElement' binding imported from the built-in 'lwc' module.
+* **Static resource:** For the purpose of this RFC, any resource referenced by a fully qualified uri will be considered a static resource. This RFC does not attempt to analyze static resource determined at runtime, for example, by the usage salesforce scoped modules like `@salesforce/resourceUrl`.
 
 ## Metadata shape
 
@@ -158,7 +159,7 @@ interface BundleMetadata {
 ```
 Other alternatives:
 - Indexed by file type and file name
-```ts
+```js
 interface BundleMetadataOption2 {
     version: string;
     moduleSpecifier: string;
@@ -599,8 +600,8 @@ interface ModuleReference {
     // Only present for salesforce scoped modules, else property is omitted
     sfdcResource?: {
         scoped:
-            | 'apexClass'
-            | 'apexMethod'
+            | 'accessCheck'
+            | 'apex'
             | 'apexContinuation'
             | 'client'
             | 'community'
@@ -608,18 +609,15 @@ interface ModuleReference {
             | 'contentAssetUrl'
             | 'customPermission'
             | 'dynamicComponent'
-            | 'slds'
             | 'messageChannel'
             | 'i18n'
             | 'gate'
             | 'label'
             | 'metric'
-            | 'module'
             | 'internal'
             | 'resourceUrl'
             | 'schema'
-            | 'sobjectClass'
-            | 'sobjectField'
+            | 'slds'
             | 'user'
             | 'userPermission';
         namespaceId: string; // scoped module namespace normalization

@@ -10,13 +10,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/23
 
 ## Summary
 
-The LWC engine has been designed from the beginning to run in an environment with access to the DOM APIs. To accommodate server-side rendering (SSR) requirements, we need a way to decouple the engine from the DOM APIs. The existing `@lwc/engine` will be replaced by 3 new packages:
-
--   `@lwc/engine-core` exposes platform-agnostic APIs and will be used by the different runtime packages to share the common logic.
--   `@lwc/engine-dom` exposes LWC APIs available on the browser.
--   `@lwc/engine-server` exposes LWC APIs used for server-side rendering.
-
-> > TODO: Add more details
+> TODO: Add more details
 
 ## Goals
 
@@ -216,7 +210,7 @@ This package contains core logic shared by the different runtime environment inc
 -   `registerDecorators`
 -   `sanitizeAttribute`
 
-On top of the public APIs, this package also exposes new internal APIs that are meant to be consumed 
+On top of the public APIs, this package also exposes new internal APIs that are meant to be consumed
 
 -   `getComponentInternalDef(Ctor: typeof LightningElement): ComponentDef`: Get the internal component definition for a given LightningElement constructor.
 -   `createVM(elm: HostElement, Ctor, options: { mode: 'open' | 'closed', owner: VM | null, renderer: Renderer }): VM`: Create a new View-Model (VM) associated with an LWC component.
@@ -225,34 +219,49 @@ On top of the public APIs, this package also exposes new internal APIs that are 
 -   `getAssociatedVMIfPresent(elm: HostElement): VM | undefined`: Retrieve the VM on a given element.
 -   `setElementProto(elm: HostElement): void`: Patch an element prototype with the bridge element.
 
-The DOM APIs used by the rendered engine are injected by the runtime depending on the environment. The list of all the current DOM APIs the engine depends upon can be found in the [DOM APIs usage](#dom-apis-usage). The [Renderer](#renderer-interface) interface will replace those direct invocation to the DOM API usages.
+The current `@lwc/engine` code relies on direct DOM invocation. The list of all the current DOM APIs the engine depends upon can be found in the [DOM APIs usage](#dom-apis-usage). Those direct DOM APIs invocations will be replaced by a [`Rendered` interface](#renderer-interface) that will be injected at runtime into the `createVM`. All the sub-components created from the root VM will share the same `Renderer` interface.
 
 #### `@lwc/engine-dom`
 
-Runtime that can be used to render LWC component trees in a DOM environment. This package exposes the following APIs:
+Runtime that can be used to render LWC component trees in a DOM environment. On top of re-exporting all the public APIs from the `@lwc/engine-core` package, this package also exposes the following DOM environment specific APIs:
 
--   `createElement` + reaction hooks
--   `isNodeFromTemplate`
-
-This package injects the native DOM APIs into the `@lwc/engine-core` rendering engine.
+-   `createElement(name: string, ctor: typeof LightningElement): HTMLElement`
+-   `isNodeFromTemplate(node: Node): boolean`
+-   `getComponentConstructor(element: HTMLElement): typeof LightningElement | null`
+-   `buildCustomElementConstructor(ctor: typeof LightningElement): typeof HTMLElement` (deprecated)
 
 #### `@lwc/engine-server`
 
-Runtime that can be used to render LWC component trees as strings. This package exposes the following API:
+Runtime that can be used to render LWC component trees as strings. Like the `@lwc/engine-dom`, this package re-exports the all the public APIs from the `@lwc/engine-core` package along with:
 
--   `renderComponent(name: string, ctor: typeof LightningElement, props?: Record<string, any>): string`: This method creates an renders an LWC component synchronously to a string.
+-   `renderComponent(name: string, ctor: typeof LightningElement, props?: { [key: string]: any }): string`: This method creates an renders an LWC component synchronously to a string. It will be discussed further in the following section.
 
-When a component is rendered using `renderComponent`, the following restriction applies:
+### Rendering an LWC component on the server
 
--   each created component will execute the following life-cycle hooks once `constructor`, `connectedCallback` and `render`
--   properties and methods annotated with `@wire` will not be invoked
--   component reactivity is disabled
+#### Constraints
 
-Another API might be created to accommodate wire adapter invocation and asynchronous data fetching on the server.
+In order to make the LWC SSR predictible and performant, only a certain subset of the LWC engine capabilities available on the client will be present on the server. As a side-effect, LWC components that need to be rendered on the server will have to observe the following constraints.
 
-This package injects mock DOM APIs in the `@lwc/engine-core` rendering engine. Those DOM APIs produce a lightweight DOM structure. This structure can then be serialized into a string containing the HTML serialization of the element's descendants. As described in the Appendix, this package is also in charge of attaching on the global object a mock `CustomEvent` and only implements a restricted subset of the event dispatching algorithm on the server (no bubbling, no event retargeting).
+**No access to web platform APIs on the server:** When running in the server environment, LWC will not polyfill web platform specific APIs. Because of this, accessing any of those APIs as the component renders on the server, will result in a runtime exception. For example, if a server side renderer component wants to attached some event listeners to the `document` when it is rendered on the client, it need to check first if the `document` object is present in the current runtime environment.
 
-The existing `lwc` package stays untouched and will be used to distribute the different versions of the engine. From the developer perspective, the experience writing a component remains identical.
+**The entire component tree will be rendered in a single pass synchronously:** This behavior matches the current behavior of the LWC engine. Connecting an LWC component to a document triggers a synchronous rendering cycle. This means that reactivity is unnecessary on the server. Disabling the reactive membrane on the server will also improve the overall SSR performance by avoid creating unnecessary JavaScript `Proxy`. This also means that if a component need to do an asynchronous operation to fetch data to render, it will not be possible to do so when rendered on the server. All the asynchronous data dependencies for a component subtree needs to be retrieved prior rendering the component and needs to be passed via public property for it to be rendered.
+
+**The `renderedCallback` lifecycle hook will not execute on the server:** When running a browser, this hook is the first life cycle hook which give the component author access to the rendered DOM elements. If the component were to attempt to access those APIs on the server it would results in a runtime error since the DOM APIs are not polyfilled.
+
+**Wire adapters will not be invoked:** The Wire protocol emits a stream of data to a component. The current protocol doesn't define today a way today to indicate that the stream is done emitting new data. Because of this, the first version of SSR will not invoke any of the wire adapter. The protocol will need to be changed and new primitives will need to be added to LWC to make wire adapter compatible with SSR.
+
+#### The `renderComponent` API
+
+The `renderComponent` is the only new public API exposed with this proposal. This new API is only available in `@lwc/engine-server`. It renders a component and returns synchronously the rendered content. This proposal accepts 3 arguments:
+ - `name` (type: `string`) - the tag name of the component host element.
+ - `ctor` (type: `typeof LightningElement`) - the root LWC component constructor.
+ - `props` (optional, type: `{ [key string]: any}`) - an object representing the different properties set on the root component.
+
+This method returns a the serialized HTML content rendered by the component. The serialization format is out of the scope of this proposal and will be covered in a different RFC. However in the first version of the `@lwc/engine-server`, the `renderComponent` will produce an HTML string matching the [declarative shadow DOM proposal](https://github.com/mfreed7/declarative-shadow-dom/blob/master/README.md) format.
+
+#### Component Authoring format
+
+The existing `lwc` package stays untouched and will be used to distribute the different versions of the engine. From the developer perspective, the experience writing a component remains identical. Since the LWC engine exposes different API depending on the environment, the application owner will be in charge of creating a different entry point for each environment.
 
 **`c/app/app.js`:**
 
@@ -282,29 +291,10 @@ const str = renderComponent('c-app', { is: App });
 console.log(str);
 ```
 
-## Drawbacks
-
--   Requires a complete rewrite of the current `@lwc/engine`
--   Might require substantial changes to the existing tools (jest preset, rollup plugins, etc.) to load the right engine depending on the environment.
-
-## Alternatives
-
-### Using a DOM implementation in JavaScript before evaluating the engine
-
-Prior the evaluation of the LWC engine, we would evaluate a DOM implementation write in JavaScript (like [jsdom](https://github.com/jsdom/jsdom) or [domino](https://github.com/fgnass/domino)). The compelling aspect of this approach is that it requires almost no change to the engine to work.
-
-There are multiple drawbacks with this approach:
-
--   Performance: The engine only relies on a limited set of well-known APIs, leveraging a full DOM implementation for SSR would greatly reduce the SSR performance.
--   Predictability: By attaching the DOM interfaces on the global object, those APIs are not only exposed to the engine but also to the component author. Exposing such APIs to the component author might bring unexpected behavior when component code runs on the server.
-
 ## How we teach this
 
-This proposal breaks up the existing `@lwc/engine` package into multiple packages. Because of this APIs that used to be imported from `lwc` might not be present anymore. With this proposal, the `createElement` API will be moving to `@lwc/engine-dom`. This change constitutes a breaking change by itself, so we need to be careful how this change will be released. The good news is that `createElement` is considered as an experimental API and should only used to create the application root and to test components.
-
-Changing the application root creation consists in a one line change. Therefor it should be pretty straightforward updated as long as it is well documented. Updating all the usages of `createElement` in test will probably require more time. For testing purposes, the `lwc` module will be mapped to the `@lwc/engine-dom` instead of `@lwc/engine-core` for now. We will also add warning messages in the console to promulgate the new pattern. A codemod for test files can also be used rename the `lwc` import in the test files to `@lwc/engine-dom`.
-
-Updating the documentation for the newly added server only APIs should be enough.
+- Updating the documentation for the newly added server only APIs should be enough.
+- Creating a set of a new linting rules prevent obvious cases where components can't be rendered on the server.
 
 ## Unresolved questions
 
@@ -473,7 +463,7 @@ Finally, on top of all the APIs used by the engine to evaluate and run, componen
 -   **SSR Usage:** 🔶 MIGHT BE REQUIRED
 -   **Observations:** This might not be needed because `CustomEvent` inherits from `Event` and because `CustomEvent` is the recommended way to dispatch non-standard events.
 
-### Renderer interface
+### `Renderer` interface
 
 ```ts
 export interface Renderer<HostNode, HostElement> {

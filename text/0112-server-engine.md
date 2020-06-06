@@ -2,17 +2,14 @@
 title: LWC Server Engine
 status: DRAFTED
 created_at: 2020-01-06
-updated_at: 2020-01-06
+updated_at: 2020-06-06
+champion: Pierre-Marie Dartus (@pmdartus)
 pr: https://github.com/salesforce/lwc-rfcs/pull/23
 ---
 
 # LWC Server Engine
 
 ## Summary
-
-> TODO: Add more details
-
-## Goals
 
 Server-side Rendering (SSR) is a popular technique for rendering pages and components that would usually run in a browser, on the server. SSR takes as input a root component and a set of properties and renders an HTML fragment and optionally one or multiple stylesheets. This technique can be used for many different things: improving initial page render time, generating static websites, reading site content for SEO bots, indexing content for site search, etc.
 
@@ -38,6 +35,8 @@ This proposal will be only focusing on phase 1 of the SSR project. Phase 2 and 3
 ### How do other frameworks implement SSR?
 
 Many popular UI frameworks already provide options to enable server-side rendering. There is no single way to implement SSR in a UI framework and each framework approaches this in a different way. That being said, all the major frameworks converge around 2 main approaches.
+
+#### DOM APIs mocking
 
 The first approach is to **mock the DOM APIs in the server environment and to reuse the same core UI framework code on the server and the client**. This is the approach [Stencil](https://github.com/ionic-team/stencil/master/tree/src/mock-doc), [Ember](https://github.com/ember-fastboot/simple-dom) and [lit-ssr](https://github.com/PolymerLabs/lit-ssr) took.
 
@@ -101,15 +100,13 @@ Object.assign(globalThis, {
 });
 ```
 
+#### Runtime injection of the rendering APIs
+
 The second approach is to **abstract the DOM APIs and the core UI framework** which is what [React](https://github.com/facebook/react/tree/master/packages/react-dom), [Vue](https://github.com/vuejs/vue-next/tree/master/packages/runtime-dom) and [Angular](https://github.com/angular/angular/tree/master/packages/platform-browser/src) did. This consists of creating an indirection between the rendering APIs and the core framework code. The indirection is injected at runtime depending on the environment. When loaded in the browser, the rendering APIs create DOM `Element` and set DOM `Attribute` on the elements. While when loaded on the server the rendering APIs are manipulating string to create the serialized version of the components on the fly.
 
 When used with a type-safe language like TypesScript, it is possible to ensure at compile time that all the rendering APIs are fulfilled in all the environments. By injecting this indirection at runtime, it also ensures that component code doesn't have access to any DOM APIs when running on the server.
 
-> TODO: discuss the architectural drawback
-
-The main drawback of this approach is the amount of refactoring that needs to happen in LWC engine code specifically. So far the LWC engine has been designed to run in a JavaScript environment with direct access to the DOM APIs. This means that if we were to adopt this approach a large chunk of the LWC engine code will need to be rewritten. For example some of the LWC engine code stores a reference for DOM interfaces (eg. `HTMLElement.prototype`, `Node.prototype`) at evaluation time. This will not be possible with this approach as the APIs will be injected into the core engine after its evaluation.
-
-> TODO: describe the main differences between the two approaches
+From a drawback perspective, introducing this a layer of indirection between the core logic and underlying APIs might introduce a performance overhead and increase the overall size of the engine.
 
 To inject the rendering APIs depending on the environment, we would need to create a different entry point per environment. Below you can find some pseudo-code for each entry point. The two entry points use the same `createComponent` abstraction to create an LWC component but pass a different renderer specific to the target environment.
 
@@ -191,7 +188,11 @@ export function renderComponent(
 }
 ```
 
-**Conclusion:** After considering the pros and cons of the two approaches described above, **the rest of this proposal discusses the second approach, where the rendering APIs are injected lazily at runtime.**
+#### Retained approach
+
+After considering the pros and cons of the two approaches described above, **the rest of this proposal discusses the second approach, where the rendering APIs are injected lazily at runtime.**
+
+The main drawback of this approach is the amount of refactoring that needs to happen in LWC engine code specifically. So far the LWC engine has been designed to run in a JavaScript environment with direct access to the DOM APIs. This means that if we were to adopt this approach a large chunk of the LWC engine code will need to be rewritten. For example some of the LWC engine code stores a reference for DOM interfaces (eg. `HTMLElement.prototype`, `Node.prototype`) at evaluation time. This will not be possible with this approach as the APIs will be injected into the core engine after its evaluation.
 
 ## How will we implement SSR?
 
@@ -252,15 +253,32 @@ To make the LWC SSR predictable and performant, only a certain subset of the LWC
 
 **No access to web platform APIs on the server:** When running in the server environment, LWC will not polyfill web platform-specific APIs. Because of this, accessing any of those APIs as the component renders on the server, will result in a runtime exception. For example, if a server-side rendered component wants to attach event listeners to the `document` when it is rendered on the client, it needs to check first if the `document` object is present in the current runtime environment.
 
-> TODO: code snippet example
+```js
+import { LightningElement } from 'lwc';
 
-**The entire component tree will be rendered in a single pass synchronously:** This behavior matches the current behavior of the LWC engine. Connecting an LWC component to a document triggers a synchronous rendering cycle. This means that reactivity is unnecessary on the server. Disabling the reactive membrane on the server will also improve the overall SSR performance by not creating unnecessary JavaScript `Proxy`. 
+// Will evaluate to true when running in a browser, otherwise it will evaluate to false.
+const isBrowser = typeof document !== 'undefined';
 
-> TODO: react does that
+export default class App extends LightningElement {
+    connectedCallback() {
+        if (isBrowser) {
+            document.addEventListener('click', this.handleDocumentClick);
+        }
+    }
 
-**No asynchronous operations allowed:** This also means that if a component needs to do an asynchronous operation to fetch data, it will not be possible to do so when rendered on the server. All the asynchronous data dependencies for a component subtree needs to be retrieved prior to rendering the component and needs to be passed via public properties for it to be rendered.
+    disconnectedCallback() {
+        if (isBrowser) {
+            document.removeEventListener('click', this.handleDocumentClick);
+        }
+    }
 
-> TODO: elaborate why
+    handleDocumentClick() { /* ... */ }
+}
+```
+
+**The entire component tree will be rendered in a single pass synchronously:** This behavior matches the current behavior of the LWC engine. Connecting an LWC component to a document triggers a synchronous rendering cycle. This means that reactivity is unnecessary on the server. Disabling the reactive membrane on the server will also improve the overall SSR performance by not creating unnecessary JavaScript `Proxy`.
+
+**No asynchronous operations allowed:** This also means that if a component needs to do an asynchronous operation to fetch data, it will not be possible to do so when rendered on the server. All the asynchronous data dependencies for a component subtree needs to be retrieved prior to rendering the component and needs to be passed via public properties for it to be rendered. Without adding new primitives to the LWC framework updating the state of a component asynchronously would violate the previous constraints. Other popular UI frameworks are currently working on supporting asynchronous rendering and integrating it their current SSR solution, but it is a complex feature to implement.
 
 **The `renderedCallback` lifecycle hook will not execute on the server:** When running in a browser, this hook is the first life cycle hook which gives the component author access to the rendered DOM elements. If the component were to attempt to access those APIs on the server it would result in a runtime error since the DOM APIs are not mocked.
 
@@ -275,7 +293,7 @@ The `renderComponent` is the only new public API exposed with this proposal. Thi
 
 This method returns a the serialized HTML content rendered by the component. The serialization format is out of the scope of this proposal and will be covered in a different RFC. However, in the first version of the `@lwc/engine-server`, the `renderComponent` will produce an HTML string matching the [declarative shadow DOM proposal](https://github.com/mfreed7/declarative-shadow-dom/blob/master/README.md) format.
 
-#### Component Authoring format
+#### Component Authoring Format
 
 The existing `lwc` package stays untouched and will be used to distribute the different versions of the engine. From the developer perspective, the experience writing a component remains identical. Since the LWC engine exposes different APIs depending on the environment, the application owner will be in charge of creating a different entry point for each environment.
 

@@ -95,6 +95,7 @@ type collectTemplateMetadata =(
     }
 ) => HTMLTemplateFile;
 
+/** Experimental API, reusing existing ast from @lwc/template-compiler **/
 import { IRElement} from '@lwc/template-compiler';
 type collectTemplateMetadata =(
     file: {
@@ -102,6 +103,7 @@ type collectTemplateMetadata =(
         root: IRElement;
     }
 ) => HTMLTemplateFile;
+/** End Experimental API **/
 ```
 
 For a script file:
@@ -271,15 +273,20 @@ interface BundleMetadataOption2 {
 interface HTMLTemplateFile {
     fileType: 'html';
     fileName: string;
+
     // List of unique components referenced in the template
     componentReferences?: ComponentReference[];
+
     /**
      * Static resources referenced in a module. For example: 'src' attribute value of an <img>, <source> tag.
      * Will be collected only if the url is fully statically analyzable
      */
     staticResources?: StaticResourceReference[];
-    // Template in AST format starting with the root <template> node. Note: this is a partial AST
-    experimentalAST?: Node;
+
+    // Template in AST format starting with the root <template> node. 
+    // Note: this part of the metadata is retaining the existing shape with a
+    // few additions(slot names, event listeners, lwc:dom, lwc:dynamic)
+    experimentalAST?: string;
 }
 
 // Represents a component referenced in the template.
@@ -297,77 +304,6 @@ interface ComponentReference extends ModuleReference {
     // Since a template can have multiple usages of same child component, individual locations should be
     // discovered via the AST
     location: never;
-}
-
-// Information about a node in the html template
-interface Node {
-    tagName: string;
-    location: SourceLocation;
-    // Any properties set in the template, will include html attributes, public properties
-    attributes?: ElementAttributeReference[];
-    // Event listeners attached declaratively in the template with a 'on' prefix, eg: 'onclick'
-    eventListeners?: DeclarativeEventListener[];
-    children?: Node[];
-}
-
-// Information about a custom element referenced in a HTML template.
-interface CustomElementNode extends Node {
-    // Information about slots set by parent
-    slots?: SlotReference[];
-}
-
-/**
- * Information about default and named slots being set by the parent component. The parent can
- * specify a 'slot' attribute in the slotted content in the case of named slot. Slot content that
- * do not have a 'slot' attribute will be passed as default slot content. The 'name' property in
- * the SlotReference object will be 'default' for such a case.
- */
-interface SlotReference {
-    name: string;
-}
-
-// Information about an element referenced in the template with a 'lwc:dynamic' attribute.
-interface DynamicCustomElementNode extends CustomElementNode {
-    ctor: ComputedValue;
-}
-
-// Information about for:each directive usage to render a list in a html template.
-interface TemplateForEachDirective extends Node {
-    tagName: 'template';
-    directive: 'for:each';
-    items: ComputedValue;
-    itemName?: string;
-    indexName?: string;
-    key?: string;
-}
-
-// Information about if:true or if:false directive usage to perform conditional rendering in a html template.
-interface TemplateIfDirective extends Node {
-    tagName: 'template';
-    directive: 'if:true' | 'if:false';
-    value: ComputedValue | string;
-}
-
-// Information about iterator directive usage in a html template.
-interface TemplateIteratorDirective extends Node {
-    tagName: 'template';
-    directive: 'iterator:it';
-    items: ComputedValue;
-    key?: string;
-}
-
-// Information about lwc:dom attribute usage in a html template to perform programmatic manipulation of dom tree.
-interface TemplateLwcDomDirective extends Node {
-    directive: 'lwc:dom';
-    directiveValue: 'manual'; // enum of all allowed values for lwc:dom attribute
-}
-
-// Information about an event handled declaratively in the template.
-interface DeclarativeEventListener {
-    type: string;
-    value: ComputedValue;
-    // Location includes the event name starting with 'on' and the property assignment ending with '}'
-    location: SourceLocation;
 }
 ```
 *Examples:*
@@ -857,34 +793,6 @@ Samples of the metadata for css files can be viewed [here](https://github.com/sa
 <summary>Click to view extended typescript definitions</summary>
 
 ```js
-// Information about an expression, surrounded by curly braces, in a HTML template.
-interface ComputedValue {
-    expression: string;
-    expressionType: 'ClassMemberExpression' | 'IteratorExpression';
-}
-
-// Information about default function parameters.
-// Also look at parameters represented using rest syntax.
-interface DefaultParameters {
-    type: 'DefaultParameters';
-    name: string;
-    defaultValue?: number | string | boolean | null | object;
-}
-
-// Information about an element's attribute set in the template.
-interface ElementAttributeReference {
-    name: string;
-    value?: (null | string | boolean) | ComputedValue;
-}
-
-// Information about function parameters received using the rest(...) syntax.
-interface RestParameters {
-    type: 'RestParameters';
-    name: string;
-    startIndex: number;
-    endIndex?: number;
-}
-
 // Object to represent the start and end position of a code block.
 interface SourceLocation {
     fileName: string;
@@ -902,6 +810,128 @@ interface StaticResourceReference {
     value: string;
     location: SourceLocation;
 }
+
+// !!Note: Retaining types from the existing data binding AST
+enum BindingType {
+    Boolean = 'boolean',
+    Component = 'component',
+    Expression = 'expression',
+    ForEach = 'for-each',
+    ForOf = 'for-of',
+    Identifier = 'identifier',
+    If = 'if',
+    LwcDom = 'lwc:dom',
+    LwcDynamic = 'lwc:dynamic',
+    MemberExpression = 'member-expression',
+    Root = 'root',
+    String = 'string',
+}
+
+interface BindingBooleanAttribute {
+    name: string;
+    type: BindingType.Boolean;
+    value: true;
+}
+interface BindingExpressionAttribute {
+    name: string;
+    type: BindingType.Expression;
+    value: BindingExpression;
+    location: SourceLocation;
+}
+interface BindingStringAttribute {
+    name: string;
+    type: BindingType.String;
+    value: string;
+    location: SourceLocation;
+}
+
+type BindingAttribute =
+    | BindingBooleanAttribute
+    | BindingExpressionAttribute
+    | BindingStringAttribute;
+
+interface BindingIdentifier {
+    name: string;
+    type: BindingType.Identifier;
+    location: SourceLocation;
+}
+
+interface BindingMemberExpression {
+    object: BindingIdentifier | BindingMemberExpression;
+    property: BindingIdentifier;
+    type: BindingType.MemberExpression;
+    location: SourceLocation;
+}
+
+type BindingExpression = BindingIdentifier | BindingMemberExpression;
+
+interface BindingForEachDirectiveNode extends BindingBaseNode {
+    expression: BindingExpression;
+    index?: BindingIdentifier;
+    item: BindingIdentifier;
+    type: BindingType.ForEach;
+}
+
+interface BindingForOfDirectiveNode extends BindingBaseNode {
+    expression: BindingExpression;
+    iterator: BindingIdentifier;
+    type: BindingType.ForOf;
+}
+
+interface BindingIfDirectiveNode extends BindingBaseNode {
+    expression: BindingExpression;
+    modifier: string;
+    type: BindingType.If;
+}
+
+interface BindingLwcDynamicDirectiveNode extends BindingBaseNode {
+    expression: BindingExpression;
+    type: BindingType.LwcDynamic;
+}
+
+interface BindingLwcDomDirectiveNode extends BindingBaseNode {
+    value: string;
+    type: BindingType.LwcDynamic;
+}
+
+type BindingDirectiveNode =
+    | BindingForEachDirectiveNode
+    | BindingForOfDirectiveNode
+    | BindingIfDirectiveNode
+    | BindingLwcDomDirectiveNode
+    | BindingLwcDynamicDirectiveNode;
+
+interface BindingBaseNode {
+    children: BindingNode[];
+    location: SourceLocation;
+}
+
+interface BindingEventTargetNode extends BindingBaseNode {
+    eventListeners?: BindingExpressionAttribute;
+}
+
+interface BindingComponentNode extends BindingEventTargetNode {
+    attributes: BindingAttribute[];
+    tag: string;
+    type: BindingType.Component;
+    // Slots of this component node set by the parent
+    slotReferences: string[];
+}
+
+interface BindingRootNode extends BindingBaseNode {
+    type: BindingType.Root;
+}
+
+interface BindingElementNode extends BindingEventTargetNode {
+    attributes: BindingAttribute[];
+    type: BindingType.String;
+}
+
+type BindingNode =
+    | BindingComponentNode
+    | BindingDirectiveNode
+    | BindingElementNode
+    | BindingRootNode;
 ```
 </details>
 

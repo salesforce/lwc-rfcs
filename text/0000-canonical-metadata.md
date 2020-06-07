@@ -3,7 +3,7 @@ title: Canonical specification of metadata for LWC modules
 status: DRAFT
 created_at: 2020-05-07
 updated_at: 2020-05-19
-rfc: 
+rfc: https://github.com/salesforce/lwc-rfcs/pull/33
 champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa (@ravijayaramappa)
 implementation: 
 ---
@@ -16,12 +16,24 @@ Table of Content:
 * [Use Cases](#use-cases)
 * [Current State of Art](#current-state-of-art)
 * [Detailed design](#detailed-design)
+    * [API](#api)
+    * [Format](#format)
+    * [Entities that will be analyzed](#entities-that-will-be-analyzed)
+    * [Definitions](#definitions)
+    * [Metadata shape](#metadata-shape)
+        * [Bundle metadata shape](#bundle-metadata-shape)
+        * [HTML Template file metadata shape](#html-template-file-metadata-shape)
+        * [Script file metadata shape](#script-file-metadata-shape)
+        * [CSS file metadata shape](#css-file-metadata-shape)
+    * [Metadata Shape Option 2](#metadata-shape-option-2)
+* [Open questions](#open-questions)
+* [Future work](#future-work)
 * [References](#reference)
 
 # Summary
 > The [dictionary definition](https://www.merriam-webster.com/dictionary/canonical%20form) of **Canonical form** is `the simplest form of something`. 
 
-This RFC aims to document the metadata collected by statically analyzing the source code of Lightning Web Component(LWC) modules. It documents the standardized shape of metadata.
+This RFC aims to document the shape of metadata collected by statically analyzing the source code of Lightning Web Component(LWC) modules. The scope of this RFC is strictly the shape of the metadata and does not cover the implementation details.
 
 # Goals
 
@@ -62,12 +74,79 @@ This RFC is an attempt to define the new metadata shape that adheres to the abov
 
 # Detailed Design
 
+## API
+
+For a bundle:
+```js
+type collectBundleMetadata =(
+    ...files: {
+        filename: string;
+        source: string;
+    }[]
+) => BundleMetadata;
+```
+
+For an HTML file:
+```js
+type collectTemplateMetadata =(
+    file: {
+        filename: string;
+        source: string;
+    }
+) => HTMLTemplateFile;
+
+import { IRElement} from '@lwc/template-compiler';
+type collectTemplateMetadata =(
+    file: {
+        filename: string;
+        root: IRElement;
+    }
+) => HTMLTemplateFile;
+```
+
+For a script file:
+```js
+type collectScriptMetadata =(
+    file: {
+        filename: string;
+        source: string;
+    }
+) => ScriptFile;
+
+import { File } from '@babel/types';
+type collectScriptMetadata =(
+    file: {
+        filename: string;
+        astRoot: File;
+    }
+) => ScriptFile;
+```
+
+For a CSS file:
+```js
+type collectCssMetadata =(
+    file: {
+        filename: string;
+        source: string;
+    }
+) => CSSFile;
+
+import { Root } from 'postcss';
+type collectCssMetadata =(
+    file: {
+        filename: string;
+        root: Root;
+    }
+) => CSSFile;
+
+```
+
 ## Format
-Metadata shape of the various objects we wish to analyse will be represented using in [JSON Schema](https://json-schema.org/) format. This is also augmented with a TypeScript definition of the shape.
+There was an initial experiment to use JSONSchema and TypeScript as a format to describe the metadata shape. Based on the feedback from reviewers, TypeScript was adopted. This will make the RFC readable and concise.
 
-[JSON](https://tools.ietf.org/html/rfc7159) is the IETF approved standard for representing objects. [JSON Schema](https://json-schema.org/) is on the path to become an IETF approved standard for describing JSON.
+A [JSON Schema](https://json-schema.org/) representation of the shape is provided for reference. [JSON](https://tools.ietf.org/html/rfc7159) is the IETF approved standard for representing objects. [JSON Schema](https://json-schema.org/) is on the path to become an IETF approved standard for describing JSON. The JSON Schema can be used to validated generated json metadata against the specification. 
 
-This format was also influenced by standardization choices made with in Salesforce UI platform.
+There are libraries that can convert TypeScript to JSONSchema and vice versa. The conversion is not seamless and needs manual editing post-conversion. 
 
 ## Entities that will be analyzed
 These are the entities that will be analyzed and metadata gathered about:
@@ -314,8 +393,11 @@ interface ScriptFile {
     // Dynamic import statements in a javascript module, additionally information about hints if provided.
     dynamicImports?: DynamicImport[];
 
-    // Export statements in a module including reexporting bindings from another module.
-    exports: [] | [Export] | [Export, ReExport];
+    // Exports of local bindings
+    exports: Export[];
+    // Reexporting bindings from another module.
+    // e.g. export * from …;
+    reExports: ReExport[];
 
     // DOM Event objects instantiated in a module. Includes Events and CustomEvents.
     domEvents?: DOMEvent[];
@@ -471,16 +553,33 @@ interface WireDecorator extends Decorator {
     type: 'wire';
     adapterId: string;
     // module name in canonical form
-    adapterModule?: {
-        moduleSpecifier: string;
-        refId: ID; // back reference to the ModuleReference object
+    adapterModule?: string;
+    adapterConfig?: {
+        // Configuration where a value is prefixed with '$' to reference a property on the component instance
+        reactive: { [name: string]: string };
+        // Configuration where value is a static
+        static: {
+            [name: string]: {
+                type:
+                    | 'number'
+                    | 'string'
+                    | 'boolean'
+                    | 'null'
+                    | 'object'
+                    | 'undefined'
+                    | 'array'
+                    | 'unresolved';
+                value?: any;
+            };
+        };
     };
-    adapterConfig?: object;
 }
 
 // Information about a static import statement in a module.
 interface Import {
-    bindings: (DefaultBinding | NamedImport | NameSpaceImport)[];
+    defaultBinding?: DefaultBinding;
+    namedImports?: NamedImport[];
+    namespaceImport?: NameSpaceImport;
     // module name in canonical form
     moduleSpecifier: string;
     // Location starts from the import key word to the end of statement
@@ -491,15 +590,13 @@ interface Import {
 // Represents a Default import binding
 // e.g: import defaultExport from "module-name";
 interface DefaultBinding {
-    importType: 'DefaultBinding';
-    // The import name will reflect the name at the source and not the aliased name
+    // The import name will reflect the imported binding's local name
     name: string;
     location: SourceLocation;
 }
 
 // e.g: import { export1 as alias1 } from "module-name";
 interface NamedImport {
-    importType: 'NamedImport';
     name: string;
     aliasName?: string;
     location: SourceLocation;
@@ -508,7 +605,6 @@ interface NamedImport {
 // For bindings in import statement like 'import * as name from "module-name";'
 // This object captures information about the '* as name'
 interface NameSpaceImport {
-    importType: 'NameSpaceImport';
     aliasName: string;
     location: SourceLocation;
 }
@@ -517,10 +613,10 @@ interface NameSpaceImport {
 interface DynamicImport {
     // module name in canonical form
     moduleSpecifier: string;
+    refId: ID; // back reference to the ModuleReference object
     moduleNameType: 'string' | 'unresolved';
     location: SourceLocation;
     hints?: DynamicImportHint[];
-    refId: ID; // back reference to the ModuleReference object
 }
 
 interface DynamicImportHint {
@@ -533,10 +629,8 @@ interface DynamicImportHint {
 
 // Information about a export statement in a module.
 interface Export {
-    type: 'export';
-    exportsList?: NamedExport[] | DefaultExport;
-    // For easy discover-ability of default export
-    default?: boolean;
+    namedExports?: NamedExport[];
+    defaultExport?: DefaultExport;
     location: SourceLocation;
 }
 
@@ -544,8 +638,7 @@ interface Export {
 // e.g. export let name1, name2, …, nameN;
 //      export { variable1 as name1, variable2 as name2, …, nameN };
 interface NamedExport {
-    exportType: 'NamedExport';
-    value: ClassDeclaration | FunctionDeclaration | VariableDeclaration;
+    value: ClassDeclaration | FunctionDeclaration | IdentifierDeclaration;
     // local name of the export
     name: string;
     // aliased name of the export
@@ -556,14 +649,13 @@ interface NamedExport {
 // A default export
 // e.g. export default function (…) { … }
 interface DefaultExport {
-    exportType: 'DefaultExport';
-    value: ClassDeclaration | FunctionDeclaration | VariableDeclaration | 'unresolved';
+    value: ClassDeclaration | FunctionDeclaration | IdentifierDeclaration | 'unresolved';
     location: SourceLocation;
 }
 
 interface ClassDeclaration {
     type: 'class';
-    name: string;
+    name?: string;
     refId: ID; // Ties back to the class object at the root metadata object
 }
 
@@ -589,8 +681,8 @@ interface FunctionDeclaration {
     doc?: string;
 }
 
-interface VariableDeclaration {
-    type: 'variableDeclaration';
+interface IdentifierDeclaration {
+    type: 'identifierDeclaration';
     name: string;
     // If the initial value is not statically analyzable, type will be 'unresolved'
     initialValue?: {
@@ -611,8 +703,7 @@ interface VariableDeclaration {
 // Information about an export statement used to reexport bindings imported from another module.
 // e.g. export * from …;
 interface ReExport {
-    type: 'reexport';
-    exportsList: {
+    exportSpecifiers: {
         name: string;
         aliasName?: string;
     }[];
@@ -765,7 +856,7 @@ Samples of the metadata for css files can be viewed [here](https://github.com/sa
 <details>
 <summary>Click to view extended typescript definitions</summary>
 
-```ts
+```js
 // Information about an expression, surrounded by curly braces, in a HTML template.
 interface ComputedValue {
     expression: string;
@@ -815,627 +906,11 @@ interface StaticResourceReference {
 </details>
 
 ### JSONSchema(outdated - Typescript definitions are up to date)
-<details>
-<summary>Click to view in JSONSchema format</summary>
 
-```json
-{
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "A representation of metadata gathered for a LWC bundle",
-    "type": "object",
-    "properties": {
-        "name": { "type": "string" },
-        "namespace": { "type": "string" },
-        "moduleType": { 
-            "description": "Define the type of module that is represented by the given metadata object.",
-            "type": "string",
-            "enum": [ "Component", "Library", "CssOnly" ]
-        },
-        "templates": { 
-            "description": "Information about HTML template files in the bundle.",
-            "type": "array",
-            "items": { "$ref": "#/definitions/HTMLTemplateFile"}
-        },
-        "scripts": {
-            "description": "Information about javascript files in the bundle.",
-            "type": "array",
-            "items": { "$ref": "#/definitions/ScriptFile"}
-        },
-        "defaultComponentClass": {
-            "description": "For a component bundle, this property is a reference to the main component class in the bundle. This class must be the default export of the javascript file. The file must be named the same as the bundle",
-            "type": "array",
-            "items": { 
-                "$ref": "#/definitions/ComponentClass"
-            }
-        },
-        "css": {
-            "description": "Information about css files in the bundle.",
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/CSSFile"
-            }
-        }
-    },
-    "definitions": {
-        "HTMLTemplateFile": {
-            "description": "Information about an HTML template file in an LWC bundle.",
-            "type": "object",
-            "properties": {
-                "fileType": { "const": "html" },
-                "fileName": { "type": "string" },
-                "children": {
-                    "description": "Custom elements referenced in a template.",
-                    "type": "array",
-                    "items": { 
-                        "$ref": "#/definitions/CustomElementReference"
-                    }
-                },
-                "staticResources": {
-                    "description": "Static resources referenced in a template. For example: 'src' attribute value of an <img>, <source> tag.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/StaticResourceReference"
-                    }
-                },
-                "dynamicChildren": {
-                    "description": "Custom elements in a template that are dynamically(lazy) loaded.",
-                    "type": "array",
-                    "items": { 
-                        "$ref": "#/definitions/DynamicComponentReference"
-                    }
-                },
-                "directives": {
-                    "description": "Elements in a template that have special directives.",
-                    "type": "object",
-                    "properties": {
-                        "forEach": {
-                            "type": "array", 
-                            "items": { "$ref" : "#/definitions/TemplateForEachDirective" }
-                        },
-                        "iterator": {
-                            "type": "array", 
-                            "items": { "$ref" : "#/definitions/TemplateIteratorDirective" }
-                        },
-                        "if": {
-                            "type": "array", 
-                            "items": { "$ref" : "#/definitions/TemplateIfDirective" }
-                        },
-                        "lwcDom": {
-                            "type": "array", 
-                            "items": { "$ref" : "#/definitions/TemplateLwcDomDirective" }
-                        }
-                    }
-                },
-                "serializedDataBindingAST": {
-                    "description": "Trimmed down AST(Abstract Syntax Tree) of the template. ",
-                    "type": "string"
-                }
-            },
-            "required": [ "fileName", "fileType" ]
-        },
-        "ScriptFile": {
-            "description": "Metadata about a file authored in javascript(or its variants like TypeScript) in an LWC bundle.",
-            "type": "object",
-            "properties": {
-                "fileType": { "type": "string", enum: ["js"]},
-                "fileName": { "type": "string" },
-                "componentClasses": {
-                    "description": "Classes that extends the 'LightningElement' class directly or by extending another component class.",
-                    "type": "array",
-                    "items": { 
-                        "$ref": "#/definitions/ComponentClass"
-                    }
-                },
-                "imports": {
-                    "description": "Static import statements in a javascript module.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Import"
-                    }
-                },
-                "dynamicImports": {
-                    "description": "Dynamic import statements in a javascript module, additionally information about hints if provided.",
-                    "type": "array",
-                    "items": { 
-                        "$ref": "#/definitions/DynamicImport"
-                    }
-                },
-                "exports": {
-                    "description": "Export statements in a module including reexporting bindings from another module.",
-                    "type": "array",
-                    "items": [
-                        { "$ref": "#/definitions/Export"},
-                        { "$ref": "#/definitions/ReExport"}
-                    ]
-                },
-                "domEvents": {
-                    "description": "DOM Event objects instantiated in a module. Includes Events and CustomEvents.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DOMEvent"
-                    }
-                },
-                "staticResources": {
-                    "description": "Static resources referenced in a module. Includes any static urls referenced in javascript and resources loaded using the lightning platform resource loader, urls fetched via the salesforce scoped url resolvers.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/StaticResourceReference"
-                    }
-                }
-            },
-            "required": [ "fileName", "fileType", "exports" ]
-        },
-        "CSSFile": {
-            "description": "Metadata about a css file in an LWC bundle.",
-            "type": "object",
-            "properties": {
-                "fileType": { "const": "css" },
-                "fileName": { "type": "string" },
-                "customProperties": { 
-                    "type": "array", 
-                    "items": { 
-                        "$ref": "#/definitions/CSSCustomProperty"
-                    }
-                },
-                "staticResources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/StaticResourceReference"
-                    }
-                }
-            },
-            "required": [ "fileName", "fileType" ]
-        },
-        "ReExport": {
-            "description": "Information about an export statement used to reexport bindings imported from another module.",
-            "type": "object",
-            "properties": {
-                "exportsList": { 
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "name": { "type": "string" },
-                            "type": {
-                                "type": "string",
-                                "enum": ["class", "function", "expression"]
-                            }
-                        }
-                    }
-                },
-                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["location", "exportsList", "moduleSpecifier"]
-        },
-        "ApiDecorator": {
-            "description": "Information about the usage of an '@api' decorator to designate a class member as public.",
-            "type": "object",
-            "properties": {
-                "type": { "const": "api" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            }
-        },
-        "ComponentClass": {
-            "description": "Information about a component class. A class is considered a component class if it extends 'LightningElement' class available in the standard 'lwc' module.",
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "extends": { "$ref": "#/definitions/ParentClass" },
-                "properties": { 
-                    "type": "array",
-                    "items": { "$ref": "#/definitions/ClassProperty" },
-                    "default": []
-                },
-                "methods": {
-                    "type": "array",
-                    "items": { "$ref": "#/definitions/ClassMethod" },
-                    "default": []
-                },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["extends", "location"]
-        },
-        "ClassMethod": {
-            "description": "Information about a class method of a component class.",
-            "type" : "object",
-            "properties": {
-                "name": { "type": "string" },
-                "accessType": {
-                    "type": "string",
-                    "enum": ["public", "private", "static"]
-                },
-                "decorator": { 
-                    "anyOf": [
-                        {"$ref": "#/definitions/ApiDecorator" },
-                        {"$ref": "#/definitions/TrackDecorator" },
-                        {"$ref": "#/definitions/WireDecorator" }
-                    ]
-                },
-                "parameterNames": { 
-                    "type": "array",
-                    "items": {
-                        "anyOf": [
-                            { "$ref": "#/definitions/DefaultParameters" },
-                            { "$ref": "#/definitions/RestParameters"}
-                        ]
-                    }
-                },
-                "returnType": { "type": "string" },
-                "returnValue": { "type": [ "number", "string", "boolean", "null", "object" ] },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": [ "name", "accessType", "location", "returnType" ]
-        },
-        "ClassProperty": {
-            "description": "Information about a class property of a component class.",
-            "type" : "object",
-            "properties": {
-                "accessType": {
-                    "type": "string",
-                    "enum": ["public", "private", "static"]
-                },
-                "dataProperty": { "type": "boolean"},
-                "hasGetter": { "type": "boolean"},
-                "hasSetter": { "type": "boolean"},
-                "name": { "type": "string" },
-                "decorator": { 
-                    "type": "array",
-                    "items": {
-                        "anyOf": [
-                            { "$ref": "#/definitions/TrackDecorator" },
-                            { "$ref": "#/definitions/WireDecorator" },
-                            { "$ref": "#/definitions/ApiDecorator"}
-                        ]
-                    },
-                    "maxItems": 1
-                },
-                "initialValue": { "type": [ "number", "string", "boolean", "null", "object" ] },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": [ "name", "accessType", "location" ]
-        },
-        "CSSCustomProperty": {
-            "description": "Information about css custom property.",
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "fallbackValue": { "$ref": "#/definitions/CSSCustomPropertyFallback"},
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": [ "name", "location" ]
-        },
-        "CSSCustomPropertyFallback": {
-            "description": "Information about css custom property fallback values.",
-            "anyOf": [
-                { "type": "string"},
-                { "$ref": "#/definitions/CSSCustomProperty"}
-            ]
-        },
-        "ComputedValue": {
-            "description": "Information about an expression, surrounded by curly braces, in a HTML template.",
-            "type": "object", 
-            "properties": {
-                "expression": { "type": "string" },
-                "root": { "$ref": "#/definitions/ClassProperty" }
-            },
-            "required": ["expression"]
-        },
-        "CustomElementReference": {
-            "description": "Information about a custom element referenced in a HTML template.",
-            "type": "object",
-            "properties": {
-                "tagName": { "type": "string" },
-                "location": { "$ref": "#/definitions/SourceLocation" },
-                "attributes": { 
-                    "type": "array",
-                    "items" : { "$ref": "#/definitions/ElementAttributeReference" }
-                },
-                "slots": {
-                    "type": "array",
-                    "items": { "$ref": "#/definitions/SlotReference" }
-                },
-                "eventListeners": {
-                    "type": "array",
-                    "items": { "$ref": "#/definitions/DeclarativeEventListener" }
-                }
-            },
-            "required": [ "tagName", "location" ]
-        },
-        "DefaultParameters": {
-            "description": "Information about default function parameters. Also look at parameters represented using rest syntax.",
-            "type": "object",
-            "properties": {
-                "type" : { "const": "DefaultParameters" },
-                "name": { "type": "string" },
-                "defaultValue": {"type": [ "number", "string", "boolean", "null", "object" ] }
-            }
-        },
-        "DOMEvent": {
-            "description": "Information about a dom event instantiated in script.",
-            "type": "object",
-            "properties": {
-                "eventType":  { "type": "string" },
-                "isCustomEvent": { "type": "boolean" },
-                "options": {
-                    "type": "object",
-                    "properties": {
-                        "bubbles": { "type": "boolean" },
-                        "composed": { "type": "boolean" }
-                    }
-                }
-            },
-            "required": ["eventType"]
-        },
-        "DynamicComponentReference": {
-            "description": "Information about an element referenced in the template with a 'lwc:dynamic' attribute.",
-            "type": "object",
-            "allOf": [{"$ref": "#/definitions/CustomElementReference"}],
-            "properties": {
-                "ctor": { "$ref": "#/definitions/ComputedValue" }
-            }
-        },
-        "DynamicImport": {
-            "description": "Information about a dynamic import statement in a module.",
-            "type" : "object",
-            "properties": {
-                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
-                "moduleNameType": { "type": "string", "enum": ["string", "unresolved"] },
-                "location": { "$ref": "#/definitions/SourceLocation" },
-                "hints": { 
-                    "type": "array",
-                    "items": { "$ref": "#/definitions/DynamicImportHint" },
-                    "default": []
-                }
-            },
-            "required": ["moduleSpecifier", "moduleNameType", "location"]
-        },
-        "DynamicImportHint": {
-            "description": "",
-            "type": "object",
-            "properties": {
-                "rawValue": { 
-                    "type": "string",
-                    "description": "Hint value with leading and trailing spaces of hint phrase trimmed"
-                },
-                "key": { "type": "string" },
-                "value": { "type": "string" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["rawValue", "key", "value", "location"]
-        },
-        "ElementAttributeReference": {
-            "description": "Information about an element's attribute set in the template.",
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "value": { 
-                    "anyOf": [
-                        { "type": [ "null", "string", "boolean"] },
-                        { "$ref": "#/definitions/ComputedValue"}
-                    ]
-                }
-            },
-            "required": ["name"]
-        },
-        "DeclarativeEventListener": {
-            "description": "Information about an event handled declaratively in the template.",
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "value": { "$ref": "#/definitions/ComputedValue" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["name", "value", "location"]
-        },
-        "Export": {
-            "description": "Information about a export statement in a module.",
-            "type": "object",
-            "properties": {
-                "exportsList": { 
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": ["class", "function", "expression"]
-                            }
-                        }
-                    }
-                },
-                "default": { 
-                    "type": "object",
-                    "properties": {
-                        "type": {
-                            "type": "string",
-                            "enum": ["class", "function", "expression"]
-                        }
-                    }
-                },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["location"]
-        },
-        "Import": {
-            "description": "Information about a static import statement in a module.",
-            "type": "object",
-            "properties": {
-                "importType": { 
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "enum": [ "DefaultBinding", "NamedImports", "NamespacedImport"]
-                    }
-                },
-                "importsList": { "type": [ "array", "string"] },
-                "moduleSpecifier": { "$ref": "#/definitions/ModuleReference" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": [ "moduleSpecifier", "location" ]
-        },
-        "ModuleReference": {
-            "description": "Information about a module imported into a module using the 'import' statement.",
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "namespace": { "type": "string" },
-                "id": {
-                    "type": "string",
-                    "enum": [ 
-                        "apexClass", "apexMethod", "apexContinuation", "client", "community",
-                        "component", "contentAssetUrl", "customPermission", "dynamicComponent",
-                        "slds", "messageChannel", "i18n", "gate", "label", "metric", "module",
-                        "internal", "resourceUrl", "schema", "sobjectClass", "sobjectField",
-                        "user", "userPermission"
-                    ]
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [ "lwc", "salesforce", "internal", "external", "local"]
-                }
-            },
-            "required": ["name", "type"]
-        },
-        "ParentClass": {
-            "description": "A parent component class including the 'LightningElement' class provided by the lwc module.",
-            "oneOf": [
-                {"$ref": "#/definitions/ComponentClass"},
-                {            
-                    "type": "object",
-                    "properties": {
-                        "name": { "type": "string" },
-                        "source": { "$ref": "#/definitions/ModuleReference"}
-                    }
-                }
-            ]
-        },
-        "RestParameters": {
-            "description": "Information about function parameters received using the rest(...) syntax.",
-            "type": "object",
-            "properties": {
-                "type": { "const": "RestParameters" },
-                "name": { "type": "string" },
-                "startIndex": { "type": "integer" },
-                "endIndex": { "type": "integer" }
-            },
-            "required": [ "name", "startIndex" ]
-        },
-        "SlotReference": {
-            "description": "Information about default and named slots being set by the parent component. The parent can specify a 'slot' attribute in the slotted content in the case of named slot. Slot content that do not have a 'slot' attribute will be passed as default slot content. The 'name' property in the SlotReference object will be 'default' for such a case.",
-            "type": "object",
-            "properties": {
-                "name": { "type": "string"}
-            },
-            "required": [ "name" ]
-        },
-        "SourceLocation": {
-            "description": "Object to represent the start and end position of a code block.",
-            "type": "object",
-            "required": [ "filename" ],
-            "properties": {
-                "fileName": { "type": "string" },
-                "startLine": { "type": "integer" },
-                "startColumn": { "type": "integer" },
-                "endLine": { "type": "integer" },
-                "endColumn": { "type": "integer" }
-            },
-            "required": ["fileName"]
-        },
-        "StaticResourceReference": {
-            "description": "Information about reference to a static resource in a module. The resource can be a url specified as a string literal or a reference to a computed value.",
-            "type": "object",
-            "properties": {
-                "type": { 
-                    "description": "The type of static resource loaded, identifiable by the file extension.",
-                    "type": "string",
-                    "enum": [ "image", "css", "html", "js", "other"]
-                },
-                "value": { 
-                    "anyOf": [
-                        { "type": "string", "format": "uri" },
-                        { "$ref": "#/definitions/ComputedValue"}
-                    ]
-                },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["type", "value", "location"]
-        },
-        "TemplateForEachDirective": {
-            "description": "Information about for:each directive usage to render a list in a html template.",
-            "type": "string",
-            "properties": {
-                "items": { "$ref": "#/definitions/ComputedValue"  },
-                "itemName": { "type": "string"},
-                "indexName": { "type": "string" },
-                "key": {"type": "string" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["items", "location"]
-        },
-        "TemplateIfDirective": {
-            "description": "Information about if:true or if:false directive usage to perform conditional rendering in a html template.",
-            "type": "string",
-            "properties": {
-                "qualifier": {
-                    "type": "string",
-                    "enum": [ "true", "false" ]
-                },
-                "value": { "$ref": "#/definitions/ComputedValue"  },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            }
-        },
-        "TemplateIteratorDirective": {
-            "description": "Information about iterator directive usage in a html template.",
-            "type": "string",
-            "properties": {
-                "items": { "$ref": "#/definitions/ComputedValue"  },
-                "key": {"type": "string" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["items", "location"]
-        },
-        "TemplateLwcDomDirective": {
-            "description": "Information about lwc:dom attribute usage in a html template to perform programmatic manipulation of dom tree.",
-            "type": "string",
-            "properties": {
-                "value": {
-                    "type": "string",
-                    "enum": [ "manual" ]
-                },
-                "tagName": { "type": "string" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["value", "tagName", "location"]
-        },
-        "TrackDecorator": {
-            "description": "Information about an @track decorator usage.",
-            "type": "object",
-            "properties": {
-                "type": { "const": "track" },
-                "location": { "$ref": "#/definitions/SourceLocation" }
-            },
-            "required": ["location", "type"]
-        },
-        "WireDecorator": {
-            "description": "Information about @wire decorator usage includes information about the data source.",
-            "type": "object",
-            "properties": {
-                "type": { "const": "wire" },
-                "location": { "$ref": "#/definitions/SourceLocation" },
-                "adapterId": { "type": "string" },
-                "adapterModule": { "$ref": "#/definitions/ModuleReference" },
-                "adapterConfig": { "type": "object" }
-            },
-            "required": ["location", "type", "adapterId"]
-        }
-    }
-}
-```
-</details>
+[Click here](https://github.com/salesforce/lwc-metadata/pull/4) to view in JSONSchema format.
 
 ## Metadata Shape Option 2
-Overview:
+**Overview:**
 The vision is to allow expert users to retrieve file based metadata and for the regular users to retrieve an easy, self-contained metadata object that exposes all publicly available/accessible properties of the current bundle.
 
 The main differences in proposed shape #2:
@@ -1679,6 +1154,7 @@ interface CssCustomProperty {
 5. Should imports/module references/component references be renamed to "dependencies"?
 6. Can a script file import a css module and should such an import have a separate ModuleReference.type?
 7. At bundle level we should be able to to deduce if the bundle is a 'Component' or 'LightningElement'?
+8. Should metadata collection phase produce diagnostics information? Diagnostics is information about errors that occurred during metadata collection. Is that the responsibility of the compilation phase?
 
 
 # Future work

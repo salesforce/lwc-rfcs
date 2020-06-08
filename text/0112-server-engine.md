@@ -11,19 +11,19 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/23
 
 ## Summary
 
-Server-side Rendering (SSR) is a popular technique for rendering pages and components that would usually run in a browser, on the server. SSR takes as input a root component and a set of properties and renders an HTML fragment and optionally one or multiple stylesheets. This technique can be used for many different things: improving initial page render time, generating static websites, reading site content for SEO bots, indexing content for site search, etc.
+Server-side Rendering (SSR) is a popular technique for rendering pages and components that would usually run in a browser, on the server. SSR takes as input a root component and a set of properties and renders an HTML fragment and optionally one or more stylesheets. This technique can be used for many different things: improving initial page render time, generating static websites, reading site content for SEO bots, indexing content for site search, etc.
 
-Due to the size and complexity of this feature, the rollout of SSR is broken up into 3 different phases and is spread over multiple releases:
+Due to the size and complexity of this feature, the rollout of SSR will be broken up into 3 different phases spread over multiple releases:
 
 -   **Phase 1:** Decouple the LWC engine from the DOM and allow it to run in a JavaScript environment without access to the DOM APIs (like Node.js). As part of this phase, the LWC server engine will also generate a prototype version of the serialized HTML (Phase 2).
--   **Phase 2:** Settle on an HTML serialization format.
--   **Phase 3:** Rehydrate in a browser the DOM tree resulting from the serialization into an LWC component tree.
+-   **Phase 2:** Settle on an HTML serialization format and update the prototype version.
+-   **Phase 3:** Rehydrate the serialized DOM tree into an LWC component tree in the browser.
 
-As part of phase 1, the goal is to provide a capability for LWC to render components transparently on the server. From the component standpoint, the LWC SSR and DOM versions provide identical APIs and will run the component in the same fashion on both platforms.
+As part of phase 1, the goal is to provide the capability for LWC to render components transparently on the server. From the component standpoint, regardless of whether we need to render the component on the server or in the DOM, the APIs used to author a component should be identical.
 
 ## Proposal Scope
 
-This proposal will be only focusing on phase 1 of the SSR project. Phase 2 and 3 will be covered in subsequent proposals. This proposal covers the following aspects of LWC SSR:
+This proposal will only focus on phase 1 described above. Phase 2 and 3 will be covered in subsequent proposals. This proposal covers the following aspects of LWC SSR:
 
 -   What are the different possible approaches for implementing SSR in a UI framework?
 -   How to create two different implementations of the LWC engine while keeping the core logic shared?
@@ -34,23 +34,23 @@ This proposal will be only focusing on phase 1 of the SSR project. Phase 2 and 3
 
 ### How do other frameworks implement SSR?
 
-Many popular UI frameworks already provide options to enable server-side rendering. There is no single way to implement SSR in a UI framework and each framework approaches this in a different way. That being said, all the major frameworks converge around 2 main approaches.
+Many popular UI frameworks already provide options to enable server-side rendering. There is no single way to implement SSR and each framework approaches it in a different way. That being said, all the major frameworks converge around 2 main approaches.
 
-#### DOM APIs mocking
+#### Mocking the DOM APIs
 
-The first approach is to **mock the DOM APIs in the server environment and to reuse the same core UI framework code on the server and the client**. This is the approach [Stencil](https://github.com/ionic-team/stencil/master/tree/src/mock-doc), [Ember](https://github.com/ember-fastboot/simple-dom) and [lit-ssr](https://github.com/PolymerLabs/lit-ssr) took.
+The first approach is to **mock the DOM APIs in the server environment and to reuse the same core UI framework code on the server and the client**. This is the approach [Stencil](https://github.com/ionic-team/stencil/master/tree/src/mock-doc), [Ember](https://github.com/ember-fastboot/simple-dom), and [lit-ssr](https://github.com/PolymerLabs/lit-ssr) take.
 
 This approach is convenient because it requires almost no changes to the core UI framework to enable SSR. Since most of the DOM APIs used by the UI framework are low-level APIs, most of them are easy to mock. Popular DOM API implementations like [domino](https://github.com/fgnass/domino) or [jsdom](https://github.com/jsdom/jsdom) can be used to avoid having to write to mocks.
 
-This approach also suffers from multiple drawbacks. The main issue is that the mock has to stay in sync with the core UI framework. As the core UI framework evolves and the DOM APIs used by the engine changes, developers have to always double-check that the newly introduced APIs are also properly mocked. The other main drawback is that by applying polyfills to evaluate the engine, the same DOM interfaces and methods are also available from the component code (eg. `window`, `document`, ...). This gives a false sense that the component is running in the browser.
+This approach also suffers from multiple drawbacks. The main issue is that the mock has to stay in sync with the core UI framework. As the core UI framework evolves and the DOM APIs used by the engine changes, developers have to always double-check that the newly introduced APIs are also properly mocked. Another issue is that by applying polyfills to evaluate the engine, the same DOM interfaces and methods are also available from the component code (eg. `window`, `document`, ...). This gives a false sense that the component is running in the browser.
 
-Using the mocking approach, the existing `@lwc/engine` stays untouched and the entry point of the SSR version of LWC would look something like this.
+Using the mocking approach, the existing `@lwc/engine` stays untouched and the entry point of the SSR version of LWC would look something like the following.
 
 **`server.ts`:**
 
 ```ts
-// Evaluate fist the DOM polyfills, then the DOM engine version of the engine. Re-export all the
-// exported properties from the DOM engine.
+// Evaluate the DOM polyfills before the DOM engine. Re-export all the exported properties from the
+// DOM engine.
 import './dom-environment';
 export * from '@lwc/engine';
 ```
@@ -102,11 +102,11 @@ Object.assign(globalThis, {
 
 #### Runtime injection of the rendering APIs
 
-The second approach is to **abstract the DOM APIs and the core UI framework** which is what [React](https://github.com/facebook/react/tree/master/packages/react-dom), [Vue](https://github.com/vuejs/vue-next/tree/master/packages/runtime-dom) and [Angular](https://github.com/angular/angular/tree/master/packages/platform-browser/src) did. This consists of creating an indirection between the rendering APIs and the core framework code. The indirection is injected at runtime depending on the environment. When loaded in the browser, the rendering APIs create DOM `Element` and set DOM `Attribute` on the elements. While when loaded on the server the rendering APIs are manipulating string to create the serialized version of the components on the fly.
+The second approach is to **abstract the DOM APIs and the core UI framework**. This is what [React](https://github.com/facebook/react/tree/master/packages/react-dom), [Vue](https://github.com/vuejs/vue-next/tree/master/packages/runtime-dom), and [Angular](https://github.com/angular/angular/tree/master/packages/platform-browser/src) do. This involves an indirection between the DOM APIs and the core framework code. The indirection is injected at runtime depending on the environment. When loaded in the browser, the rendering APIs create DOM `Element` and set DOM `Attribute` on the elements. When loaded on the server, the rendering APIs manipulate strings to serialize components on the fly.
 
-When used with a type-safe language like TypesScript, it is possible to ensure at compile time that all the rendering APIs are fulfilled in all the environments. By injecting this indirection at runtime, it also ensures that component code doesn't have access to any DOM APIs when running on the server.
+When used with a type-safe language like TypesScript, it is possible to ensure at compile time that all the rendering APIs are fulfilled in all environments. By injecting this indirection at runtime, it also ensures that component code doesn't have access to actual DOM APIs when running on the server.
 
-From a drawback perspective, introducing this a layer of indirection between the core logic and underlying APIs might introduce a performance overhead and increase the overall size of the engine.
+From a drawback perspective, introducing this layer of indirection between the core logic and underlying APIs might introduce a performance overhead and increase the overall size of the engine.
 
 To inject the rendering APIs depending on the environment, we would need to create a different entry point per environment. Below you can find some pseudo-code for each entry point. The two entry points use the same `createComponent` abstraction to create an LWC component but pass a different renderer specific to the target environment.
 
@@ -119,7 +119,11 @@ const domRenderer = {
     createElement(tagName: string): Element {
         return document.createElement(tagName);
     },
-    insertBefore(node: Node, parent: Element, anchor: Node): void {
+    insertBefore(
+        node: Node,
+        parent: Element,
+        anchor: Node
+    ): void {
         return parent.insertBefore(node, anchor);
     },
 };
@@ -172,7 +176,7 @@ const serverRenderer = {
 };
 
 // The method dedicated to create an LWC component in a server environment. It returns a string
-// resulting of the serialization component tree
+// representing the serialized component tree.
 export function renderComponent(
     tagName: string,
     opts: { Ctor: typeof LightningElement },
@@ -190,19 +194,19 @@ export function renderComponent(
 
 #### Retained approach
 
-After considering the pros and cons of the two approaches described above, **the rest of this proposal discusses the second approach, where the rendering APIs are injected lazily at runtime.**
+After considering the pros and cons of the two approaches described above, **the rest of this proposal discusses the second approach where the rendering APIs are injected lazily at runtime.**
 
-The main drawback of this approach is the amount of refactoring that needs to happen in LWC engine code specifically. So far the LWC engine has been designed to run in a JavaScript environment with direct access to the DOM APIs. This means that if we were to adopt this approach a large chunk of the LWC engine code will need to be rewritten. For example some of the LWC engine code stores a reference for DOM interfaces (eg. `HTMLElement.prototype`, `Node.prototype`) at evaluation time. This will not be possible with this approach as the APIs will be injected into the core engine after its evaluation.
+The main drawback of this approach is the amount of refactoring that needs to happen in the LWC engine code. The present LWC engine has been designed to run in a JavaScript environment with direct access to DOM APIs. This means that if we were to adopt this approach, much of the LWC engine code will need to be rewritten. For example, parts of the LWC engine code store a reference for DOM interfaces (eg. `HTMLElement.prototype`, `Node.prototype`, etc) at evaluation time. This will not be possible in the injection approach as the APIs will not be available until after evaluation.
 
 ## How will we implement SSR?
 
 ### Splitting `@lwc/engine`
 
-As discussed in the previous section, we will introduce an abstraction of the underlying rendering APIs into the core framework depending on the target environment. To share the core UI framework between the different environments the existing `@lwc/engine` will be split into three packages.
+As discussed in the previous section, we will introduce an abstraction of the underlying rendering APIs into the core framework depending on the target environment. To share the core UI framework between the different environments, the existing `@lwc/engine` will be split into the following three packages.
 
 #### `@lwc/engine-core`
 
-This package contains core logic shared by the different runtime environments including the rendering engine and the reactivity mechanism. It should never be consumed directly in an application. It only provides internal APIs for building custom runtimes. This package exposes the following platform-agnostic public APIs:
+This package contains core logic shared by the different runtime environments. This includes the rendering engine and the reactivity mechanism. It should never be consumed directly in an application. It only provides internal APIs for building custom runtimes. This package exposes the following platform-agnostic public APIs:
 
 -   `LightningElement`
 -   `api`
@@ -219,7 +223,7 @@ This package contains core logic shared by the different runtime environments in
 -   `registerDecorators`
 -   `sanitizeAttribute`
 
-On top of the public APIs, this package also exposes new internal APIs that are meant to be consumed by the platform specific modules:
+In addition, the following new APIs are also exposed. These are meant for internal use and are to be consumed by platform-specific modules:
 
 -   `getComponentInternalDef(Ctor: typeof LightningElement): ComponentDef`: Get the internal component definition for a given LightningElement constructor.
 -   `createVM(elm: HostElement, Ctor, options: { mode: 'open' | 'closed', owner: VM | null, renderer: Renderer }): VM`: Create a new View-Model (VM) associated with an LWC component.
@@ -228,7 +232,7 @@ On top of the public APIs, this package also exposes new internal APIs that are 
 -   `getAssociatedVMIfPresent(elm: HostElement): VM | undefined`: Retrieve the VM on a given element.
 -   `setElementProto(elm: HostElement): void`: Patch an element prototype with the bridge element.
 
-The current `@lwc/engine` code relies on direct DOM invocation. The list of all the current DOM APIs the engine depends upon can be found in the [DOM APIs usage](#dom-apis-usage). Those direct DOM API invocations will be replaced by a [`Rendered` interface](#renderer-interface) that will be injected at runtime into the `createVM`. All the sub-components created from the root VM will share the same `Renderer` interface.
+The current `@lwc/engine` code relies on direct DOM invocation. The list of all the current DOM APIs the engine depends upon can be found in the [DOM APIs usage](#dom-apis-usage). Those direct DOM API invocations will be replaced by a [`Renderer` interface](#renderer-interface) that will be injected at runtime via `createVM`. Sub-components created from the root VM will share the same `Renderer` interface.
 
 #### `@lwc/engine-dom`
 

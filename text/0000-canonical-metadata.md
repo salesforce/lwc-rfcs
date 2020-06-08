@@ -776,14 +776,21 @@ interface CSSFile {
 }
 
 // Information about css custom property.
+
 interface CSSCustomProperty {
     name: string;
-    fallbackValue?: CSSCustomPropertyFallback;
     location: SourceLocation;
 }
 
-// Information about css custom property declaration
-// Information about css custom property fallback values.
+interface CSSCustomPropertyDeclaration extends CSSCustomProperty {
+    value: CSSCustomProperty | string;
+    scope: string; // the scope of the current custom property
+}
+
+interface CSSCustomPropertyReference extends CSSCustomProperty {
+    fallback: CSSCustomPropertyFallback[] | null; // array to accommodate value with comma separated custom properties and strings: var(--default-border-radius, var(--border-top, 5px) 10px var(--border-bottom, 10 px) 10px);
+}
+
 type CSSCustomPropertyFallback = string | CSSCustomProperty;
 ```
 Examples:
@@ -1160,16 +1167,22 @@ interface CSSMetadata extends FileMetadata {
     customProperties: Array<CssCustomProperty>;
 }
 
-interface CssCustomProperty {
-    external: boolean; // determines if the custom property is defined in the current file
+// Information about css custom property.
+interface CSSCustomProperty {
     name: string;
-    fallback: string;
-    value?: {
-        type: string;
-        value: string;
-        fallback: string;
-    }
+    location: SourceLocation;
 }
+
+interface CSSCustomPropertyDeclaration extends CSSCustomProperty {
+    value: CSSCustomPropertyReference | string;
+    scope: string; // the scope of the current custom property
+}
+
+interface CSSCustomPropertyReference extends CSSCustomProperty {
+    fallback: CSSCustomPropertyFallback[] | null; // array to accommodate value with comma separated custom properties and strings: var(--default-border-radius, var(--border-top, 5px) 10px var(--border-bottom, 10 px) 10px);
+}
+
+type CSSCustomPropertyFallback = string | CSSCustomProperty;
 ```
 </details>
 

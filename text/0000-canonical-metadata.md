@@ -783,7 +783,7 @@ interface CSSCustomProperty {
 }
 
 interface CSSCustomPropertyDeclaration extends CSSCustomProperty {
-    value: CSSCustomProperty | string;
+    value: CSSCustomPropertyReference | string;
     scope: string; // the scope of the current custom property
 }
 

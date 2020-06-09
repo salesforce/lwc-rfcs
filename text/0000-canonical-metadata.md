@@ -1,8 +1,8 @@
 ---
 title: Canonical specification of metadata for LWC modules
-status: DRAFT
+status: DRAFTED
 created_at: 2020-05-07
-updated_at: 2020-05-19
+updated_at: 2020-06-09
 rfc: https://github.com/salesforce/lwc-rfcs/pull/33
 champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa (@ravijayaramappa)
 implementation: 

@@ -771,7 +771,10 @@ interface CSSFile {
     fileType: 'css';
     fileName: string;
     imports?: ModuleReference[];
-    customProperties?: CSSCustomProperty[];
+    customProperties?: {
+        declarations?: CSSCustomPropertyDeclaration[];
+        references?: CSSCustomPropertyReference[];
+    }
     staticResources?: StaticResourceReference[];
 }
 
@@ -1164,7 +1167,10 @@ interface HTMLEventListener {
 interface CSSMetadata extends FileMetadata {
     type: 'css';
     imports: Array<Reference>; // css only module imports
-    customProperties: Array<CssCustomProperty>;
+    customProperties?: {
+        declarations?: CSSCustomPropertyDeclaration[];
+        references?: CSSCustomPropertyReference[];
+    }
 }
 
 // Information about css custom property.

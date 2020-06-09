@@ -110,7 +110,7 @@ From a drawback perspective, introducing this layer of indirection between the c
 
 To inject the rendering APIs depending on the environment, we would need to create a different entry point per environment. Below you can find some pseudo-code for each entry point. The two entry points use the same `createComponent` abstraction to create an LWC component but pass different renderers specific to the target environment.
 
-**`entry-points/dom.js`:**
+**`entry-points/dom.ts`:**
 
 ```ts
 import { LightningElement, createComponent } from '@lwc/engine-core';
@@ -140,7 +140,7 @@ export function createElement(
 }
 ```
 
-**`entry-points/server.js`:**
+**`entry-points/server.ts`:**
 
 ```ts
 import { LightningElement, createComponent } from '@lwc/engine-core';
@@ -322,7 +322,7 @@ document.body.appendChild(app);
 **`server.js`:**
 
 ```js
-import { renderComponent } from '@lwc/engine-server'; // Resolves to `@lwc/engine-server`
+import { renderComponent } from 'lwc'; // Resolves to `@lwc/engine-server`
 import App from 'c/app';
 
 const str = renderComponent('c-app', { is: App });

@@ -1,8 +1,10 @@
 ---
 title: Custom Element Constructor
-status: DRAFTED
-created_at: 2019-07-05
-updated_at: 2019-07-05
+status: IMPLEMENTED
+created_at: 2019/07/05
+updated_at: 2020/06/12
+champion: Caridy Patiño (caridy)
+implementation: https://github.com/salesforce/lwc/pull/1395
 pr: https://github.com/salesforce/lwc-rfcs/pull/7
 ---
 

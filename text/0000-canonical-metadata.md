@@ -89,19 +89,15 @@ type collectBundleMetadata =(
 For an HTML file:
 ```js
 type collectTemplateMetadata =(
-    file: {
-        filename: string;
-        source: string;
-    }
+    filename: string;
+    source: string;
 ) => HTMLTemplateFile;
 
 /** Experimental API, reusing existing ast from @lwc/template-compiler **/
 import { IRElement} from '@lwc/template-compiler';
 type collectTemplateMetadata =(
-    file: {
-        filename: string;
-        root: IRElement;
-    }
+    filename: string;
+    root: IRElement;
 ) => HTMLTemplateFile;
 /** End Experimental API **/
 ```
@@ -109,38 +105,33 @@ type collectTemplateMetadata =(
 For a script file:
 ```js
 type collectScriptMetadata =(
-    file: {
-        filename: string;
-        source: string;
-    }
+    filename: string;
+    source: string;
 ) => ScriptFile;
 
+/** Internal API, optimization to reuse existing ast from compilation process **/
 import { File } from '@babel/types';
 type collectScriptMetadata =(
-    file: {
-        filename: string;
-        astRoot: File;
-    }
+    filename: string;
+    astRoot: File;
 ) => ScriptFile;
+/** End internal API **/
 ```
 
 For a CSS file:
 ```js
 type collectCssMetadata =(
-    file: {
-        filename: string;
-        source: string;
-    }
+    filename: string;
+    source: string;
 ) => CSSFile;
 
+/** Internal API, optimization to reuse existing ast from compilation process **/
 import { Root } from 'postcss';
 type collectCssMetadata =(
-    file: {
-        filename: string;
-        root: Root;
-    }
+    filename: string;
+    root: Root;
 ) => CSSFile;
-
+/** End internal API **/
 ```
 
 ## Format
@@ -218,8 +209,8 @@ interface BundleMetadata {
     moduleSpecifier: string;
     name: string;
     namespace: string;
-    // Define the type of module that is represented by the given metadata object.
-    moduleType?: 'HTML' | 'CSS' | 'Javascript';
+    // Define the type of bundle that is represented by the given metadata object.
+    bundleType?: 'LightningElement' | 'CSS' | 'Javascript';
 
     /**
      * For a component bundle, this property is a reference to the main component class in the bundle.
@@ -246,8 +237,8 @@ interface BundleMetadataOption2 {
     moduleSpecifier: string;
     name: string;
     namespace: string;
-    // Define the type of module that is represented by the given metadata object.
-    moduleType?: 'HTML' | 'LightningElement' | 'CSS' | 'Javascript' | 'LightningEvent';
+    // Define the type of bundle that is represented by the given metadata object.
+    bundleType?: 'LightningElement' | 'CSS' | 'Javascript' | 'LightningEvent';
 
     /**
      * For a component bundle, this property is a reference to the main component class in the bundle.
@@ -365,9 +356,9 @@ interface Class {
     // When not statically analyzable, will be 'unresolved'(e.g. Mixin)
     extends: ParentClass;
 
-    properties?: ClassProperty[];
+    properties: ClassProperty[];
 
-    methods?: ClassMethod[];
+    methods: ClassMethod[];
 
     // Location starts with the "class" key word and ends at the closing curly braces of the class body
     location: SourceLocation;
@@ -664,7 +655,7 @@ interface DOMEvent {
 // Information about an event handled declaratively in the template.
 interface ProgrammaticEventListener {
     type: string;
-    targetType: 'host' | 'shadowRoot' | 'Node';
+    targetType: 'host' | 'shadowRoot' | 'unresolved';
     options?: {
         capture?: boolean;
     };
@@ -672,7 +663,7 @@ interface ProgrammaticEventListener {
 }
 
 interface EventDispatch {
-    targetType: 'host' | 'shadowRoot' | 'Node';
+    targetType: 'host' | 'shadowRoot' | 'unresolved';
     event:
         | {
               refId: ID; // Back pointer to the metadata for the DOMEvent
@@ -737,7 +728,7 @@ interface ModuleReference {
         | '@salesforce' // reference is a @salesforce scoped module
         | 'internal' // reference is relative import, "internal" to the current bundle
         | 'external'; // reference is an external module like another component or a library
-    location: SourceLocation;
+    location: SourceLocation[];
     id: ID;
 }
 
@@ -805,7 +796,6 @@ Samples of the metadata for css files can be viewed [here](https://github.com/sa
 ```js
 // Object to represent the start and end position of a code block.
 interface SourceLocation {
-    fileName: string;
     startLine: number;
     startColumn: number;
     endLine: number;
@@ -1197,6 +1187,7 @@ type CSSCustomPropertyFallback = string | CSSCustomProperty;
     - **Answer:** Dean Moses from Builder Framework team says it is not required.
 2. Is documentation(.md) in the scope of this RFC? Will it overlap with [this RFC](https://github.com/salesforce/lwc-rfcs/pull/26)
 3. Does svg file have any useful metadata?
+    - **Answer:** Not in the scope of this RFC.
 4. For a script file, should the metadata gathering be restricted to only ComponentClasses or be more broad and gather metadata about all classes?
     - Should it collect data about only exported classes?
     - **Answer:** Collect metadata only about component classes and any exported class. A component class is one that extends LightningElement.

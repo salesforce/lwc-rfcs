@@ -20,7 +20,7 @@ By providing a secure container for scripts to run, see, and interact with all t
 <secure-script src="//cdn.optimizely.com/js/12345678.js"></secure-script>
 ```
 
-`secure-script` is a custom element which acts the same as the `script` tag, but any code which is evaluated inside this container is able to traverse the entire shadow tree using ligh DOM semantics. So if the above script runs `document.querySelectorAll('button')`, it will return all button elements regardless if they are in the shadow or not.
+`secure-script` is a custom element which acts the same as the `script` tag, but any code which is evaluated inside this container is able to traverse the entire shadow tree using light DOM semantics. So if the above script runs `document.querySelectorAll('button')`, it will return all button elements regardless if they are in the shadow or not.
 
 ```html
 <secure-script>
@@ -68,7 +68,7 @@ The goal of this proposal is to provide a way for application developers to cont
 ### Synthetic Shadow
 Many LWC applications apply the [synthetic-shadow polyfill](https://github.com/salesforce/lwc/tree/master/packages/%40lwc/synthetic-shadow/). This polyfill emulates the native shadow behavior while still allowing global styles to cascade into the shadow trees. Synthetic shadow currently [patches](https://github.com/salesforce/lwc/tree/master/packages/%40lwc/synthetic-shadow/src/polyfills/document-shadow) the `document.querySelector` and `document.querySelectorAll` APIs which is what prevents developers from penetrating the shadow DOM boundaries either in their LWC components or any other scripts added to the document. We only want to solve for the latter scenario.
 
-Ok, so what if we store a reference to the original, unpatched APIs before they get patched by our polyfill? And we let *only* our "secure scripts" access those APIs? That's the premise of this approach for synthetic shadow:
+To ensure we can solve the problem while continuing to guarantee the benefits that are provided by the synthetic-shadow polyfill for all other components, we are currently proposing the following characteristics for the secure-script design:
 
 * Create a secure JS sandbox which doesn’t allow its object graph to be extended using [`Object.preventExtensions`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/preventExtensions)
   * The sandbox is created using a same-domain iframe provided by Locker v.Next

@@ -180,4 +180,4 @@ TBD
 
 ## Unresolved questions
 
-- Do we want to support all the existing `script` tag attributes like `type`, `async` and `defer`?
+- Do we want to maintain parity with the `script` element including supporting attributes like `type`, `async` and `defer`? If so can we just extend [`HTMLScriptElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement)? 

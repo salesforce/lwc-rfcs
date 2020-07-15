@@ -57,8 +57,6 @@ Some examples of these libraries are:
 - **Personalization platforms**: Optimizely, Evergage, Google Optimize
 - **Instrumentation tools**: New Relic, Sentry.io
 
-In addition, developers are finding that this model is not compatible with their **design systems** and **testing frameworks**.
-
 The goal of this proposal is to provide a way for application developers to continue to use their existing integrations until library authors can support web component based applications.
 
 ## Design

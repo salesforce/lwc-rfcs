@@ -174,10 +174,10 @@ customElements.define('secure-script', SecureScript);
 
 TBD
 
-# How we teach this
+## How we teach this
 
 TBD
 
-# Unresolved questions
+## Unresolved questions
 
 - Do we want to support all the existing `script` tag attributes like `type`, `async` and `defer`?

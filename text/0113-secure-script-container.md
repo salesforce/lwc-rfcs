@@ -2,7 +2,7 @@
 title: Secure Script Container
 status: DRAFTED
 created_at: 2020-07-15
-pr: https://github.com/salesforce/lwc-rfcs/pull/38
+pr: https://github.com/salesforce/lwc-rfcs/pull/39
 champion: Caridy Patiño, Ted Conn
 ---
 

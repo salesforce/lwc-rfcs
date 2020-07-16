@@ -57,14 +57,14 @@ Some examples of these libraries are:
 - **Personalization platforms**: Optimizely, Evergage, Google Optimize
 - **Instrumentation tools**: New Relic, Sentry.io
 
-The goal of this proposal is to provide a way for application developers to continue to use their existing integrations until library authors can support web component based applications.
+The goal of this proposal is to provide a way for application developers to continue to use their existing integrations until library authors support shadow DOM integration.
 
 ## Design
 
 `secure-script` will solve for the synthetic shadow and subsequently the native shadow.
 
 ### Synthetic Shadow
-Many LWC applications apply the [synthetic-shadow polyfill](https://github.com/salesforce/lwc/tree/master/packages/%40lwc/synthetic-shadow/). This polyfill emulates the native shadow behavior while still allowing global styles to cascade into the shadow trees. Synthetic shadow currently [patches](https://github.com/salesforce/lwc/tree/master/packages/%40lwc/synthetic-shadow/src/polyfills/document-shadow) the `document.querySelector` and `document.querySelectorAll` APIs which is what prevents developers from penetrating the shadow DOM boundaries either in their LWC components or any other scripts added to the document. We only want to solve for the latter scenario.
+Many LWC applications apply the [synthetic-shadow polyfill](https://github.com/salesforce/lwc/tree/master/packages/%40lwc/synthetic-shadow/). This polyfill emulates the native shadow DOM behavior while still allowing global styles to cascade into the shadow trees. Synthetic shadow currently [patches](https://github.com/salesforce/lwc/tree/master/packages/%40lwc/synthetic-shadow/src/polyfills/document-shadow) the `document.querySelector` and `document.querySelectorAll` APIs which is what prevents developers from penetrating the shadow DOM boundaries either in their LWC components or any other scripts added to the document. We only want to solve for the latter scenario.
 
 To ensure we can solve the problem while continuing to guarantee the benefits that are provided by the synthetic-shadow polyfill for all other components, we are currently proposing the following characteristics for the secure-script design:
 

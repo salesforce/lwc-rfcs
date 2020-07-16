@@ -38,7 +38,7 @@ Inline scripting would also be supported, such as the above example which uses s
 
 ## Motivation
 
-Web component applications need the ability to integrate with third party libraries. Because
+Web component based applications need the ability to integrate with third party libraries. Because
 web components rely on the shadow DOM for encapsulation, this development paradigm does not work
 with libraries who are expecting to interact with the application globally. Before there was
 component encapsulation via shadow DOM it was possible for library authors to:

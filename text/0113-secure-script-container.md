@@ -99,12 +99,25 @@ Some scripts define globals which are meant to be used by the rest of the applic
 <!-- End Google Analytics -->
 ```
 
-If we included the above snippet inside our secure-script container, then `ga` will only be available to the *inner* `window`, i.e. the secure container's window. So `ga` will not be usable by anyone else in the entire application. We can however, allow for globals to be created inside our secure container, and redefined in any additional application sandboxes created by Locker (or the global outer window).
+If we included the above snippet inside our secure-script container, then `ga` will only be defined in the *inner* `window`, i.e. the secure container's window. So `ga` will not be usable by anyone else in the entire application. We can however, allow for globals that are defined in our secure container to be set on the outer window, or in any additional application sandboxes created by Locker.
 
 A syntax like the following could be provided:
 
 ```html
 <secure-script extra-globals="ga"></secure-script>
+```
+
+So the above Google Analytics example would be coded like so:
+
+```html
+<!-- Google Analytics -->
+<secure-script extra-globals="ga">
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'UA-XXXXX-Y', 'auto');
+    ga('send', 'pageview');
+</secure-script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!-- End Google Analytics -->
 ```
 
 ### Known Limitations

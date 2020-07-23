@@ -66,7 +66,7 @@ A new element called `<virtual-script>` encapsulates the various mechanisms to e
 
 Many LWC applications use the [synthetic-shadow polyfill](https://github.com/salesforce/lwc/tree/master/packages/%40lwc/synthetic-shadow/). This polyfill emulates the native Shadow DOM behavior while still allowing global styles to cascade into the shadow trees. Synthetic Shadow patches many of the DOM APIs that allow you to interact and traverse the DOM tree, (e.g.: `document.querySelector` and `document.querySelectorAll`), these APIs will prevent developers from penetrating the Shadow DOM boundaries defined by their LWC components. In this phase, we want to solve the LWC + Synthetic Shadow scenario.
 
-To ensure we can solve the problem while continuing to guarantee the benefits that are provided by the synthetic-shadow polyfill for all other components running on the main window. We are currently proposing the following characteristics for the virtual-script design:
+To ensure we can solve the problem while continuing to guarantee the benefits that are provided by the synthetic-shadow polyfill for all other components running on the main window, we are currently proposing the following characteristics for the virtual-script design:
 
 * Create a JS sandbox before the Synthetic Shadow Polyfill is evaluated.
   * The sandbox is created using a same-domain iframe.

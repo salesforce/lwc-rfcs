@@ -60,7 +60,7 @@ The goal of this proposal is to provide a way for application developers to cont
 
 ## Design
 
-A new element called `<virtual-script>` encapsulates the various mechanism to evaluate the scripts in a virtual environment, which solves the problem when using synthetic shadow and subsequently, when using the native Shadow DOM. We can implement this solution in two phases:
+A new element called `<virtual-script>` encapsulates the various mechanisms to evaluate the scripts in a virtual environment, which solves the problem when using synthetic shadow and subsequently, when using the native Shadow DOM. We can implement this solution in two phases:
 
 ### Phase I: Synthetic Shadow
 

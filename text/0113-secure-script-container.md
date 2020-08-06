@@ -120,6 +120,10 @@ So the above Google Analytics example would be coded like so:
 <!-- End Google Analytics -->
 ```
 
+- `virtual-script` container does not have access to globals defined by other scripts in the outer window unless they were defined in a `virtual-script` using `extra-globals`.
+- Globals defined in `extra-globals` will be redefined in any `virtual-script` containers.
+- They will also be available to any Locker-created sandboxes
+
 ### Known Limitations
 
 * Currently there is an outstanding issue with synthetic shadow in that the Event object patching happens lazily, so we are unable to prevent its patching at the time of creating the secure container, which means that events are still retargeted. [See LWC PR #1569](https://github.com/salesforce/lwc/pull/1569).

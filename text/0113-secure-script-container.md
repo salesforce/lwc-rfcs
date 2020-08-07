@@ -144,6 +144,36 @@ If we evaluate the above snippets with `<virtual-script>` instead, then `ga` glo
 
 Note: these global values are controlled side-channels between the main window and the sandbox, and should be used with caution. For example, creating a component that depends on `ga` to be defined, is an anti-pattern.
 
+### Supported Attributes
+
+`crossorigin`: indicates that the browser should provide more information to window.onerror when handling CORS errors
+
+`defer`: indicates that the script should be executed after the document has parsed (has no effect if `src` is absent)
+
+`integrity`: enables the browser to verify thata fetched resource is delivered without unexpected manipulation
+
+`nomodule`: the script should not be executed in browsers that support ES2015 modules
+
+`nonce`: user provided nonce values for CSP will be supported
+
+`referrerpolicy`: indicates which referrer to send when fetching the focument
+
+`src`: the address of the resource
+
+**async**
+
+TBD describe asynchronous nature of `virtual-script`.
+
+### Unsupported Attributes
+
+`type`: all `virtual-script` resources will be `text/javascript`. `type="module"` will not be supported.
+
+`charset`: this attribute is deprecated
+
+`language`: this attribute is deprecated
+
+
+
 ### Known Limitations
 
 * Currently there is an outstanding issue with Synthetic Shadow in that the Event object patching happens lazily, so we are unable to prevent its patching at the time of creating the sandbox, which means that events are still re-targeted in some cases. [See LWC PR #1569](https://github.com/salesforce/lwc/pull/1569).

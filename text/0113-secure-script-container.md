@@ -184,7 +184,6 @@ We will want to gather the top 20 common libraries and implement their behavior 
 
 ## Drawbacks
 
-- We are potentially prolonging the life of our synthetic shadow dom polyfill, instead of encouraging community library authors to adopt Shadow DOM semantics.
 - The element may end up being anywhere from 5kb - 20kb.
 - Debugging these 3rd party libraries will become harder due to the javascript membrane.
 

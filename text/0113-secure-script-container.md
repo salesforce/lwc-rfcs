@@ -150,7 +150,7 @@ Note: these global values are controlled side-channels between the main window a
 
 `defer`: indicates that the script should be executed after the document has parsed (has no effect if `src` is absent)
 
-`integrity`: enables the browser to verify thata fetched resource is delivered without unexpected manipulation
+`integrity`: enables the browser to verify that a fetched resource is delivered without unexpected manipulation
 
 `nomodule`: the script should not be executed in browsers that support ES2015 modules
 

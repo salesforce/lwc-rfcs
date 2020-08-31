@@ -156,7 +156,7 @@ Note: these global values are controlled side-channels between the main window a
 
 `nonce`: user provided nonce values for CSP will be supported
 
-`referrerpolicy`: indicates which referrer to send when fetching the focument
+`referrerpolicy`: indicates which referrer to send when fetching the script
 
 `src`: the address of the resource
 

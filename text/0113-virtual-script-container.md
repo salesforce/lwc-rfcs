@@ -196,7 +196,7 @@ We will want to gather the top 20 common libraries and implement their behavior 
 
 ## Adoption strategy
 
-We will document the availability of virtual-script tags for use in certain products, and the element will be available for use by the general public.
+We will document the availability of virtual-script tags for use in certain products, and the element will be available for use by the general public. It is important to note that usage of virtual script containers require above-average scrutiny because they bypass the standard component encapsulation model. In addition, it is impossible to test every 3rd party integration, so uses with a new library will require additional rigor.
 
 ## How we teach this
 

@@ -172,6 +172,7 @@ TBD describe asynchronous nature of `virtual-script`.
 
 `language`: this attribute is deprecated
 
+`nonce`: has special semantics since it is a global attribute and browsers do special behavior with this attribute when a CSP policy is applied. We will have to treat this attribute specially.
 
 
 ### Known Limitations
@@ -195,7 +196,7 @@ We will want to gather the top 20 common libraries and implement their behavior 
 
 ## Adoption strategy
 
-TBD
+We will document the availability of virtual-script tags for use in certain products, and the element will be available for use by the general public.
 
 ## How we teach this
 
@@ -203,5 +204,4 @@ TBD
 
 ## Unresolved questions
 
-- Do we want to support all the existing `script` tag attributes like `type`, `async` and `defer`?
-- Is product security ok with 3rd party scripts running inside the virtual environment but without the same level of sandboxing used by Locker vNext?
+- We will need feedback and guidance from Product Security.

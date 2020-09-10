@@ -196,7 +196,7 @@ The engine-server module providing the SSR capability can seamlessly render Shad
 **Synthetic Shadow DOM**
 The selection of Light DOM should not be impacted by the use of synthetic shadow instead of native shadow. Now, the goal is to get rid of synthetic shadow, but this is hardly possible today because of:
 
-* Base components do not work with native shadow (https://sfdc-communitycloud.slack.com/archives/C5W3E40TC/p1596736376290800)
+* Salesforce Lightning Components do not work with native shadow today
 * Shadow DOM has accessibility issues
 
 Could we think of a lightweight synthetic shadow that do not override the global methods but provides enough functions to the base components to work while letting third party integration tools work? This can be a different DOM option, which is an hybrid between Shadow DOM and Light DOM.

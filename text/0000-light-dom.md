@@ -205,8 +205,8 @@ Could we think of a lightweight synthetic shadow that do not override the global
 
 More implementation details available through this POC:
 
-* Demo: https://git.soma.salesforce.com/pages/priand/pages-lwc-lightdom
-* Git repo: https://github.com/priandsf/lwc/blob/light-dom-1.7.7/packages/sample-app/README.md
+* Demo: Coming soon
+* Git repo: [https://github.com/priandsf/lwc/blob/light-dom-1.7.7/packages/sample-app/README.md](https://github.com/priandsf/lwc/blob/light-dom-1.7.7/packages/sample-app/README.md)
 
 ### **Potential issues**
 

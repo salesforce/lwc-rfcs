@@ -132,15 +132,22 @@ Some scripts define globals which are meant to be used by the rest of the applic
 <!-- End Google Analytics -->
 ```
 
-If we evaluate the above snippets with `<virtual-script>` instead, then `ga` global value will only be available into the sandbox. So `ga` will not be usable by anyone else in the entire application. We can however, allow for globals to be exposed into the main window. A syntax like the following could be provided:
+If we evaluate the above snippets with `<virtual-script>` instead, then `ga` global value will only be available into the sandbox. So `ga` will not be usable by anyone else in the entire application. We can however, allow for globals to be exposed into the main window. We call this global _exporting_. 
+
+Conversely, if a script running in `virtual-script` needs access to a global variable from the main window, we can _import_ this global. 
+
+A syntax like the following will be provided:
 
 ```html
-<virtual-script extra-globals="ga"></virtual-script>
+<virtual-script exported-globals="foo"></virtual-script>
+<virtual-script imported-globals="bar"></virtual-script>
 ```
 
-- `virtual-script` container would not have access to globals defined by other scripts in the outer window unless they were defined in a `virtual-script` using `extra-globals`.
-- Globals defined in `extra-globals` will be redefined in any `virtual-script` containers.
-- They will also be available to any Locker-created sandboxes
+- `virtual-script` container would not have access to globals defined by other scripts in the outer window unless they were imported using `imported-globals`.
+
+- Globals defined in `exported-globals` will be redefined in any `virtual-script` container.
+- Exported globals will also be available to any Locker-created sandboxes
+- Globals defined in Oasis using `imported-globals` will be redefined only in the `virtual-script` container they are imported to.
 
 Note: these global values are controlled side-channels between the main window and the sandbox, and should be used with caution. For example, creating a component that depends on `ga` to be defined, is an anti-pattern.
 

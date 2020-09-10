@@ -214,21 +214,21 @@ More implementation details available through this POC:
 Slot propagation is not available between components using Shadow and Light DOM intermingled.  Typically, the use case below will not work:
 
 ```html
-<!-- App.html -> shadow on/off, doesn't matter -->
+<!-- App.html, shadow on/off, doesn't matter -->
 <template>
   <Container>
     <div>Slotted content!</div>
   </Container>
 </template>
 
-<!-- Container.html -> shadow on -->
+<!-- Container.html, shadow on -->
 <template>
   <Comp>
     <slot></slot>
   <Comp>
 </template>
 
-<!-- Comp.html -> shadow off -->
+<!-- Comp.html, shadow off -->
 <template>
   <slot>default content</slot>
 </template>

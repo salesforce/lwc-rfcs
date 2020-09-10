@@ -4,7 +4,7 @@ status: DRAFTED
 created_at: 2020-09-10
 updated_at: 2020-09-10
 champion: Philippe Riand (priand), Ted Conn (tconn)
-pr: 
+pr: https://github.com/salesforce/lwc-rfcs/pull/40
 ---
 
 # RFC: Light DOM Support

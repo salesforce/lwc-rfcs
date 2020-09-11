@@ -80,11 +80,11 @@ To ensure we can solve the problem while continuing to guarantee the benefits th
 * Package the above functionality in a web component which semantically matches the `<script>` tag API.
 
 * Provide an additional mechanism to remap globals when needed.
-    * The sandbox does NOT include any global name defined in the main window, whether it is defined before or after the creation of the sandbox. But the `<virtual-script>` can opt-in to share a global value between the sandbox and the main window, this must be done via the `extra-globals` argument passed to the `<virtual-script extra-globals="dataLayer">` element.
+    * The sandbox does NOT include any global name defined in the main window, whether it is defined before or after the creation of the sandbox. But the `<virtual-script>` can opt-in to share a global value between the sandbox and the main window, this must be done via the `imported-globals` argument passed to the `<virtual-script imported-global="dataLayer">` element.
 
 Other considerations for Phase I:
 
- * due to the explicit order of evaluation required for this to function, we plan to only support one sandbox that can be shared by multiple virtual scripts.
+ * due to the explicit order of evaluation required for this to function, we plan to only support one sandbox per page that can be shared by multiple virtual scripts.
  * budget is around 5kb (minify/gzip).
  * performance penalties will be added to the virtual scripts as they run inside a membrane:
    * evaluation budget: 30% slower than evaluating the same script in the main window.
@@ -104,12 +104,11 @@ For applications which are using the native shadow, the underlying implementatio
 
 * Package the above functionality in a web component which semantically matches the `<script>` tag API.
 
-* Provide an additional mechanism to remap globals when needed.
-    * The sandbox does NOT include any global name defined in the main window, whether it is defined before or after the creation of the sandbox. But the `<virtual-script>` can opt-in to share a global value between the sandbox and the main window, this must be done via the `extra-globals` argument passed to the `<virtual-script extra-globals="dataLayer">` element.
+* Provide an additional mechanism to remap globals when needed: this is discussed below in [globals](#Globals).
 
 Other considerations for Phase II:
 
- * the virtual script web component "should" be registered before any shadow root is created, it is not longer a "must", the flip side of this is that pre-existing shadowRoots are just not going to be inspected by virtual scripts.
+ * the virtual script web component "should" be registered before any shadow root is created, it is no longer a "must", the flip side of this is that pre-existing shadowRoots are just not going to be inspected by virtual scripts.
  * budget is less than 10kb (minify/gzip).
  * performance penalties will be added to the virtual scripts as they run inside a membrane:
    * evaluation budget: 30% slower than evaluating the same script in the main window.

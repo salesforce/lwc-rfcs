@@ -180,6 +180,9 @@ TBD describe asynchronous nature of `virtual-script`.
 
 `nonce`: has special semantics since it is a global attribute and browsers do special behavior with this attribute when a CSP policy is applied. We will have to treat this attribute specially.
 
+### Supported Events
+
+Initially we aim to support `load` and `error` events. We may add support for more as new use cases arise.
 
 ### Known Limitations
 

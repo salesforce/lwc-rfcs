@@ -75,7 +75,7 @@ Consumer applications require DOM traversal and observability of an applicationâ
     They faced the same issues than third party tools when it comes to traverse the DOM
 
 Furthermore, **the goal of Shadow DOM is not to enclose the entire application in a single shadow-bound element**. We want to build UIs which are comprised of multiple web components, not UIs which are a single, top-level web component. Web components shouldnâ€™t be the fundamental mechanism for building everything in an app, otherwise they negate the usefulness of standard semantic HTML. This is why we think the current model is fundamentally flawed.
-[Image: shadow spectrum (1).png]
+![shadow spectrum](./shadow-spectrum.png?raw=true "Shadow Spectrum")
 
 ### Prior Art
 

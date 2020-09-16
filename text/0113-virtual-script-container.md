@@ -172,8 +172,6 @@ TBD describe asynchronous nature of `virtual-script`.
 
 ### Unsupported Attributes
 
-`type`: all `virtual-script` resources will be `text/javascript`. `type="module"` will not be supported.
-
 `charset`: this attribute is deprecated
 
 `language`: this attribute is deprecated

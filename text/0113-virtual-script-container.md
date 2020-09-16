@@ -113,7 +113,7 @@ Other considerations for Phase II:
  * performance penalties will be added to the virtual scripts as they run inside a membrane:
    * evaluation budget: 30% slower than evaluating the same script in the main window.
    * operation budget: 1X slower than executing the same task is the main window.
-   * 3rd party scripts are rarely part of the critical path for the application to function.
+   * this tool is targeting non-critical path tools, and we will always force the async attribute
  * synthetic shadow and native shadow combinations can be allowed, and supported, although it will require an explicit order to run before synthetic shadow polyfill does it.
 
 ### Globals

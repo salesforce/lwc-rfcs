@@ -1,7 +1,8 @@
 ---
 title: Virtual Script Container
-status: DRAFTED
+status: APPROVED
 created_at: 2020-07-15
+updated_at: 2020-09-16
 pr: https://github.com/salesforce/lwc-rfcs/pull/39
 champion: Caridy Patiño, Ted Conn
 ---

@@ -2,10 +2,10 @@
 title: Canonical specification of metadata for LWC modules
 status: DRAFTED
 created_at: 2020-05-07
-updated_at: 2020-06-09
+updated_at: 2020-10-30
 rfc: https://github.com/salesforce/lwc-rfcs/pull/33
 champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa (@ravijayaramappa)
-implementation: 
+implementation: https://git.soma.salesforce.com/lwc/lwc-platform/tree/master/packages/lwc-metadata-next
 ---
 
 # Canonical specification of metadata for LWC modules
@@ -79,10 +79,16 @@ This RFC is an attempt to define the new metadata shape that adheres to the abov
 For a bundle:
 ```js
 type collectBundleMetadata =(
-    ...files: {
-        filename: string;
-        source: string;
-    }[]
+    {
+        type: BundleType;
+        name: string;
+        namespace: string;
+        namespaceMapping: NamespaceMapping;
+        files: {
+            fileName: string;
+            source: string;
+        }[];
+    }
 ) => BundleMetadata;
 ```
 
@@ -91,6 +97,7 @@ For an HTML file:
 type collectTemplateMetadata =(
     filename: string;
     source: string;
+    namespaceMapping: NamespaceMapping;
 ) => HTMLTemplateFile;
 
 /** Experimental API, reusing existing ast from @lwc/template-compiler **/
@@ -98,6 +105,7 @@ import { IRElement} from '@lwc/template-compiler';
 type collectTemplateMetadata =(
     filename: string;
     root: IRElement;
+    namespaceMapping: NamespaceMapping;
 ) => HTMLTemplateFile;
 /** End Experimental API **/
 ```
@@ -107,6 +115,8 @@ For a script file:
 type collectScriptMetadata =(
     filename: string;
     source: string;
+    namespaceMapping: NamespaceMapping;
+    bundleType: BundleType;
 ) => ScriptFile;
 
 /** Internal API, optimization to reuse existing ast from compilation process **/
@@ -114,6 +124,8 @@ import { File } from '@babel/types';
 type collectScriptMetadata =(
     filename: string;
     astRoot: File;
+    namespaceMapping: NamespaceMapping;
+    bundleType: BundleType;
 ) => ScriptFile;
 /** End internal API **/
 ```
@@ -123,6 +135,7 @@ For a CSS file:
 type collectCssMetadata =(
     filename: string;
     source: string;
+    namespaceMapping: NamespaceMapping;
 ) => CSSFile;
 
 /** Internal API, optimization to reuse existing ast from compilation process **/
@@ -130,6 +143,7 @@ import { Root } from 'postcss';
 type collectCssMetadata =(
     filename: string;
     root: Root;
+    namespaceMapping: NamespaceMapping;
 ) => CSSFile;
 /** End internal API **/
 ```
@@ -148,10 +162,6 @@ These are the entities that will be analyzed and metadata gathered about:
         * Tag name
         * Attributes
         * Slot content - default and named slots
-    * Static resource
-        * Image urls
-        * Javascript resource
-        * CSS resource
     * Dynamic components
     * Nodes with special directives
         * for:each
@@ -184,13 +194,9 @@ These are the entities that will be analyzed and metadata gathered about:
     * Programmatically generated events
         * type
         * options: composed, bubbles
-    * Programmatically fetched static resources
-        * `<script>`
-        * `<img>`
-        * `<link>`
+    * Events dispatched and Event Listeners attached
 * CSS file
-    * Custom property declaration and usage([--*](https://developer.mozilla.org/en-US/docs/Web/CSS/--*))
-    * Static resources
+    * Custom property declaration([--*](https://developer.mozilla.org/en-US/docs/Web/CSS/--*))
     * CSS imports
 
 ## Definitions
@@ -209,28 +215,20 @@ interface BundleMetadata {
     moduleSpecifier: string;
     name: string;
     namespace: string;
-    // Define the type of bundle that is represented by the given metadata object.
-    bundleType?: 'LightningElement' | 'CSS' | 'Javascript';
-
-    /**
-     * For a component bundle, this property is a reference to the main component class in the bundle.
-     * This class must be the default export of the javascript file. The file must be named the same
-     * as the bundle
-     */
-    defaultComponentClass?: Class;
-
-    // Information about HTML template files in the bundle.
-    templates?: HTMLTemplateFile[];
-
-    // Information about javascript files in the bundle.
-    scripts?: ScriptFile[];
-
-    // Information about css files in the bundle.
-    css?: CSSFile[];
+    // main entry file of the bundle
+    entryFileName?: string;
+    // A list of metadata objects for each file processed in the bundle
+    files: (HTMLTemplateFile | ScriptFile | CSSFile)[];
+    // Diagnostic issues discovered at the bundle level. Diagnostics discovered at the file level as
+    // available in the metadata of the individual file
+    diagnostics: CompilerDiagnostic[];
 }
 ```
-Other alternatives:
+<details>
+<summary>Other alternatives</summary>
+
 - Indexed by file type and file name
+
 ```js
 interface BundleMetadataOption2 {
     version: string;
@@ -257,90 +255,74 @@ interface BundleMetadataOption2 {
     css?: { [key: string]: CSSFile[] };
 }
 ```
+</details>
+<p>
 
 #### HTML Template file metadata shape
 ```js
 // Root metadata object for an HTML template file
-interface HTMLTemplateFile {
+interface HTMLTemplateFile extends File {
     fileType: 'html';
-    fileName: string;
-
     // List of unique components referenced in the template
-    componentReferences?: ComponentReference[];
-
-    /**
-     * Static resources referenced in a module. For example: 'src' attribute value of an <img>, <source> tag.
-     * Will be collected only if the url is fully statically analyzable
-     */
-    staticResources?: StaticResourceReference[];
-
-    // Template in AST format starting with the root <template> node. 
-    // Note: this part of the metadata is retaining the existing shape with a
-    // few additions(slot names, event listeners, lwc:dom, lwc:dynamic)
-    experimentalAST?: string;
+    componentReferences: ComponentReference[];
+    // Template in AST format starting with the root <template> node. Note: this is a partial AST
+    experimentalAST?: RootNode;
 }
 
 // Represents a component referenced in the template.
 // Use the 'tagName' property for kebab case and 'name' property for the reference in canonical form
-interface ComponentReference extends ModuleReference {
-    // Component reference always has a namespace, is a required property
-    namespace: string;
-    // No sfdcResource for a component
-    sfdcResource: never;
+interface ComponentReference {
+    // Full canonical name, eg. lightning/input, lightning/recordForm
+    // name will be in camel case
+    name: string;
+    // If a namespace mapping was specified, name will be transformed
+    namespacedName?: string;
     // Components are always imported from an external bundle
     type: 'external';
     // element's tag name as it appears in the template, retains the kebab casing
     tagName: string;
-    // ComponentReference object is only for reference gathering
-    // Since a template can have multiple usages of same child component, individual locations should be
-    // discovered via the AST
-    location: never;
 }
 ```
-*Examples:*
-Samples of the metadata for HTML template files can be viewed [here](https://github.com/salesforce/lwc-metadata/pull/1)
 
 #### Script file metadata shape
 ```js
 // Root Metadata object for a file authored in javascript(or its variants like TypeScript) in an LWC bundle.
-interface ScriptFile {
+interface ScriptFile extends File {
     fileType: 'js';
-    fileName: string;
 
     // A list of ModuleReference objects referenced by this script file
     moduleReferences: ModuleReference[];
 
     // List of class metadata, covers only component class and any exported class.
     // class has to be created using the ES6 'class' syntax
-    classes?: Class[];
+    classes: Class[];
+
+    /**
+     * If the file has uses an "export default <ClassDeclaration | Identifier that resolved to a local class>",
+     * this property provides a reference to the class metadata.
+     */
+    mainClass?: {
+        name?: string;
+        refId: ID; // back pointer to the Class metadata
+    };
 
     // Static import statements in a javascript module.
-    imports?: Import[];
+    imports: Import[];
 
     // Dynamic import statements in a javascript module, additionally information about hints if provided.
-    dynamicImports?: DynamicImport[];
+    dynamicImports: DynamicImport[];
 
     // Exports of local bindings
     exports: Export[];
-    // Reexporting bindings from another module.
-    // e.g. export * from …;
-    reExports: ReExport[];
 
     // DOM Event objects instantiated in a module. Includes Events and CustomEvents.
-    domEvents?: DOMEvent[];
+    domEvents: DOMEvent[];
 
     // Programmatically added event listeners in a module
-    eventListeners?: ProgrammaticEventListener[];
+    eventListeners: ProgrammaticEventListener[];
 
     // EventTarget.dispatchEvent invocations
-    eventsDispatched?: EventDispatch[];
-
-    /**
-     * Static resources referenced in a module.
-     * Includes any fully qualified urls referenced in javascript.
-     * Does not include resources loaded via lightning/platformResourceLoader or a url determined at runtime.
-     */
-    staticResources?: StaticResourceReference[];
+    eventsDispatched: EventDispatch[];
 }
 
 // Information about a class
@@ -354,7 +336,7 @@ interface Class {
 
     // A parent can be another class declared locally, imported identifier from an external module.
     // When not statically analyzable, will be 'unresolved'(e.g. Mixin)
-    extends: ParentClass;
+    extends?: ParentClass;
 
     properties: ClassProperty[];
 
@@ -362,29 +344,13 @@ interface Class {
 
     // Location starts with the "class" key word and ends at the closing curly braces of the class body
     location: SourceLocation;
-
-    // A string literal representing the leading comments of the class declaration
-    doc?: string;
     id: ID;
 }
 
-interface ClassMember {
-    // Note: getter/setter types are considered a property
-    type: 'property' | 'method';
-    // According to javascript specs
-    propertyFieldType: 'public' | 'private' | 'static';
-    name: string;
-    // Location starts with the first character of the member's identifier and ends at the semi-colon
-    // in case of a property and closing curly in case of a method
-    // For a accessor property type, the getter and setter property has the specific location
-    location?: SourceLocation;
-    // A string literal representing the leading comments of the class member
-    doc?: string;
-}
-
 // Information about a class property of a component class.
-interface ClassProperty extends ClassMember {
-    type: 'property';
+interface ClassProperty {
+    type: 'Property';
+    name: string;
     // To make it easy to discover
     propertyType: 'accessor' | 'dataProperty';
     // True, if the property is an instance property
@@ -393,91 +359,56 @@ interface ClassProperty extends ClassMember {
     getter?: Getter;
     // Present if the property has a setter
     setter?: Setter;
-    decorators?: [TrackDecorator | WireDecorator | ApiDecorator];
+    decorators: LwcDecorator[];
 }
 
 // The naming is derived from data descriptors v/s accessor descriptor
 interface DataProperty {
     // If the initial value is not statically analyzable, type will be 'unresolved'
-    initialValue: {
-        type:
-            | 'number'
-            | 'string'
-            | 'boolean'
-            | 'null'
-            | 'object'
-            | 'undefined'
-            | 'array'
-            | 'unresolved';
-        value?: any;
-    };
+    initialValue: Value;
+    // Location starts with the first character of the member's identifier and ends at the semi-colon
+    location: SourceLocation;
 }
 
 // Information about presence of getter
 interface Getter {
     // If the initial value is not statically analyzable, type will be 'unresolved'
-    initialValue: {
-        type:
-            | 'number'
-            | 'string'
-            | 'boolean'
-            | 'null'
-            | 'object'
-            | 'undefined'
-            | 'array'
-            | 'unresolved';
-        value?: any;
-    };
+    initialValue: Value;
     location: SourceLocation;
-    // A string literal representing the leading comments of the getter block
-    doc?: string;
 }
 
 // Information about presence of setter
 // Do not infer any information about return value, setters are expected to return void
 interface Setter {
-    // A string literal representing the leading comments of the setter block
-    doc?: string;
     location: SourceLocation;
 }
 
 // Information about a class method
-interface ClassMethod extends ClassMember {
-    type: 'method';
-    decorators?: [ApiDecorator | TrackDecorator | WireDecorator];
-    parameterNames?: (DefaultParameters | RestParameters)[];
-    // If the return value is not statically analyzable, type will be 'unresolved'
-    returnValue: {
-        type:
-            | 'number'
-            | 'string'
-            | 'boolean'
-            | 'null'
-            | 'object'
-            | 'undefined'
-            | 'array'
-            | 'unresolved';
-        value?: any;
-    };
+interface ClassMethod {
+    type: 'Method';
+    name: string;
+    decorators: LwcDecorator[];
+    location: SourceLocation;
 }
 
 interface Decorator {
     type: string;
     location: SourceLocation;
 }
+
 // Information about the usage of an '@api' decorator to designate a class member as public.
 interface ApiDecorator extends Decorator {
-    type: 'api';
+    type: 'Api';
 }
 
 // Information about an @track decorator usage.
 interface TrackDecorator extends Decorator {
-    type: 'track';
+    type: 'Track';
 }
 
 // Information about @wire decorator usage includes information about the data source.
 interface WireDecorator extends Decorator {
-    type: 'wire';
+    type: 'Wire';
     adapterId: string;
     // module name in canonical form
     adapterModule?: string;
@@ -486,21 +417,72 @@ interface WireDecorator extends Decorator {
         reactive: { [name: string]: string };
         // Configuration where value is a static
         static: {
-            [name: string]: {
-                type:
-                    | 'number'
-                    | 'string'
-                    | 'boolean'
-                    | 'null'
-                    | 'object'
-                    | 'undefined'
-                    | 'array'
-                    | 'unresolved';
-                value?: any;
-            };
+            [name: string]: Value;
         };
     };
 }
+
+type LwcDecorator = ApiDecorator | TrackDecorator | WireDecorator;
+
+interface UnresolvedValue {
+    type: 'Unresolved';
+    value: 'unresolved';
+}
+
+interface NumberValue {
+    type: 'Number';
+    value: number;
+}
+
+interface BooleanValue {
+    type: 'Boolean';
+    value: boolean;
+}
+
+interface StringValue {
+    type: 'String';
+    value: string;
+}
+
+interface NullValue {
+    type: 'Null';
+    value: null;
+}
+
+interface UndefinedValue {
+    type: 'Undefined';
+    value: undefined;
+}
+
+interface ObjectValue {
+    type: 'Object';
+    value: {
+        [name: string]: Value;
+    };
+}
+
+interface ArrayValue {
+    type: 'Array';
+    value: Value[];
+}
+
+interface ImportedValue {
+    type: 'ImportedValue';
+    localName: string;
+    importedName: string;
+    moduleSpecifier: string;
+}
+
+type Value =
+    | BooleanValue
+    | StringValue
+    | NullValue
+    | ObjectValue
+    | ArrayValue
+    | UndefinedValue
+    | NumberValue
+    | UnresolvedValue
+    | ImportedValue;
 
 // Information about a static import statement in a module.
 interface Import {
@@ -543,7 +525,7 @@ interface DynamicImport {
     refId: ID; // back reference to the ModuleReference object
     moduleNameType: 'string' | 'unresolved';
     location: SourceLocation;
-    hints?: DynamicImportHint[];
+    hints: DynamicImportHint[];
 }
 
 interface DynamicImportHint {
@@ -559,91 +541,32 @@ interface Export {
     namedExports?: NamedExport[];
     defaultExport?: DefaultExport;
     location: SourceLocation;
+    // module name in canonical form
+    moduleSpecifier?: string;
+    // back reference to the ModuleReference object
+    refId?: ID;
 }
 
 // Information about a export statement in a module.
 // e.g. export let name1, name2, …, nameN;
 //      export { variable1 as name1, variable2 as name2, …, nameN };
 interface NamedExport {
-    value: ClassDeclaration | FunctionDeclaration | IdentifierDeclaration;
-    // local name of the export
-    name: string;
-    // aliased name of the export
-    aliasName?: string;
+    localName?: string;
+    // exported name of the binding
+    exportedName: string;
     location: SourceLocation;
 }
 
 // A default export
 // e.g. export default function (…) { … }
 interface DefaultExport {
-    value: ClassDeclaration | FunctionDeclaration | IdentifierDeclaration | 'unresolved';
     location: SourceLocation;
-}
-
-interface ClassDeclaration {
-    type: 'class';
-    name?: string;
-    refId: ID; // Ties back to the class object at the root metadata object
-}
-
-interface FunctionDeclaration {
-    type: 'function';
-    name?: string;
-    async?: boolean;
-    parameterNames?: (DefaultParameters | RestParameters)[];
-    returnValue: {
-        type:
-            | 'number'
-            | 'string'
-            | 'boolean'
-            | 'null'
-            | 'object'
-            | 'undefined'
-            | 'array'
-            | 'unresolved';
-        value?: any;
-    };
-    location: SourceLocation;
-    // A string literal representing the leading comments of the function declaration
-    doc?: string;
-}
-
-interface IdentifierDeclaration {
-    type: 'identifierDeclaration';
-    name: string;
-    // If the initial value is not statically analyzable, type will be 'unresolved'
-    initialValue?: {
-        type:
-            | 'number'
-            | 'string'
-            | 'boolean'
-            | 'null'
-            | 'object'
-            | 'undefined'
-            | 'array'
-            | 'unresolved';
-        value?: any;
-    };
-    location: SourceLocation;
-}
-
-// Information about an export statement used to reexport bindings imported from another module.
-// e.g. export * from …;
-interface ReExport {
-    exportSpecifiers: {
-        name: string;
-        aliasName?: string;
-    }[];
-    // module name in canonical form
-    moduleSpecifier: string;
-    location: SourceLocation;
-    refId: ID; // back reference to the ModuleReference object
 }
 
 // Information about a dom event instantiated in script.
 interface DOMEvent {
     eventType: string;
-    isCustomEvent?: boolean;
+    interface: 'Event' | 'CustomEvent';
     options?: {
         bubbles?: boolean;
         composed?: boolean;
@@ -655,7 +578,7 @@ interface DOMEvent {
 // Information about an event handled declaratively in the template.
 interface ProgrammaticEventListener {
     type: string;
-    targetType: 'host' | 'shadowRoot' | 'unresolved';
+    targetType: 'host' | 'shadowRoot' | 'document' | 'window' | 'unresolved';
     options?: {
         capture?: boolean;
     };
@@ -663,7 +586,7 @@ interface ProgrammaticEventListener {
 }
 
 interface EventDispatch {
-    targetType: 'host' | 'shadowRoot' | 'unresolved';
+    targetType: 'host' | 'shadowRoot' | 'document' | 'window' | 'unresolved';
     event:
         | {
               refId: ID; // Back pointer to the metadata for the DOMEvent
@@ -676,7 +599,8 @@ interface EventDispatch {
 type ParentClass =
     | {
           name: string; // Another class declared in the same file
-          refId: ID; // Back pointer to the metadata for the parent class
+          refId?: ID; // Back pointer to the metadata for the parent class, if its metadata exists
+          location: SourceLocation;
       }
     // or a class imported from an external module
     | {
@@ -689,111 +613,89 @@ type ParentClass =
       }
     | 'unresolved'; // When the parent class is not statically analyzable, for example mixins
 
+type SfdcResourceType =
+    | 'accessCheck'
+    | 'apex'
+    | 'apexMethod'
+    | 'apexContinuation'
+    | 'client'
+    | 'community'
+    | 'component'
+    | 'contentAssetUrl'
+    | 'customPermission'
+    | 'dynamicComponent'
+    | 'messageChannel'
+    | 'i18n'
+    | 'gate'
+    | 'label'
+    | 'metric'
+    | 'internal'
+    | 'resourceUrl'
+    | 'schema'
+    | 'slds'
+    | 'user'
+    | 'userPermission';
+
 // Information about a module reference
 interface ModuleReference {
     // Full canonical name, eg. lightning/input, lightning/recordForm
     // name will be in camel case
-    moduleSpecifier: string;
-    // name of the bundle or module, will retain camel case
-    name?: string;
-    // namespace if it exists
-    namespace?: string;
+    name: string;
+    // If a namespace mapping was specified, name will be transformed
+    namespacedName?: string;
     // Only present for salesforce scoped modules, else property is omitted
     sfdcResource?: {
-        scoped:
-            | 'accessCheck'
-            | 'apex'
-            | 'apexContinuation'
-            | 'client'
-            | 'community'
-            | 'component'
-            | 'contentAssetUrl'
-            | 'customPermission'
-            | 'dynamicComponent'
-            | 'messageChannel'
-            | 'i18n'
-            | 'gate'
-            | 'label'
-            | 'metric'
-            | 'internal'
-            | 'resourceUrl'
-            | 'schema'
-            | 'slds'
-            | 'user'
-            | 'userPermission';
-        namespaceId?: string; // scoped module namespace normalization
+        scoped: SfdcResourceType;
+        namespacedId?: string; // scoped module namespace normalization
+        id?: string;
     };
     type:
         | 'lwc' // reference is the built-in lwc module
         | '@salesforce' // reference is a @salesforce scoped module
-        | 'internal' // reference is relative import, "internal" to the current bundle
+        | 'local' // reference is relative import, "local" to the current bundle
         | 'external'; // reference is an external module like another component or a library
-    location: SourceLocation[];
+    locations: SourceLocation[];
     id: ID;
-}
-
-// Information about default function parameters.
-// Also look at parameters represented using rest syntax.
-interface DefaultParameters {
-    type: 'DefaultParameters';
-    name: string;
-    defaultValue?: number | string | boolean | null | object;
-}
-
-// Information about function parameters received using the rest(...) syntax.
-interface RestParameters {
-    type: 'RestParameters';
-    name: string;
-    startIndex: number;
-    endIndex?: number;
 }
 
 // Unique identifier per object, other metadata objects of the same module can have a back reference
 // to this id. The uniqueness of ids is only guaranteed within the module. It cannot span multiple modules
 type ID = string;
 ```
-Examples:
-Samples of the metadata for script files can be viewed [here](https://github.com/salesforce/lwc-metadata/pull/2)
 
 #### CSS file metadata shape
 ```js
-// Root metadata object for a css file
-interface CSSFile {
+/**
+ * Root metadata object for a css file.
+ */
+interface CSSFile extends File {
     fileType: 'css';
-    fileName: string;
-    imports?: ModuleReference[];
-    customProperties?: {
-        declarations?: CSSCustomPropertyDeclaration[];
-        references?: CSSCustomPropertyReference[];
-    }
-    staticResources?: StaticResourceReference[];
+
+    // The list of imported CSS modules via the @import CSS at-rule.
+    imports: ModuleReference[];
+
+    // The list of CSS custom properties.
+    customProperties: CSSCustomProperty[];
 }
 
-// Information about css custom property.
-
+/**
+ * CSS custom property detail.
+ */
 interface CSSCustomProperty {
+    // The custom property name.
     name: string;
+
+    // The custom property location.
     location: SourceLocation;
 }
-
-interface CSSCustomPropertyDeclaration extends CSSCustomProperty {
-    value: CSSCustomPropertyReference | string;
-    scope: string; // the scope of the current custom property
-}
-
-interface CSSCustomPropertyReference extends CSSCustomProperty {
-    fallback: CSSCustomPropertyFallback[] | null; // array to accommodate value with comma separated custom properties and strings: var(--default-border-radius, var(--border-top, 5px) 10px var(--border-bottom, 10 px) 10px);
-}
-
-type CSSCustomPropertyFallback = string | CSSCustomProperty;
 ```
-Examples:
-Samples of the metadata for css files can be viewed [here](https://github.com/salesforce/lwc-metadata/pull/3)
 
 <details>
 <summary>Click to view extended typescript definitions</summary>
 
 ```js
+type BundleType = 'internal' | 'platform';
+
 // Object to represent the start and end position of a code block.
 interface SourceLocation {
     startLine: number;
@@ -802,20 +704,18 @@ interface SourceLocation {
     endColumn: number;
 }
 
-// Information about reference to a static resource in a module. The resource can be a url specified
-// as a string literal.
-interface StaticResourceReference {
-    // The type of static resource loaded, identifiable by the file extension.
-    type: 'image' | 'css' | 'html' | 'js' | 'svg' | 'other';
-    value: string;
-    location: SourceLocation;
+interface File {
+    fileType: 'css' | 'html' | 'js';
+    fileName: string;
+    diagnostics: CompilerDiagnostic[];
 }
 
-// !!Note: Retaining types from the existing data binding AST
-enum BindingType {
+// Types used for representing experimentalAST
+enum Type {
     Boolean = 'boolean',
     Component = 'component',
     Expression = 'expression',
+    Element = 'element',
     ForEach = 'for-each',
     ForOf = 'for-of',
     Identifier = 'identifier',
@@ -827,113 +727,94 @@ enum BindingType {
     String = 'string',
 }
 
-interface BindingBooleanAttribute {
+interface BooleanAttribute {
     name: string;
-    type: BindingType.Boolean;
+    type: Type.Boolean;
     value: true;
-}
-interface BindingExpressionAttribute {
-    name: string;
-    type: BindingType.Expression;
-    value: BindingExpression;
     location: SourceLocation;
 }
-interface BindingStringAttribute {
+interface ExpressionAttribute {
     name: string;
-    type: BindingType.String;
+    type: Type.Expression;
+    value: Expression;
+    location: SourceLocation;
+}
+interface StringAttribute {
+    name: string;
+    type: Type.String;
     value: string;
     location: SourceLocation;
 }
 
-type BindingAttribute =
-    | BindingBooleanAttribute
-    | BindingExpressionAttribute
-    | BindingStringAttribute;
+type Attribute = BooleanAttribute | ExpressionAttribute | StringAttribute;
 
-interface BindingIdentifier {
+interface Identifier {
     name: string;
-    type: BindingType.Identifier;
-    location: SourceLocation;
+    type: Type.Identifier;
 }
 
-interface BindingMemberExpression {
-    object: BindingIdentifier | BindingMemberExpression;
-    property: BindingIdentifier;
-    type: BindingType.MemberExpression;
-    location: SourceLocation;
+interface MemberExpression {
+    object: Identifier | MemberExpression;
+    property: Identifier;
+    type: Type.MemberExpression;
 }
 
-type BindingExpression = BindingIdentifier | BindingMemberExpression;
+type Expression = Identifier | MemberExpression;
 
-interface BindingForEachDirectiveNode extends BindingBaseNode {
-    expression: BindingExpression;
-    index?: BindingIdentifier;
-    item: BindingIdentifier;
-    type: BindingType.ForEach;
+interface ForEachDirectiveNode extends BaseNode {
+    expression: Expression;
+    index?: Identifier;
+    item: Identifier;
+    type: Type.ForEach;
 }
 
-interface BindingForOfDirectiveNode extends BindingBaseNode {
-    expression: BindingExpression;
-    iterator: BindingIdentifier;
-    type: BindingType.ForOf;
+interface ForOfDirectiveNode extends BaseNode {
+    expression: Expression;
+    iterator: Identifier;
+    type: Type.ForOf;
 }
 
-interface BindingIfDirectiveNode extends BindingBaseNode {
-    expression: BindingExpression;
+interface IfDirectiveNode extends BaseNode {
+    expression: Expression;
     modifier: string;
-    type: BindingType.If;
+    type: Type.If;
 }
 
-interface BindingLwcDynamicDirectiveNode extends BindingBaseNode {
-    expression: BindingExpression;
-    type: BindingType.LwcDynamic;
-}
+type DirectiveNode = ForEachDirectiveNode | ForOfDirectiveNode | IfDirectiveNode;
 
-interface BindingLwcDomDirectiveNode extends BindingBaseNode {
-    value: string;
-    type: BindingType.LwcDynamic;
-}
-
-type BindingDirectiveNode =
-    | BindingForEachDirectiveNode
-    | BindingForOfDirectiveNode
-    | BindingIfDirectiveNode
-    | BindingLwcDomDirectiveNode
-    | BindingLwcDynamicDirectiveNode;
-
-interface BindingBaseNode {
-    children: BindingNode[];
+interface BaseNode {
+    children: Node[];
     location: SourceLocation;
 }
 
-interface BindingEventTargetNode extends BindingBaseNode {
-    eventListeners?: BindingExpressionAttribute;
+interface EventTargetNode extends BaseNode {
+    eventListeners?: {
+        [eventName: string]: Expression;
+    };
 }
 
-interface BindingComponentNode extends BindingEventTargetNode {
-    attributes: BindingAttribute[];
+interface ComponentNode extends EventTargetNode {
+    attributes: Attribute[];
     tag: string;
-    type: BindingType.Component;
+    type: Type.Component;
     // Slots of this component node set by the parent
     slotReferences: string[];
 }
 
-interface BindingRootNode extends BindingBaseNode {
-    type: BindingType.Root;
+interface RootNode extends BaseNode {
+    type: Type.Root;
 }
 
-interface BindingElementNode extends BindingEventTargetNode {
-    attributes: BindingAttribute[];
-    type: BindingType.String;
+interface ElementNode extends EventTargetNode {
+    attributes: Attribute[];
+    type: Type.Element;
+    tag: string;
 }
 
-type BindingNode =
-    | BindingComponentNode
-    | BindingDirectiveNode
-    | BindingElementNode
-    | BindingRootNode;
+type Node = ComponentNode | DirectiveNode | ElementNode | RootNode;
 ```
 </details>
+<p>
 
 ### JSONSchema(outdated - Typescript definitions are up to date)
 
@@ -1193,9 +1074,14 @@ type CSSCustomPropertyFallback = string | CSSCustomProperty;
     - **Answer:** Collect metadata only about component classes and any exported class. A component class is one that extends LightningElement.
 5. Should imports/module references/component references be renamed to "dependencies"?
 6. Can a script file import a css module and should such an import have a separate ModuleReference.type?
+    - **Answer:** No
 7. At bundle level we should be able to to deduce if the bundle is a 'Component' or 'LightningElement'?
+    - **Answer:** No. The following steps describes the alternative.
+    - BundleMetadata provides the entry file name. User will have to lookup if the entry file type is a js file. 
+    - The ScriptFile metadata object provides a reference to the mainClass of the file, if one exists.
+    - If Class metadata object has a field called isComponentClass to indicate of the class extends LightningElement.
 8. Should metadata collection phase produce diagnostics information? Diagnostics is information about errors that occurred during metadata collection. Is that the responsibility of the compilation phase?
-
+    - **Answer:** Yes. Diagnostics are included as part of metadata.
 
 # Future work
 * Make usage of `lightning/platformResourceLoader` statically analyzable. A separate RFC will be required for this work. Initial suggestion is to take the same approach as hints for dynamic imports.

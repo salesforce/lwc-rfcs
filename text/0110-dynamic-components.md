@@ -3,7 +3,7 @@ title: Dynamic Imports
 status: IMPLEMENTED
 created_at: 2019-07-01
 updated_at: 2021-02-01
-pr: https://github.com/salesforce/lwc-rfcs/pull/41
+pr: https://github.com/salesforce/lwc-rfcs/pull/42
 ---
 
 # Dynamic Imports 

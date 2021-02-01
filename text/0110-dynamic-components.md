@@ -1,12 +1,12 @@
 ---
-title: Dynamic Components
+title: Dynamic Imports
 status: IMPLEMENTED
 created_at: 2019-07-01
-updated_at: 2020-02-18
-pr: https://github.com/salesforce/lwc-rfcs/pull/10
+updated_at: 2021-02-01
+pr: https://github.com/salesforce/lwc-rfcs/pull/41
 ---
 
-# Dynamic Components 
+# Dynamic Imports 
 
 ## Summary
 
@@ -21,6 +21,10 @@ This RFC introduces a set of principles and invariants required to preserve a re
 **Lazy loading**: loading javascript from the server that is not initially sent to the client.
 
 **Dynamic instantiation**: creation of a new component instance where the underlying component constructor is not known until runtime.
+
+**string-literal dynamic import**: a dynamic import which uses a static string-literal to reference the component. This category of dynamic imports is statically analyzable.
+
+**variable dynamic import**: a dynamic import which uses Javascript to create the component string parameter to pass into the import function.
 
 **Code splitting:** Capability to split the code base in multiple bundles, that can be loaded on demand
 
@@ -50,7 +54,7 @@ export default class DynamicCtor extends LightningElement {
 
 ## Motivation
 
-Before this RFC, LWC does not support dynamic component creation nor allow you to specify at build or design time different component configurations to pivot on during runtime. We purposely made this decision to ensure we have a clean, statically analyzable and predictable behavior on which to build upon. Due to the complexity and dynamic nature of the Lightning Platform and OSS, as we expand LWC to new clouds, applications and contexts, this strategy isn't sufficient. New primitives must be introduced to guarantee and allow for a more flexible and scalable model.
+Before this RFC, LWC does not support dynamic imports nor allow you to specify at build or design time different component configurations to pivot on during runtime. We purposely made this decision to ensure we have a clean, statically analyzable and predictable behavior on which to build upon. Due to the complexity and dynamic nature of the Lightning Platform and OSS, as we expand LWC to new clouds, applications and contexts, this strategy isn't sufficient. New primitives must be introduced to guarantee and allow for a more flexible and scalable model.
 
 ## Proposal
 
@@ -208,11 +212,11 @@ export default class Chatter extends LightningElement {
 </script>
 ```
 
-By doing **dynamic imports** we are making the dependencies **soft** (not part of the dependency tree), meaning that will be loaded at runtime (a network call may be made). That being said, by forcing some invariants (described below) in the way we use those dynamic imports we could gather a lot of metadata at compile time that will allows us to optimize **when** those resource can be prefetched (see Annex for pivots proposal).
+By using **string-lteral dynamic imports** we are making the dependencies **soft** (not part of the dependency tree), meaning that will be loaded at runtime (a network call may be made). That being said, by forcing some invariants (described below) in the way we use those dynamic imports we could gather a lot of metadata at compile time that will allows us to optimize **when** those resource can be prefetched (see Annex for pivots proposal).
 
 ### Guiding Principles
 
-We want to avoid ad-hoc solutions and proprietary non-standard ways to define dynamic component loading. We want to build an API that is future proof, whenever more things land into the spec for modules.
+We want to avoid ad-hoc solutions and proprietary non-standard ways to define dynamic imports. We want to build an API that is future proof, whenever more things land into the spec for modules.
 
 ### General Invariants
 
@@ -316,6 +320,8 @@ export async function example3() {
 }
 ```
 
+The example above is using a **variable dynamic import** which is not statically analyzable. Using this is strongly discouraged and requires multiple level of approvals.
+
 #### Metadata
 
 The compiler add to its metadata all of the parsed dynamic imports, its source value and the hints (queryString parameters), here is an example of the output:
@@ -331,7 +337,7 @@ The compiler add to its metadata all of the parsed dynamic imports, its source v
 
 ## Drawbacks
 
-The biggest drawback of this feature is the historic abuse of dynamic component creation in the Lightning Platform. We will add guardrails to prevent developers from shooting themselves in the foot.
+The biggest drawback of this feature is the historic abuse of dynamic imports in the Lightning Platform. We will add guardrails to prevent developers from shooting themselves in the foot.
 
 ## Alternatives
 

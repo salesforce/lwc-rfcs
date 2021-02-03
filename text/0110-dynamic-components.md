@@ -22,9 +22,9 @@ This RFC introduces a set of principles and invariants required to preserve a re
 
 **Dynamic instantiation**: creation of a new component instance where the underlying component constructor is not known until runtime.
 
-**string-literal dynamic import**: a dynamic import which uses a static string-literal to reference another module. This category of dynamic imports is statically analyzable.
+**String-literal dynamic import**: a dynamic import which uses a static string-literal to reference another module. This category of dynamic imports is statically analyzable.
 
-**variable dynamic import**: a dynamic import which uses Javascript to create the component string parameter to pass into the import function.
+**Variable dynamic import**: a dynamic import which uses Javascript to create the component string parameter to pass into the import function.
 
 **Code splitting:** Capability to split the code base in multiple bundles, that can be loaded on demand
 
@@ -174,9 +174,9 @@ export default class Chatter extends LightningElement {
 
 async connectedCallback() {
     if (isPhone) {
-      dynamicCtor = await import("lwc-chatter-mobile");
+      this.dynamicCtor = await import("lwc-chatter-mobile");
     } else {
-      dynamicCtor = await import("lwc-chatter-desktop");
+      this.dynamicCtor = await import("lwc-chatter-desktop");
     }
   }
 }
@@ -216,7 +216,7 @@ By using **string-lteral dynamic imports** we are making the dependencies **soft
 
 ### Guiding Principles
 
-We want to avoid ad-hoc solutions and proprietary non-standard ways to define dynamic imports. We want to build an API that is future proof, whenever more things land into the spec for modules.
+We want to avoid ad-hoc solutions and proprietary non-standard ways to define dynamic imports. We want to build an API that is future proof for whenever more things land into the spec for modules.
 
 ### General Invariants
 
@@ -275,7 +275,7 @@ export default class LazyTest extends LightningElement {
 
   function tmpl($api, $cmp) {
      return [$cmp.lazyConstructor != null // falsy for null or undefined
-       $api.c("lazy-component", $cmp.lazyConstructor)
+       ? $api.c("lazy-component", $cmp.lazyConstructor)
        : null
     }];
   }
@@ -292,7 +292,7 @@ export default class LazyTest extends LightningElement {
 </script>
 ```
 
-As you can see in bold from the implementation details above we have transformed the *lwc:lazy* directive into a condition, and we have abstracted the dynamic import mechanism into a high order loader call provisioned by the application container (this will be configurable).
+As you can see from the implementation details above we have transformed the *lwc:lazy* directive into a condition, and we have abstracted the dynamic import mechanism into a high order loader call provisioned by the application container (this will be configurable).
 
 #### API invariants
 
@@ -303,7 +303,7 @@ As you can see in bold from the implementation details above we have transformed
 * The attribute bindings must be explicit.
     * No dynamic bag will be allowed (ex. *...props* 'a la React')
 
-> Note: The compiler options will allow you to restrict and or use the loader as decribed above.
+> Note: The compiler options will allow you to restrict and/or use the loader as decribed above.
 
 ```js
 // This will work

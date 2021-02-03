@@ -22,7 +22,7 @@ This RFC introduces a set of principles and invariants required to preserve a re
 
 **Dynamic instantiation**: creation of a new component instance where the underlying component constructor is not known until runtime.
 
-**string-literal dynamic import**: a dynamic import which uses a static string-literal to reference the component. This category of dynamic imports is statically analyzable.
+**string-literal dynamic import**: a dynamic import which uses a static string-literal to reference another module. This category of dynamic imports is statically analyzable.
 
 **variable dynamic import**: a dynamic import which uses Javascript to create the component string parameter to pass into the import function.
 

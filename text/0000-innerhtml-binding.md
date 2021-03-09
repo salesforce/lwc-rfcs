@@ -1,145 +1,148 @@
 ---
-title: InnerHTML Bindings for SSR
+title: InnerHTML Bindings template binding
 status: DRAFTED
 created_at: 2019-10-03
-updated_at: 2019-10-03
-pr: https://github.com/salesforce/lwc-rfcs/pull/15
+updated_at: 2021-03-08
+pr: https://github.com/salesforce/lwc/pull/2256
+champion: Philippe Riand, Pierre-Marie Dartus
 ---
 
 # InnerHTML Bindings for SSR
 
 ## Summary
 
-Applications dealing with rich content, like commerce apps, need to render 
-this content as raw HTML, typically coming from a database or a CMS. Today, 
-the data binding capability always escapes the HTML for security reasons,
-which makes the rich content data not rendered as expected.
+Applications dealing with rich content, like commerce apps, need to render this content as raw HTML, coming from a database or a CMS. Today, there is no way in LWC to rendered raw HTML content both on the browser and the server. This proposal introduces the `lwc:inner-html` template directive to inject HTML content.
 
-## Basic example
+### Basic example
 
-The following template render some HTML content as innerHTML  
+The following template renders raw HTML content inside the `<div>` HTML element:
 
+**example.js**
 ```js
-function createMarkup() { return {__html: 'First &middot; Second'}; };
+import { LightningElement } from 'lwc';
 
+export default class Example extends HTMLElement {
+  content = 'Hello <strong>world</strong>!';
+}
+```
+
+**example.html**
+```html
 <template>
-    <div lwc:inner-html={createMarkup}/>
+  <div lwc:inner-html={content} />
 </template>
 ```
 
-The directive is named `inner-html` as it mimics what the DOM `innerHTML`
-property does. As such, it can be used on any tag where the `innerHTML`
-property is available. The HTML fragment inserted is not processed by the LWC
-compiler and thus LWC components won't be created unless they are exposed as
-custom elements to the browser.
+**Output:**
+
+```html
+<x-example>
+  # shadow-root
+  |   <div>
+  |     Hello <strong>world</strong>
+  |   </div>
+</x-example>
+```
 
 ## Motivation
 
-It is common in customer facing apps to render rich content coming from a
-CMS or equivalent.  
+It is common in customer-facing apps to render rich content coming from a CMS. As of today, this capability is supported by acting directly with the DOM within `renderedCallback()`. The templating syntax does not provide any binding capability that renders some content as raw HTML.
 
-As of today, and according to the LWC documentation, this capability is 
-supported by acting directly with the DOM within `renderedCallback()`.
-The templating mechanism does not provide any binding capability that renders
-some content as raw HTML.  
+The reliance on the `renderedCallback()` life-cycle hook to render raw HTML content is a real issue for server-side rendering. In SSR, the `renderedCallback()` is never invoked. There is currently no straightforward way to inject raw HTML content for server-side rendered components.
 
-As a side effect, this also breaks with SSR, as `renderedCallback()` and DOM 
-manipulation won't be allowed when a component is rendered on the server.
-Moreover, even if it was possible, it would make the client side hydration 
-more complex as the content
-is not generated as part of the VDOM.  
-
-Having to act on the DOM is also not user friendly compared to a binding
-facility.  
-
+This proposal introduces a new `lwc:inner-html` directive to inject raw HTML content that would work both in the browser and on the server.
 
 ## Detailed design
 
-It seems that there is a consensus among the most popular libraries to expose the
-innerHTML property of an element, although the exposed name for this property varies:
+### Runtime behavior
 
-React: [dangerouslySetInnerHTML attribute](https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml).  
-Angular: [[innerHTML]](https://angular.io/guide/template-syntax#property-binding-vs-interpolation).  
-VueJS: [v-html attribute](https://vuejs.org/v2/guide/syntax.html#Raw-HTML).  
+At runtime the `lwc:inner-html` directive binds the directive value to the `Element.innerHTML` property. During each rendering cycle, the LWC engine diff the current value with its previous value. If the value changes between two rendering cycles, the LWC engine sets the element `innerHTML` property to the new value.
 
-The Angular choice of `innerHTML` feels the most natural, while the React `dangerouslyInnerHTML`
-has probably be named this way to not conflict with any potential component property.
-To avoid any name collision, LWC can prefix it with the technical "lwc:" prefix.
+`Element.innerHTML` is a wellknown XSS sink. To prevent malicious content injection via this `lwc:inner-html` directive, a new `sanitizeHtmlContent` hook is introduced on the LWC engine. This hook is invoked during the LWC component rendering cycle and can be used to strip out malicious code from the content to be injected. The hook accepts a single `content` string argument. The `content` is raw HTML content passed to the `lwc:inner-html` directive. The `sanitizeHtmlContent` hook is expected to return the sanitized HTML content as a string. By default, the `sanitizeHtmlContent` hook is a pass-through.
 
-React makes it even more secure by forcing the HTML to be added to a temporary 
-object with a `__html` property. This avoids undesired assignment from a method
-that does not sanitize the content:
+```js
+import * as lwc from 'lwc';
+import DOMPurify from 'dompurify';
+
+lwc.sanitizeHtmlContent = function (content) {
+    return DOMPurify.sanitize(content);
+};
+```
+
+When running in native shadow, the shadow DOM style automatically gets applied to injected content. In synthetic shadow, the `lwc:inner-html` relies on the same mechanism than `lwc:dom="manual"` to apply the scoped styles to the manually injected content. The synthetic shadow DOM attaches a MutationObserver on the root element and watches for DOM changes in the subtree to apply the styling attributes.
+
+### Compilation restrictions
+
+The `lwc:inner-html` directive can be applied to elements in the template. The directive accepts a string or an expression value. The LWC template compiler enforces the following restrictions:
+
+-   The `lwc:inner-html` directive can't be used as a boolean attribute.
+-   The `lwc:inner-html` directive cannot be applied to LWC components.
+-   The `lwc:inner-html` directive cannot be applied to the `<slot>` and `<template>` HTML elements.
+-   The `lwc:inner-html` directive cannot be applied to HTML element with child nodes.
 
 ```html
 <template>
-    <div lwc:inner-html={getUserName()}/>
+  <!-- Valid -->
+  <div lwc:inner-html={content}></div>
+  <div lwc:inner-html="<h1>hello</h1>"></div>
+
+  <!-- Invalid -->
+  <div lwc:inner-html></div>
+  <div lwc:inner-html={content}>With content</div>
+  <slot lwc:inner-html={content}></slot>
+  <template lwc:inner-html={content}></template>
+  <x-foo lwc:inner-html={content}></x-foo>
+
 </template>
 ```
 
-It is up to the component developer to make sure that the injected HTML is properly
-sanitized ([https://en.wikipedia.org/wiki/HTML_sanitization]()). Several client side
-libraries, easily consumable by an LWC application, are available to do the job.
+### Caveats
 
-The compiler generates an error if an element has both an `innerHTML` property and
-some content defined, like bellow:  
+#### Usage of custom elements in the injected content
+
+The LWC engine will not attempt to upgrade custom elements injected via `lwc:inner-html` even if the custom element maps to a known LWC component.
+
+```js
+import { LightningElement } from 'lwc';
+
+export default class extends LightningElement {
+  content = '<x-button></x-button>';
+}
+```
 
 ```html
 <template>
-    <div lwc:inner-html={myHTML()}>
-      Adding content when innerMTML is defined leads to a compilation error
-    </div>
+  <x-button></x-button>
+  <div lwc:inner-html={content}></div>
 </template>
 ```
 
-### Validity
+In the above example, the `<x-button>` element defined in the template is treated as a potential LWC component. The `<x-button>` custom element defined in the `content` is treated like any other custom element. If `x-button` is registered as a custom element in the global registry, it will be upgraded by the user agent.
 
-The `lwc:inner-html` attribute can be set on any tag in an LWC template with the
-following restrictions:
+#### Usage of `<slot>` in the injected content
 
-  - The host element cannot contain both declarative markup and the `lwc:inner-html`
-  attribute.  
-  - The `lwc:inner-html` attribute cannot be applied to LWC components, as their
-  content is defined by a template.  
-  - The `lwc:inner-html` attribute cannot be applied to the `<slot>` tag, as its content
-  comes from a slot.  
+The LWC compiler transforms the `<slot>` elements in the template to support slotting in synthetic shadow. `<slot>` elements injected via the `lwc:inner-html` will not participate in the slotting when LWC with running in synthetic shadow.
 
-
-### Implementation details
-
-From an implementation standpoint, the HTML fragment is kept in the host element
-attribute. When the VDOM comparison finds that this attribute has changed, then 
-it updates the DOM element content by assigning it to the element.innerHTML property.
-
-
-## Drawbacks
-
-  - It might open security breaches if not used appropriately. The proposed API forces 
-  the developer to know what he/she is doing and avoids mistaken assignment.  
-  - Locker might prevent this assignment. To be verified.  
-
-Note: the security issue is *not* different from setting the HTML with a DOM operation
-in `renderedCallback()`. If DOM manipulation is secured by locker, then this should
-benefit from it.  
-
+It is also important to call out the opposite effect of injecting `<slot>` in native shadow. In native shadow, LWC relies on the user agent for slotting. If the content injected via `lwc:inner-html` contains slot elements, those new slots might conflict with existing slots defined in the template.
 
 ## Alternatives
 
-Different syntaxes for the `innerHTML` attribute are possible, but they finally lead to
-the same results. It is then more a matter of preference and consistency.  
+Different syntaxes for the `innerHTML` attribute are possible, but they finally lead to the same results. It is then more a matter of preference and consistency.
 
-Another solution would define a new binding syntax, like for example `${{myhtml()}}` or
-`${htnl:myhtml()}}`. But such a syntax could be used everywhere a binding is possible,
-including attribute values. This could lead to undefined behaviors why not providing any
-value. The proposed syntax makes sure that the `innerHTML` binding always applies to the
-content of an element.
+Another solution would define a new binding syntax, like for example `${{myhtml}}` or `${html:myhtml}}`. But such a syntax could be used everywhere a binding is possible, including attribute values. This could lead to undefined behaviors why not providing any value. The proposed syntax makes sure that the `innerHTML` binding always applies to the content of an element.
 
+## Prior Art
+
+-   React: [dangerouslySetInnerHTML attribute](https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml).
+-   Angular: [[innerHTML]](https://angular.io/guide/property-binding).
+-   VueJS: [v-html attribute](https://vuejs.org/v2/guide/syntax.html#Raw-HTML).
 
 ## Adoption strategy
 
-Because the attribute uses the reserved `lwc:` prefix, there is not backward compatibility
-issue, and there is no potential name conflicts.
-
+Because the attribute uses the reserved `lwc:` prefix, there is no backward compatibility issue, and there is no potential name conflicts.
 
 ## How we teach this
 
-inner HTML or raw HTML binding are the industry adopted terms for such a feature.
+Documentation has to be updated with this new directive. 
+
+Usage of `lwc:dom="manual"` for dynamic content injection is now obsolete and developers should transition over to `lwc:inner-html`. This should greatly reduce the number of components using `lwc:dom="manual"` directive. The `lwc:dom="manual"` documentation should be updated to reflect this. 

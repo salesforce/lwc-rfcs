@@ -210,10 +210,8 @@ To solve the above problem, the template in a Light DOM component, will have a s
 <template macro>
   <h1>My Light DOM element</h1>
 
-  <slot onslotchange="{handleSlotChange}">
-    <!-- throws error -->
-    <div lwc:dom="manual"></div>
-    <!-- throws error -->
+  <slot onslotchange="{handleSlotChange}"></slot> <!-- throws error -->
+  <div lwc:dom="manual"></div> <!-- throws error -->
   </slot>
 </template>
 ```

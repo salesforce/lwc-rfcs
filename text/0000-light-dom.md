@@ -148,8 +148,6 @@ Some of the LWC component capabilities are directly inherited from Shadow DOM, o
 
   In this case, item 1 will be in blue and item 2 and 3 will be in red. Also note that in `<x-a>`, we can write a selector of higher specificity `x-b p` to override the styles in `x-b`.
 
-  Light DOM components can have scoped style assigned to their content. Today, all styles are scoped by default. The compiler generates some scope attributes to the Elements in the template and attaches a style sheet to the document (or parent shadow).
-
   Global scoping is not supported. If desired, a global stylesheet can be injected manually.
 
 - **`this.template`**

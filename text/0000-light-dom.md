@@ -202,7 +202,7 @@ This can also be used to check whether a `vm` is associated with a Shadow DOM el
 
 Template compiler, when compiling a template that belongs to a Light DOM component, should throw compiler errors when event listeners are found on `slot` elements or when `lwc:dom="manual"` directive is found.
 
-Currently, the template compiler has no context of the Javascript file and thus can't know whether the template being compiled is a Light DOM component template or a Shadow DOM component template.
+Currently, the template compiler has no context of the Javascript file and thus can't know whether the template being compiled is for a Light DOM component or a Shadow DOM component.
 
 To solve the above problem, the template in a Light DOM component, will have a special `macro` attribute at the root `<template>` tag.
 
@@ -241,7 +241,7 @@ function stylesheet(hostSelector, shadowSelector, nativeShadow, macroSelector) {
 export default [stylesheet];
 ```
 
-the CSS output of which when evaulated as follows:
+which when evaulated as follows:
 
 ```js
 const macroSelector = isMacroElement ? `[${tokens.hostAttribute}]` : '';
@@ -283,7 +283,7 @@ export interface VFakeSlot extends VElement {
 }
 ```
 
-Creating a node for `VFakeSlot` will mean creating the two text nodes. Adding/removing children to the slot will result in adding or removing children between the two text nodes.
+Creating a node for `VFakeSlot` will mean creating the two text nodes. Adding/removing children to the slot will result in adding or removing children _between_ the two text nodes.
 
 For example:
 

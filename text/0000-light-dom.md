@@ -15,7 +15,7 @@ As of today, all the LWC components inheriting from `LightningElement` render th
 
 ## Basic example
 
-When the Shadow DOM option is turned off for a component, then its content is not attached to its shadow-root, but to the Element itself. Here is an example, showing whenever Shadow DOM is on or off:
+When the Shadow DOM is turned off for a component, its content is not attached to its shadow-root, but to the element itself. Here is an example, showing whenever Shadow DOM is on or off:
 
 _Shadow DOM_
 
@@ -42,7 +42,7 @@ _Light DOM_
 </app-counter-blue-light>
 ```
 
-As a result, when the content of a component resied in the Light DOM, it can be accessed like any other content in the Document host, and thus behave like any other content (styling, APIs, accessibility, third party tooling...).
+As a result, when the content of a component resides in the Light DOM, it can be accessed like any other content in the Document host, and thus behave like any other content (styling, APIs, accessibility, third party tooling...).
 
 ## Motivation
 
@@ -55,7 +55,7 @@ Consumer applications require DOM traversal and observability of an applicationâ
 
 - **Third party integrations**
 
-  Third party tools need to traverse the DOM, which breaks with Shadow DOM and the existing browser APIs (querySelector, ...). Note that the use of Light DOM fixes for Light DOM components, but for for native Shadow DOM ones if the page contains some.
+  Third party tools need to traverse the DOM, which breaks with Shadow DOM and the existing browser APIs (querySelector, ...). Note that the use of Light DOM fixes for Light DOM components, but not for native Shadow DOM ones if the page contains any.
 
   - Analytics tools, Personalization platforms, Commerce tools like PriceSpider or Honey...
 

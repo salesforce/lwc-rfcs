@@ -7,11 +7,11 @@ champion: Philippe Riand (priand), Ted Conn (tconn)
 pr: https://github.com/salesforce/lwc-rfcs/pull/44
 ---
 
-# RFC: Light DOM Support
+# RFC: Light DOM Component
 
 ## Summary
 
-LWC currently enforces the use of Shadow DOM for every component. This proposal aims to provide a new option, a toggle, which instead lets a component attach its content as children in the Light DOM.
+As of today, all the LWC components inheriting from `LightningElement` render their content to the shadow DOM. This proposal introduces a new kind of component, which renders its content as children in the Light DOM.
 
 ## Basic example
 
@@ -21,12 +21,12 @@ _Shadow DOM_
 
 ```html
 <app-container-blue-shadow>
-  ▼ #shadow-root (open)
-      <div>
-        <b>Blue Shadow:</b>
-        <span class="counter">...</span>
-        <button type="button">Add one</button>
-      </div>
+  #shadow-root (open)
+  | <div>
+  |   <b>Blue Shadow:</b>
+  |   <span class="counter">...</span>
+  |   <button type="button">Add one</button>
+  | </div>
 </app-counter-blue-shadow>
 ```
 
@@ -34,7 +34,7 @@ _Light DOM_
 
 ```html
 <app-container-blue-light>
-  ▼ <div>
+    <div>
       <b>Blue Light:</b>
       <span class="counter">...</span>
       <button type="button">Add one</button>
@@ -42,21 +42,7 @@ _Light DOM_
 </app-counter-blue-light>
 ```
 
-As a result, when the content of a component lives in its children, it can be accessed like any other content in the Document host, and thus behave like any other content (styling, APIs, accessibility, third party tooling...).
-
-Shadow DOM provides a wonderful, native component encapsulation and composition model.
-
-The two main reasons for using Shadow DOM are:
-
-**Native Component Encapsulation**
-
-The Shadow DOM encapsulation model provides a way for the component author to keep the component internals hidden, with no effect from the broader environment. This means that global styles have no effect on those internals and those internals cannot be queried from outside of the component. This provides a way for widget-type components to be more portable (eg: embedding into 3rd party apps) at the cost of some complexity that makes the creation of a component or an application harder.
-
-**Native Component Composition**
-
-The Shadow DOM gives custom element developers a way to allow consumers to compose some content that it should render. Think about native elements like `<select>`. This is done via `<slot>` elements that are automatically filled by the content from the light DOM. Without Shadow DOM there is no native component composition and this functionality must be provided by the framework.
-
-> A single component that needs to stand on its own with its own set of functionality is a good candidate for shadow DOM. Salesforce Lightning components are a good example of that.
+As a result, when the content of a component resied in the Light DOM, it can be accessed like any other content in the Document host, and thus behave like any other content (styling, APIs, accessibility, third party tooling...).
 
 ## Motivation
 
@@ -75,9 +61,9 @@ Consumer applications require DOM traversal and observability of an application�
 
 - **Testing software**
 
-  They faced the same issues than third party tools when it comes to traverse the DOM
+  Tools like Selenium, Cypress etc. face the same issues as third party tools when it comes to traversing the DOM.
 
-Furthermore, **the goal of Shadow DOM is not to enclose the entire application in a single shadow-bound element**. We want to build UIs which are comprised of multiple web components, not UIs which are a single, top-level web component. Web components shouldn’t be the fundamental mechanism for building everything in an app, otherwise they negate the usefulness of standard semantic HTML. This is why we think the current model is fundamentally flawed.
+Introducing components rendering to the Light DOM opens new possibilities where applications can render most of their content in the Light DOM, but also keep individual widgets (e.g. `select` tag) and leaf components that render in the Shadow DOM. This approach combines the best of both worlds by solving the issues presented above and offering strong encapsulation when needed.
 ![shadow spectrum](./shadow-spectrum.png?raw=true "Shadow Spectrum")
 
 ### Prior Art
@@ -87,13 +73,6 @@ Most of the libraries designed to support Shadow DOM also propose a Light DOM op
 - [StencilJS](https://stenciljs.com/docs/styling#shadow-dom-in-stencil)
 - [LitElement](https://lit-element.polymer-project.org/api/classes/_lit_element_.litelement.html#createrenderroot)
 - [MS Fast Element](https://fast.design/docs/fast-element/working-with-shadow-dom#shadow-dom-configuration)
-- ...
-
-Or frameworks that are built for Light DOM offer a Shadow DOM option:
-
-- [Angular](https://angular.io/guide/component-styles#view-encapsulation)
-- [React](https://github.com/Wildhoney/ReactShadow) (community library)
-- [Vue.js](https://github.com/karol-f/vue-custom-element) (community library)
 
 ## Detailed design
 
@@ -123,7 +102,11 @@ In LWC as well, the developer will retain the choice: they can choose to inherit
 ```js
 import { MacroElement } from "lwc";
 
-export default class MyLightComponent extends MacroElement {}
+export default class MyLightComponent extends MacroElement {
+  renderedCallback() {
+    this.querySelector("child-element"); // note the absence of this.template
+  }
+}
 ```
 
 `MacroElement` is a new class that will be exported from the `lwc` module. Its API and functionality remain identical to `LightningElement` with the primary difference of not using Shadow DOM.
@@ -136,15 +119,15 @@ Some of the LWC component capabilities are directly inherited from Shadow DOM, o
 
   As we mentioned before, the component composition model in LWC is provided by slots. Light DOM will provide the same mental model for developers building Light DOM components.
 
-  In Light DOM, `<slot>` will denote the place where the slotted component will be attached. The `<slot>` element itself won't be rendered. The slotted content (or the placeholder content) will be flattened to the parent element at runtime.
+  In Light DOM, `<slot>` will denote the place where the slotted component will be attached. The `<slot>` element itself won't be rendered. The slotted content (or the fallback content) will be flattened to the parent element at runtime.
 
-  Since the `<slot>` element itself isn't rendered, adding any event listeners to the `<slot>` element in the template will throw a compiler error.
+  Since the `<slot>` element itself isn't rendered, adding attributes or event listeners to the `<slot>` element in the template will throw a compiler error.
 
 - **Scoped Styles**
 
-  Shadow DOM styles are scoped to the component they belong. Styles don't leak out to the rest of the page and the page styles don't leak into this component. In Native shadow, it is enforced by the browser whereas in Synthetic shadow it is enforced by adding few attributes to the elements and scoping all CSS rules by those attributes.
+  Shadow DOM styles are scoped to the enclosing shadow tree. Styles don't leak out to the rest of the page and the page styles don't leak into this component. In Native shadow, it is enforced by the browser whereas in Synthetic shadow it is enforced by adding few attributes to the elements and scoping all CSS rules by those attributes.
 
-  Styles scoping in Light DOM will be done differently. The styles will be scoped not just to the component they belong, but also to its children. These styles won't leak out to the parents (or their children) though. This is similar to how Aura styles its components.
+  Styles scoping in Light DOM will be done differently. The styles will be scoped not just to the component they belong, but also to its children. These styles won't leak out to the parents (or their children) though.
 
   E.g.
 
@@ -173,7 +156,7 @@ Some of the LWC component capabilities are directly inherited from Shadow DOM, o
   </x-a>
   ```
 
-  Opting out of this scoping is not supported. There's no way for a component author to say a CSS rule shouldn't be scoped to that specific component (and its children). For example, CSS modules provides a `:global` selector that can be used to opt out of this local scoping. LWC won't provide any such selector. If global scoping is desired, a global stylesheet can be injected manually.
+  Opting out of this scoping is not supported. There's no way for a component author to say a CSS rule shouldn't be scoped to that specific component (and its children). If global scoping is desired, a global stylesheet can be injected manually.
 
 - **`this.template`**
 
@@ -190,155 +173,9 @@ Some of the LWC component capabilities are directly inherited from Shadow DOM, o
 
 There is no migration of the existing components. Existing components inherit from `LightningElement` and light DOM components will inherit from `MacroElement` and they are two different things. If a component author wishes to use Light DOM for any of their existing components, they will have to make the relevant changes manually.
 
-### Synthetic Shadow DOM
-
-The selection of Light DOM should not be impacted by the use of synthetic shadow instead of native shadow. Now, the goal is to get rid of synthetic shadow, but this is hardly possible today because of:
-
-- Salesforce Lightning Components do not work with native shadow today
-- Shadow DOM has accessibility issues
-
-Could we think of a lightweight synthetic shadow that do not override the global methods but provides enough functions to the base components to work while letting third party integration tools work? This can be a different DOM option, which is an hybrid between Shadow DOM and Light DOM.
-
-## Internal Implementation
-
-Fortunately, most of the code already exists in the LWC core runtime, as it has been implemented to support synthetic shadow. This makes the implementation much easier, and only touching a few code blocks.
-
-### Class Structure
-
-LWC will be refactored into a base class `BaseLightningElement` that will be used throughout the `lwc` codebase. `LightningElement` class will inherit `BaseLightningElement` and will have only Shadow DOM specific logic. For example, `renderer.attachShadow(elm, ...)` will only exist in `LightningElement`.
-
-`MacroElement` will also inherit `BaseLightningElement` and will have light dom specific logic. For example, `this.template` will return `null`.
-
-Developers can't inherit from `BaseLightningElement` directly - compiler will prevent that from happening.
-
-### View Model
-
-Each LWC component has a VM (View Model) associated to it which carries the component runtime information. The VM class has an attribute `cmpRoot` which is of type `ShadowRoot`. We'll have to change it to `ShadowRoot | null` to denote that it will be null in case of `MacroElement`.
-
-```typescript
-export interface VM<N = HostNode, E = HostElement> {
-  cmpRoot: ShadowRoot | null;
-}
-```
-
-This can also be used to check whether a `vm` is associated with a Shadow DOM element or a Light DOM element.
-
-### Template
-
-Template compiler, when compiling a template that belongs to a Light DOM component, should throw compiler errors when event listeners are found on `slot` elements or when `lwc:dom="manual"` directive is found.
-
-Currently, the template compiler has no context of the Javascript file and thus can't know whether the template being compiled is for a Light DOM component or a Shadow DOM component.
-
-To solve the above problem, the template in a Light DOM component, will have a special `macro` attribute at the root `<template>` tag.
-
-```html
-<template macro>
-  <h1>My Light DOM element</h1>
-
-  <slot onslotchange={handleSlotChange}></slot> <!-- throws error -->
-  <div lwc:dom="manual"></div> <!-- throws error -->
-  </slot>
-</template>
-```
-
-In the presence of the `macro` attribute, the template-compiler will do additional validations. Currently, there doesn't seem to be a need to modify the compiler output in anyway.
-
-### Scoped Styles
-
-Style scoping will be done at the host level. The host will have a special attribute (similar to the one that is used in Synthetic shadow) and that attribute selector will be used to prefix all the CSS selectors in the style.
-
-`:host` and `:host()` will also be replaced with the host token.
-
-e.g. for the following CSS,
-
-```css
-p {
-  color: red;
-}
-```
-
-the output of style-compiler will be (note the addition of `macroSelector`)
-
-```js
-function stylesheet(hostSelector, shadowSelector, nativeShadow, macroSelector) {
-  return [macroSelector, "p", shadowSelector, " {color: red;}"].join("");
-}
-export default [stylesheet];
-```
-
-which when evaulated as follows:
-
-```js
-const macroSelector = isMacroElement ? `[${tokens.hostAttribute}]` : '';
-
-content = evaluateStylesheetsContent(
-    stylesheets,
-    hostSelector,
-    shadowSelector,
-    !syntheticShadow,
-    macroSelector
-```
-
-will result in
-
-```css
-[x-test_test_a] p {
-  color: red;
-}
-```
-
-Runtime will also add the attribute `x-test_test_a` to the host element here:
-
-```js
-if (renderer.syntheticShadow || !cmpRoot) {
-  updateSyntheticShadowAttributes(vm, html);
-}
-```
-
-### Slotting
-
-Slotting will mostly reuse synthetic shadow slotting. However, there is one major difference: the slot element itself won't be rendered.
-
-Instead of the slot, two empty text nodes will be inserted to denote the start and end of the slot. This can be done by introducing a new `VNode` called `VFakeSlot`:
-
-```js
-export interface VFakeSlot extends VElement {
-  start: VText;
-  end: VText;
-}
-```
-
-Creating a node for `VFakeSlot` will mean creating the two text nodes. Adding/removing children to the slot will result in adding or removing children _between_ the two text nodes.
-
-For example:
-
-```js
-// updating dynamic children
-const endElm = vnode.end.elm!;
-const parentElm = endElm.parentNode!;
-updateDynamicChildren(parentElm, oldCh, newCh, endElm); // inserted before endElm
-
-// in updating static children
-const startIndex = Array.prototype.indexOf.call(parentElm, startElm);
-addVnodes(parentElm, null, newCh, startIndex, newChLength);
-```
-
-`updateDynamicChildren` here is the same function that is used for synthetic shadow.
-
 ### Server Side Rendering
 
 The engine-server module should provide the SSR capability to seamlessly render Shadow DOM or Light DOM. It should include the component children, as well as the scoped styles.
-
-### POC
-
-More implementation details available through this POC:
-
-- Git repo: [https://github.com/salesforce/lwc/tree/abdulsattar/spikes/light-dom](https://github.com/salesforce/lwc/tree/abdulsattar/spikes/light-dom)
-
-**Earlier POC by Philippe Riand**
-
-- Demo: [https://priandsf.github.io/lwc-light-dom-static](https://priandsf.github.io/lwc-light-dom-static)
-- Git repo: [https://github.com/priandsf/lwc/blob/light-dom-1.7.7/packages/sample-app/README.md](https://github.com/priandsf/lwc/blob/light-dom-1.7.7/packages/sample-app/README.md)
 
 ## Adoption strategy
 

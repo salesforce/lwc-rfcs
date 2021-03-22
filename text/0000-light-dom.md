@@ -162,6 +162,43 @@ Some of the LWC component capabilities are directly inherited from Shadow DOM, o
 
   In `LightningElement`, `this.template` returns the shadow-root. It will return `null` in `MacroElement`.
 
+- **Querying**
+
+  `MacroElement` (and `LightningElement`) forward several DOM querying/manipulation methods like `querySelector`, `dispatchEvent` etc. to the host element. Full list of methods forwarded [here](https://github.com/salesforce/lwc/blob/master/packages/@lwc/engine-core/src/framework/base-lightning-element.ts#L242). 
+  
+  This will allow component author to just use `this.querySelector` instead of using `this.template.querySelector` in case of `LightningElement`.
+  However, there's no way to get a direct reference to the host element, like `this.template.host` that's available in `LightningElement`.
+
+  E.g.
+  ```js
+  /* <template>
+   *   <x-child></x-child>
+   * </template>
+   */
+  export default class ParentElement extends MacroElement {
+    renderedCallback() {
+      this.querySelector('x-child').addEventListener('custom', (e) => {
+          console.log('Called with ' + JSON.stringify(e.detail));
+      });
+    }
+  }
+
+  /**
+   * <template>
+   *   <button>Click Me</button>
+   * </template>
+   */
+  export default class ChildElement extends MacroElement {
+      renderedCallback() {
+          this.querySelector('button').addEventListener('click', this.handleClick);
+      }
+
+      handleClick() {
+        this.dispatchEvent(new CustomEvent('custom', { detail: { macro: true } }));
+      }
+  }
+  ```
+
 ### Security (WIP)
 
 - In some applications, light-dom components may not be allowed... it’s up to the app context

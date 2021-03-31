@@ -32,14 +32,14 @@ This RFC introduces a set of principles and invariants required to preserve a re
 
 ```html
 <template>
-  <x-lazy lwc:dynamic="{customCtor}"></x-lazy>
+  <x-lazy lwc:dynamic={customCtor}></x-lazy>
 </template>
 ```
 
 ```js
-import { LightningElement, track } from "lwc";
+import { LightningElement } from "lwc";
 export default class DynamicCtor extends LightningElement {
-  @track customCtor;
+  customCtor;
 
   connectedCallback() {
     this.loadCtor();
@@ -82,14 +82,14 @@ A developer can choose between a bunch of types of charts (`lightning-chart-hist
 ```html
 <template>
   <section>
-    <template if:true="{isTypePie}">
-      <lightning-chart-pie data="{data}"></lightning-chart-pie>
+    <template if:true={isTypePie}>
+      <lightning-chart-pie data={data}></lightning-chart-pie>
     </template>
-    <template if:true="{isTypeBar}">
-      <lightning-chart-bar data="{data}"></lightning-chart-bar>
+    <template if:true={isTypeBar}>
+      <lightning-chart-bar data={data}></lightning-chart-bar>
     </template>
-    <template if:true="{isTypeHistogram}">
-      <lightning-chart-histogram data="{data}"></lightning-chart-histogram>
+    <template if:true={isTypeHistogram}>
+      <lightning-chart-histogram data={data}></lightning-chart-histogram>
     </template>
   </section>
   <template></template
@@ -122,7 +122,7 @@ Now let's imagine we have a lot of charts, like thirty. The template becomes ver
 
 ```html
 <template>
-  <lwc-chart-impl lwc:dynamic="{dynamicCtor}" data="{data}"></lwc-chart-impl>
+  <lwc-chart-impl lwc:dynamic={dynamicCtor} data={data}></lwc-chart-impl>
 </template>
 
 <script>
@@ -140,7 +140,7 @@ Now let's imagine we have a lot of charts, like thirty. The template becomes ver
 
   export default class Chart extends LightningElement {
     @api type;
-    @track dynamicCtor;
+    dynamicCtor;
 
     connectedCallback() {
       this.dynamicCtor = getCtorByType(this.type);
@@ -166,8 +166,8 @@ The problem is, though, that maybe some of the dependencies are heavy. Let's loo
 ```html
 <template>
   <lwc-chatter-impl
-    lwc:dynamic="{dynamicCtor}"
-    data="{data}"
+    lwc:dynamic={dynamicCtor}
+    data={data}
   ></lwc-chatter-impl>
 </template>
 
@@ -197,14 +197,14 @@ In order to do that, we use [dynamic imports](https://github.com/tc39/proposal-d
 ```html
 <template>
   <lwc-chatter-impl
-    lwc:dynamic="{dynamicCtor}"
-    data="{data}"
+    lwc:dynamic={dynamicCtor}
+    data={data}
   ></lwc-chatter-impl>
 </template>
 
 <script>
   export default class Chatter extends LightningElement {
-    @track dynamicCtor;
+    dynamicCtor;
 
     async connectedCallback() {
       let Ctor;
@@ -259,18 +259,18 @@ The API and ergonomics for dynamically loading a module has a similar mental mod
 <!-- original HTML source -->
 <template>
   <lazy-component
-    lwc:dynamic="{lazyConstructor}"
-    value="{value}"
+    lwc:dynamic={lazyConstructor}
+    value={value}
     other="test"
   ></lazy-component>
 </template>
 
 <!-- original JS source -->
 <script>
-  import { LightningElement, track } from "lwc";
+  import { LightningElement } from "lwc";
   export default class LazyTest extends LightningElement {
     @api value = "yay!";
-    @track lazyConstructor;
+    lazyConstructor;
 
     async connectedCallback() {
       const { default: Ctor } = await import("lightning/concreteComponent");

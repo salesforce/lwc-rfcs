@@ -175,7 +175,7 @@ The problem is, though, that maybe some of the dependencies are heavy. Let's loo
   import isPhone from "@salesforce/api/isPhone";
 
   export default class Chatter extends LightningElement {
-    @track dynamicCtor;
+    dynamicCtor;
 
     async connectedCallback() {
       if (isPhone) {

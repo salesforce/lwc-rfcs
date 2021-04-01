@@ -193,7 +193,7 @@ There is no migration of the existing components. Existing components inherit fr
 
 ### Server Side Rendering
 
-The engine-server module should provide the SSR capability to seamlessly render Shadow DOM or Light DOM. It should include the component children, as well as the scoped styles.
+The engine-server module should provide the SSR capability to seamlessly render Shadow DOM or Light DOM. It should include the component children, as well as generated styles.
 
 ## Adoption strategy
 
@@ -208,3 +208,11 @@ We need to provide the proper documentation to educate the LWC developers:
 
 - What are the differences between Shadow DOM and Light DOM
 - We need a guide on when to use one or the other
+
+## Open questions
+
+**How to deal with different namespaced packages claiming the same custom element name?** 
+
+As of today on the Salesforce platform, all the LWC components are authored under the `c` namespace. This namespace dictates the prefix for of the custom elements rendered in the DOM. When delivered via a namespaced package, the components are referenced using their actual namespace (eg. `lightning`, `my_ns`, etc.). However internal component references in the package is done using the `c` namespace. 
+
+Because of this if 2 manage package publish a `button` component, the 2 components will be rendered as `c-button` in DOM. This is problematic because a custom element name can only be bound to a single element constructor. Even if this is not a new issue, the [scoped custom element registry proposal](https://github.com/WICG/webcomponents/issues/716) would solve this issue for shadow DOM components. This is still an issue for light DOM component as scoped custom elements registry can only be attached to a shadow root.  

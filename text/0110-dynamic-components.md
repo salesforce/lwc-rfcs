@@ -246,7 +246,7 @@ These invariants follow the same pattern that we use for `@wire`: the ability to
 
 The API and ergonomics for dynamically loading a module has a similar mental model to the HTML `is` attribute proposal (which we can't use since Safari won't implement it in the foreseeable future): An arbitrary tag name on which you can assign any constructor.
 
-```json
+```javascript
 {
   "dynamicComponent": {
     "loader": "@salesforce/loader",

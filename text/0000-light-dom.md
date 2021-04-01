@@ -115,89 +115,70 @@ export default class MyLightComponent extends MacroElement {
 
 Some of the LWC component capabilities are directly inherited from Shadow DOM, or emulated by the synthetic-shadow. Despite the use of Light DOM, we’d like to keep these features available, even if their behavior is slightly adapted to the Light DOM:
 
-- **Slots**
+#### Slots
 
-  As we mentioned before, the component composition model in LWC is provided by slots. Light DOM will provide the same mental model for developers building Light DOM components.
+As we mentioned before, the component composition model in LWC is provided by slots. Light DOM will provide the same mental model for developers building Light DOM components.
 
-  In Light DOM, `<slot>` will denote the place where the slotted component will be attached. The `<slot>` element itself won't be rendered. The slotted content (or the fallback content) will be flattened to the parent element at runtime.
+In Light DOM, `<slot>` will denote the place where the slotted component will be attached. The `<slot>` element itself won't be rendered. The slotted content (or the fallback content) will be flattened to the parent element at runtime.
 
-  Since the `<slot>` element itself isn't rendered, adding attributes or event listeners to the `<slot>` element in the template will throw a compiler error.
+Since the `<slot>` element itself isn't rendered, adding attributes or event listeners to the `<slot>` element in the template will throw a compiler error.
 
-- **Scoped Styles**
+#### Styles
 
-  Shadow DOM styles are scoped to the enclosing shadow tree. Styles don't leak out to the rest of the page and the page styles don't leak into this component. In Native shadow, it is enforced by the browser whereas in Synthetic shadow it is enforced by adding few attributes to the elements and scoping all CSS rules by those attributes.
+Until now styles used in LWC components where scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles are naturally leaks out of the component, LWC doesn't do any style scoping out of the box. Developers are in charge of making sure to write specific enough selector to target the component content.
 
-  Styles scoping in Light DOM will be done differently. The styles will be scoped not just to the component they belong, but also to its children. These styles won't leak out to the parents (or their children) though.
+To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM elements if all the ancestor components are also a light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise if any of the ancestors is a shadow DOM components the style has to be injected in the closest shadow root. Upon insertion of a light DOM element does the following steps:
 
-  E.g.
+- look up for the closest root node (`Node.prototype.getRootNode()`)
+- insert the stylesheet if not already present:
+  - if the root node is the HTML document, the style sheet is inserted as a `<style>` element in the `<head>`.
+  - if the root node is a shadow root, the stylesheet is inserted as a `<style>` element as the first shadow root child.
 
-  ```html
-  <x-a>
-    <style>
-      p {
-        color: blue;
-      }
-    </style>
+It is important to notice that the order in which light DOM components are rendered impact the order in which stylesheets are injected in the root node and directly influences CSS rule specificity.
 
-    <p></p> <!-- will be blue -->
-    <p class="red"></p> <!-- will still be blue. red class from child won't leak out here -->
+**Note:** Different approaches layer style scoping on top has been discussed while designing Light DOM, like introducing a new file extension for automatic style scoping `.scoped.css` or using a `<style scoped>` element in the template.
 
-    <x-b>
-      <style>
-        p.red {
-          color: red;
-        }
-      </style>
+#### `this.template`
 
-      <p></p> <!-- will be blue. Style from x-a will be applied -->
-      <p class="red"></p> <!-- will be red -->
-      <p class="red"></p> <!-- This paragraph is coming from A and slotted into B. Will also be red. -->
-    </x-b>
-  </x-a>
-  ```
+In `LightningElement`, `this.template` returns the shadow-root. It will return `null` in `MacroElement`.
 
-  Opting out of this scoping is not supported. There's no way for a component author to say a CSS rule shouldn't be scoped to that specific component (and its children). If global scoping is desired, a global stylesheet can be injected manually.
+### Querying
 
-- **`this.template`**
+`MacroElement` (and `LightningElement`) forward several DOM querying/manipulation methods like `querySelector`, `dispatchEvent` etc. to the host element. Full list of methods forwarded [here](https://github.com/salesforce/lwc/blob/master/packages/@lwc/engine-core/src/framework/base-lightning-element.ts#L242).
 
-  In `LightningElement`, `this.template` returns the shadow-root. It will return `null` in `MacroElement`.
+This will allow component author to just use `this.querySelector` instead of using `this.template.querySelector` in case of `LightningElement`.
+However, there's no way to get a direct reference to the host element, like `this.template.host` that's available in `LightningElement`.
 
-- **Querying**
+E.g.
 
-  `MacroElement` (and `LightningElement`) forward several DOM querying/manipulation methods like `querySelector`, `dispatchEvent` etc. to the host element. Full list of methods forwarded [here](https://github.com/salesforce/lwc/blob/master/packages/@lwc/engine-core/src/framework/base-lightning-element.ts#L242). 
-  
-  This will allow component author to just use `this.querySelector` instead of using `this.template.querySelector` in case of `LightningElement`.
-  However, there's no way to get a direct reference to the host element, like `this.template.host` that's available in `LightningElement`.
+```js
+/* <template>
+ *   <x-child></x-child>
+ * </template>
+ */
+export default class ParentElement extends MacroElement {
+  renderedCallback() {
+    this.querySelector("x-child").addEventListener("custom", (e) => {
+      console.log("Called with " + JSON.stringify(e.detail));
+    });
+  }
+}
 
-  E.g.
-  ```js
-  /* <template>
-   *   <x-child></x-child>
-   * </template>
-   */
-  export default class ParentElement extends MacroElement {
-    renderedCallback() {
-      this.querySelector('x-child').addEventListener('custom', (e) => {
-          console.log('Called with ' + JSON.stringify(e.detail));
-      });
-    }
+/**
+ * <template>
+ *   <button>Click Me</button>
+ * </template>
+ */
+export default class ChildElement extends MacroElement {
+  renderedCallback() {
+    this.querySelector("button").addEventListener("click", this.handleClick);
   }
 
-  /**
-   * <template>
-   *   <button>Click Me</button>
-   * </template>
-   */
-  export default class ChildElement extends MacroElement {
-      renderedCallback() {
-          this.querySelector('button').addEventListener('click', this.handleClick);
-      }
-
-      handleClick() {
-        this.dispatchEvent(new CustomEvent('custom', { detail: { macro: true } }));
-      }
+  handleClick() {
+    this.dispatchEvent(new CustomEvent("custom", { detail: { macro: true } }));
   }
-  ```
+}
+```
 
 ### Security (WIP)
 

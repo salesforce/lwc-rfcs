@@ -125,9 +125,9 @@ Since the `<slot>` element itself isn't rendered, adding attributes or event lis
 
 #### Styles
 
-Until now styles used in LWC components where scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles are naturally leaks out of the component, LWC doesn't do any style scoping out of the box. Developers are in charge of making sure to write specific enough selector to target the component content.
+Until now styles used in LWC components were scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles naturally leak out of the component; LWC doesn't do any style scoping out of the box. Developers are in charge of making sure to write specific enough selectors to target the intended element or pseudo-element.
 
-To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM elements if all the ancestor components are also a light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise if any of the ancestors is a shadow DOM components the style has to be injected in the closest shadow root. Upon insertion of a light DOM element does the following steps:
+To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM elements if all the ancestor components are also a light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise if any of the ancestors is a shadow DOM component, the style has to be injected in the closest shadow root. Upon insertion of a light DOM element, LWC does the following steps:
 
 - look up for the closest root node (`Node.prototype.getRootNode()`)
 - insert the stylesheet if not already present:
@@ -136,7 +136,7 @@ To support the cases where a shadow DOM element composes a light element, light 
 
 It is important to notice that the order in which light DOM components are rendered impact the order in which stylesheets are injected in the root node and directly influences CSS rule specificity.
 
-**Note:** Different approaches layer style scoping on top has been discussed while designing Light DOM, like introducing a new file extension for automatic style scoping `.scoped.css` or using a `<style scoped>` element in the template.
+**Note:** Different approaches to layer style scoping on top has been discussed while designing Light DOM, like introducing a new file extension for automatic style scoping (`.scoped.css`) or using a `<style scoped>` element in the template. This can be addressed in a future RFC.
 
 #### `this.template`
 
@@ -144,7 +144,7 @@ In `LightningElement`, `this.template` returns the shadow-root. It will return `
 
 ### Querying
 
-`MacroElement` (and `LightningElement`) forward several DOM querying/manipulation methods like `querySelector`, `dispatchEvent` etc. to the host element. Full list of methods forwarded [here](https://github.com/salesforce/lwc/blob/master/packages/@lwc/engine-core/src/framework/base-lightning-element.ts#L242).
+`MacroElement` (and `LightningElement`) forward several DOM querying/manipulation methods like `querySelector`, `dispatchEvent` etc. to the host element. Full list of methods forwarded [here](https://github.com/salesforce/lwc/blob/15ff9bb98ec324dc68d40c96e6d37de69d9f1145/packages/%40lwc/engine-core/src/framework/base-lightning-element.ts#L134-L160).
 
 This will allow component author to just use `this.querySelector` instead of using `this.template.querySelector` in case of `LightningElement`.
 However, there's no way to get a direct reference to the host element, like `this.template.host` that's available in `LightningElement`.
@@ -174,7 +174,7 @@ export default class ChildElement extends MacroElement {
     this.querySelector("button").addEventListener("click", this.handleClick);
   }
 
-  handleClick() {
+  handleClick = () => {
     this.dispatchEvent(new CustomEvent("custom", { detail: { macro: true } }));
   }
 }

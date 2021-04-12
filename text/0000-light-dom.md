@@ -76,40 +76,40 @@ Most of the libraries designed to support Shadow DOM also propose a Light DOM op
 
 ## Detailed design
 
-### Selecting Light DOM vs Shadow DOM
+### Rendering to the Light DOM
 
-In raw JS, developer has the choice to use or not use shadow DOM for their custom element. For example,
-
-```js
-// uses Shadow DOM
-class MyShadowElement extends HTMLElement {
-  connectedCallback() {
-    this.attachShadow({ mode: "open" });
-    this.shadowRoot.innerHTML = "<p>My custom element that uses Shadow DOM";
-  }
-}
-
-// doesn't use Shadow DOM
-class MyLightElement extends HTMLElement {
-  connectedCallback() {
-    this.innerHTML = "<p>My element that does not use Shadow DOM";
-  }
-}
-```
-
-In LWC as well, the developer will retain the choice: they can choose to inherit from `LightningElement` to select Shadow DOM (which already exists) or inherit from a new class, `MacroElement`, to opt into Light DOM.
+Toggle between light DOM and shadow DOM is done via a new `shadowDOM` static property on the `LightElement` constructor. This accepts a `boolean` value and is `true` default. When set to `false`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `false` the component renders its content directly in the host element light DOM.  
 
 ```js
-import { MacroElement } from "lwc";
+import { LightningElement } from 'lwc';
 
-export default class MyLightComponent extends MacroElement {
-  renderedCallback() {
-    this.querySelector("child-element"); // note the absence of this.template
-  }
+// Example of a shadow DOM component
+class ShadowDOMComponent extends LightningElement {}
+
+// Example of a light DOM component
+class LightDOMComponent extends LightningElement {
+  static shadowDOM = false;
 }
+
+// Default value
+console.log(LightningElement.shadowDOM) // true
 ```
 
-`MacroElement` is a new class that will be exported from the `lwc` module. Its API and functionality remain identical to `LightningElement` with the primary difference of not using Shadow DOM.
+The `shadowDOM` property is looked up by the LWC engine when the component is instantiated for the first time and is cache for future instantiation. Changing the value of the `shadowDOM` static property after the first instantiation doesn't influence wether components are rendered in the light DOM or in the shadow DOM. 
+
+It also means that developers should be careful not to override the `shadowDOM` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.  
+
+```js
+import { LightningElement } from 'lwc';
+
+class Base extends LightningElement {}
+
+class Child extends Base {
+  // ⚠️ Changing the shadowDOM static property value in a component class inheriting from a base
+  // will certainly class some unexpected issue.
+  static shadowDOM = false;
+}
+```
 
 ### Component features when using Light DOM
 
@@ -138,47 +138,15 @@ It is important to notice that the order in which light DOM components are rende
 
 **Note:** Different approaches to layer style scoping on top has been discussed while designing Light DOM, like introducing a new file extension for automatic style scoping (`.scoped.css`) or using a `<style scoped>` element in the template. This can be addressed in a future RFC.
 
-#### `this.template`
+#### `LightningElement.prototype.template`
 
-In `LightningElement`, `this.template` returns the shadow-root. It will return `null` in `MacroElement`.
+When rendering to the shadow DOM, `LightningElement.prototype.template` returns the component associated `ShadowRoot`. When rendering to the light DOM, `LightningElement.prototype.template` value is `null`.
 
-### Querying
+#### DOM querying
 
-`MacroElement` (and `LightningElement`) forward several DOM querying/manipulation methods like `querySelector`, `dispatchEvent` etc. to the host element. Full list of methods forwarded [here](https://github.com/salesforce/lwc/blob/15ff9bb98ec324dc68d40c96e6d37de69d9f1145/packages/%40lwc/engine-core/src/framework/base-lightning-element.ts#L134-L160).
+This proposal doesn't change the way component authors query the light DOM. Component can query their children elements via `LightningElement.prototype.querySelector` and `LightningElement.prototype.querySelectorAll`.
 
-This will allow component author to just use `this.querySelector` instead of using `this.template.querySelector` in case of `LightningElement`.
-However, there's no way to get a direct reference to the host element, like `this.template.host` that's available in `LightningElement`.
-
-E.g.
-
-```js
-/* <template>
- *   <x-child></x-child>
- * </template>
- */
-export default class ParentElement extends MacroElement {
-  renderedCallback() {
-    this.querySelector("x-child").addEventListener("custom", (e) => {
-      console.log("Called with " + JSON.stringify(e.detail));
-    });
-  }
-}
-
-/**
- * <template>
- *   <button>Click Me</button>
- * </template>
- */
-export default class ChildElement extends MacroElement {
-  renderedCallback() {
-    this.querySelector("button").addEventListener("click", this.handleClick);
-  }
-
-  handleClick = () => {
-    this.dispatchEvent(new CustomEvent("custom", { detail: { macro: true } }));
-  }
-}
-```
+> It means that turning a shadow DOM component to a light DOM one, all the occurrences of `this.template.querySelector` have to replaced `this.querySelector`.
 
 ### Security (WIP)
 
@@ -189,7 +157,7 @@ export default class ChildElement extends MacroElement {
 
 ### Component Migration
 
-There is no migration of the existing components. Existing components inherit from `LightningElement` and light DOM components will inherit from `MacroElement` and they are two different things. If a component author wishes to use Light DOM for any of their existing components, they will have to make the relevant changes manually.
+There is no automated migration of the existing components. As discussed above, Light DOM components differs from Shadow DOM components from the API and runtime standpoint. If a component author wishes to use Light DOM for any of their existing components, they will have to make the relevant changes manually.
 
 ### Server Side Rendering
 
@@ -203,8 +171,7 @@ This feature should be exposed and explained to the component library developers
 
 ## How we teach this
 
-Shadow DOM and Light DOM are already names accepted by the industry, see: [Terminology: light DOM vs. shadow DOM](https://developers.google.com/web/fundamentals/web-components/shadowdom?hl=en).
-We need to provide the proper documentation to educate the LWC developers:
+Shadow DOM and Light DOM are already names accepted by the industry, see: [Terminology: light DOM vs. shadow DOM](https://developers.google.com/web/fundamentals/web-components/shadowdom?hl=en). We need to provide the proper documentation to educate the LWC developers:
 
 - What are the differences between Shadow DOM and Light DOM
 - We need a guide on when to use one or the other

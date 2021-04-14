@@ -48,13 +48,19 @@ This RFC introduces a new opt-in mechanism at compile time to preserve HTML comm
 
 LWC compilation strips HTML comments because the browsers do not use them at runtime. The bundle's size is smaller by stripping the HTML comments, and the rehydration process does not need to take into account comments nodes.
 
-To preserve the performance of the existing components, we propose to introduce one of these:
+To preserve the performance of the existing components, we propose to introduce two options to enable comments:
 
-1. A new attribute (`preserve-comments`) to the root template tag in the component template.
+1. A new boolean attribute (`preserve-comments`) to the root template tag in the component template; `false` by default.
 
-2. Add a compile option (`preserveHTMLComments`) to the template compiler.
+2. A new compile option (`preserveHTMLComments`) in the template compiler; `false` by default.
 
 Both options will make the compiler invoke a runtime API adding the HTML comments in the component template to the output code that runs in the browser/server. Modifications in each environment's renderers will ensure that the comment node/text is present on the resulting HTML.
+
+#### Invariants
+
+* When option 1 is present, HTML comments will be enabled regardless of the value of option 2.
+
+* When option 2 is set to true while compiling a LWC template, HTML comments will be enabled, regardless of the presence of option 1.
 
 ### Runtime behavior
 
@@ -64,12 +70,10 @@ During rendering cycles, the LWC engine diffing algorithm will show/hide the com
 
 #### Invariants
 
-* HTML comments will be supported based on the opt-in mechanism (TBD, either option 1 or 2).
+* HTML comments will be enabled based on the opt-in mechanism, either [option 1 or 2](#compile-time-behavior).
 * HTML comments will not support bindings (`{foo}`).
-* When supported, comments must be rendered in engine/dom and engine/server.
-* HTML comments inside <slot> elements, will be rendered as part of the slot content.
-* When inside a `<template if:true/false>` will be rendered according to the `if:true/false` directive.
-* HTML comments inside `<template for:each>` will be rendered according to the `for:each` directive.
+* When enabled, comments must be rendered in engine/dom and engine/server.
+* HTML comments will behave the same way as other nodes with respect to slots and directives (`if:true`, `for:each`, etc.).
 
 ### Backwards Compatible
 

@@ -40,7 +40,7 @@ Microsoft Outlook's desktop email client leverage MSO (Microsoft Office) to rend
 
 Email developers rely on [MSO conditionals](https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/compatibility/ms537512(v=vs.85)?redirectedfrom=MSDN)  to improve the UX of emails opened on Microsoft Outlook.
 
-This RFC introduces a new opt-in mechanism at compile time to preserve comments on the rendered component.
+This RFC introduces a new opt-in mechanism at compile time to preserve HTML comments.
 
 ## Proposal
 

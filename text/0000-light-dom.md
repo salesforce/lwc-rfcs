@@ -117,13 +117,111 @@ Some of the LWC component capabilities are directly inherited from Shadow DOM, o
 
 #### Slots
 
-As we mentioned before, the component composition model in LWC is provided by slots. Light DOM will provide the same mental model for developers building Light DOM components.
+As mentioned before, the component composition model in LWC is provided by slots. Light DOM will provide the same mental model for developers building Light DOM components.
 
 In Light DOM, `<slot>` will denote the place where the slotted component will be attached. The `<slot>` element itself won't be rendered. The slotted content (or the fallback content) will be flattened to the parent element at runtime.
 
 Since the `<slot>` element itself isn't rendered, adding attributes or event listeners to the `<slot>` element in the template will throw a compiler error.
 
-Due to the above differences from regular `<slot>`, LWC compiler will enforce the presence of `<slot shadow="false">` on Light DOM slots to make it explicit to the user that these are different slots.
+Due to the above differences from regular `<slot>`, LWC compiler will enforce the presence of `<slot lwc:no-shadow>` on Light DOM slots to make it explicit to the user that these are different slots.
+
+##### Timing
+
+In terms of timing, slots in light DOM will behave similarly to the current synthetic shadow slots. For example:
+
+```html
+<!-- x/slottable.html -->
+<template lwc:no-shadow>
+  <slot lwc:no-shadow name="foo"></slot>
+  <slot lwc:no-shadow></slot>
+  <slot lwc:no-shadow name="bar"></slot>
+</template>
+```
+
+```html
+<!-- app.html -->
+<template>
+  <x-slottable>
+    <x-baz></x-baz>
+    <x-foo slot="foo"></x-foo>
+    <x-bar slot="bar"></x-bar>
+  </x-slottable>
+</template>
+```
+
+(Note that the ordering of the named slots and default slot is different between the slottable component and the component using it.)
+
+This results in the timing:
+
+- `slottable` `constructor`
+- `slottable` `connectedCallback`
+- `foo` `constructor`
+- `foo` `connectedCallback`
+- `foo` `renderedCallback`
+- `baz` `constructor`
+- `baz` `connectedCallback`
+- `baz` `renderedCallback`
+- `bar` `constructor`
+- `bar` `connectedCallback`
+- `bar` `renderedCallback`
+- `slottable` `renderedCallback`
+
+Note that this timing is different from the equivalent for slots in native shadow DOM:
+
+- `slottable` `constructor`
+- `slottable` `connectedCallback`
+- `baz` `constructor`
+- `baz` `connectedCallback`
+- `baz` `renderedCallback`
+- `foo` `constructor`
+- `foo` `connectedCallback`
+- `foo` `renderedCallback`
+- `bar` `constructor`
+- `bar` `connectedCallback`
+- `bar` `renderedCallback`
+- `slottable` `renderedCallback`
+
+In native slots, the ordering is based on the order in the _consumer_ component, whereas in synthetic and light DOM slots, it's based on the ordering in the _slotted_ component.
+
+##### Lazy slots
+
+The main reason for this difference is that synthetic shadow slots and light DOM slots are both _lazy_. For example:
+
+```html
+<!-- x/slottable.html -->
+<template lwc:no-shadow>
+  <template if:true={foo}>
+    <slot lwc:no-shadow></slot>
+  </template>
+</template>
+```
+
+```js
+// slottable.js
+import { LightningElement, track } from 'lwc'
+export default class Slottable extends LightningElement {
+  foo = false
+}
+```
+
+```html
+<!-- app.html -->
+<template>
+  <x-slottable>
+    <x-foo></x-foo>
+  </x-slottable>
+</template>
+```
+
+In this case, `<x-foo>` will never render at all, because it's within a `<template if:true>` block where the condition is false. Similarly, the slot contents would not render if there was no receiving slot for a given slot name, or if the target component contained no slots at all.
+
+These are all differences with native shadow slots, which render eagerly. However, these differences align with the current implementation of synthetic shadow slots. This behavior is maintained in light DOM slots for simplicity's sake in the LWC engine, as well as for the performance benefit of lazy slots.
+
+##### Events and other slot features
+
+The `slotchange` event and `::slotted` CSS pseudo-selector are both unsupported for light DOM slots.
+
+In the case of `slotchange`, it's not clear what `event.target` would be. For `::slotted`, it's not really relevant or useful since light DOM slots can be styled the same as any other light DOM content.
 
 #### Styles
 

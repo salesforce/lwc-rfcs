@@ -129,14 +129,14 @@ Due to the above differences from regular `<slot>`, LWC compiler will enforce th
 
 Until now styles used in LWC components were scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles naturally leak out of the component; LWC doesn't do any style scoping out of the box. Developers are in charge of writing selectors that are specific enough to target the intended element or pseudo-element.
 
-To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM element, if all the ancestor components are also a light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise, if any of the ancestors is a shadow DOM component, the style has to be injected in the closest shadow root. Upon insertion of a light DOM element, LWC does the following steps:
+To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM element, if all the ancestor components are also light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise, if any of the ancestors is a shadow DOM component, the style has to be injected into the closest shadow root. Upon insertion of a light DOM element, LWC does the following steps:
 
 - look up for the closest root node (`Node.prototype.getRootNode()`)
 - insert the stylesheet if not already present:
   - if the root node is the HTML document, the style sheet is inserted as a `<style>` element in the `<head>`.
   - if the root node is a shadow root, the stylesheet is inserted as a `<style>` element as the first shadow root child.
 
-It is important to notice that the order in which light DOM components are rendered impact the order in which stylesheets are injected in the root node and directly influences CSS rule specificity.
+It is important to notice that the order in which light DOM components are rendered impacts the order in which stylesheets are injected into the root node and directly influences CSS rule specificity.
 
 **Note:** Different approaches to layer style scoping on top has been discussed while designing Light DOM, like introducing a new file extension for automatic style scoping (`.scoped.css`) or using a `<style scoped>` element in the template. This can be addressed in a future RFC.
 

@@ -11,7 +11,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/44
 
 ## Summary
 
-As of today, all the LWC components inheriting from `LightningElement` render their content to the shadow DOM. This proposal introduces a new kind of component, which renders its content as children in the Light DOM.
+As of today, all the LWC components inheriting from `LightningElement` render their content to the shadow DOM. This proposal introduces a new kind of component which renders its content as children in the Light DOM.
 
 ## Basic example
 
@@ -78,10 +78,10 @@ Most of the libraries designed to support Shadow DOM also propose a Light DOM op
 
 ### Rendering to the Light DOM
 
-Toggle between light DOM and shadow DOM is done via a new `shadowDOM` static property on the `LightElement` constructor. This accepts a `boolean` value and is `true` default. When set to `false`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `false` the component renders its content directly in the host element light DOM.  
+Toggle between light DOM and shadow DOM is done via a new `shadowDOM` static property on the `LightningElement` constructor. This accepts a `boolean` value and is `true` by default. When set to `true`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `false` the component renders its content directly in the host element light DOM.
 
 ```js
-import { LightningElement } from 'lwc';
+import { LightningElement } from "lwc";
 
 // Example of a shadow DOM component
 class ShadowDOMComponent extends LightningElement {}
@@ -92,15 +92,15 @@ class LightDOMComponent extends LightningElement {
 }
 
 // Default value
-console.log(LightningElement.shadowDOM) // true
+console.log(LightningElement.shadowDOM); // true
 ```
 
-The `shadowDOM` property is looked up by the LWC engine when the component is instantiated for the first time and is cache for future instantiation. Changing the value of the `shadowDOM` static property after the first instantiation doesn't influence wether components are rendered in the light DOM or in the shadow DOM. 
+The `shadowDOM` property is looked up by the LWC engine when the component is instantiated for the first time and is cached for future instantiation. Changing the value of the `shadowDOM` static property after the first instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
 
-It also means that developers should be careful not to override the `shadowDOM` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.  
+It also means that developers should be careful not to override the `shadowDOM` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.
 
 ```js
-import { LightningElement } from 'lwc';
+import { LightningElement } from "lwc";
 
 class Base extends LightningElement {}
 
@@ -123,11 +123,13 @@ In Light DOM, `<slot>` will denote the place where the slotted component will be
 
 Since the `<slot>` element itself isn't rendered, adding attributes or event listeners to the `<slot>` element in the template will throw a compiler error.
 
+Due to the above differences from regular `<slot>`, LWC compiler will enforce the presence of `<slot shadow="false">` on Light DOM slots to make it explicit to the user that these are different slots.
+
 #### Styles
 
-Until now styles used in LWC components were scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles naturally leak out of the component; LWC doesn't do any style scoping out of the box. Developers are in charge of making sure to write specific enough selectors to target the intended element or pseudo-element.
+Until now styles used in LWC components were scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles naturally leak out of the component; LWC doesn't do any style scoping out of the box. Developers are in charge of writing selectors that are specific enough to target the intended element or pseudo-element.
 
-To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM elements if all the ancestor components are also a light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise if any of the ancestors is a shadow DOM component, the style has to be injected in the closest shadow root. Upon insertion of a light DOM element, LWC does the following steps:
+To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM element, if all the ancestor components are also a light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise, if any of the ancestors is a shadow DOM component, the style has to be injected in the closest shadow root. Upon insertion of a light DOM element, LWC does the following steps:
 
 - look up for the closest root node (`Node.prototype.getRootNode()`)
 - insert the stylesheet if not already present:
@@ -148,12 +150,20 @@ This proposal doesn't change the way component authors query the light DOM. Comp
 
 > It means that turning a shadow DOM component to a light DOM one, all the occurrences of `this.template.querySelector` have to replaced `this.querySelector`.
 
-### Security (WIP)
+### Security
 
-- In some applications, light-dom components may not be allowed... it’s up to the app context
-  - **what is the behavior when it’s not allowed?**
-  - Some applications might disable light-dom as a whole
-  - Some applications might disable light-dom selectively using a “privileged code” model
+Shadow DOM (in combination with Locker) encapsulates components and prevents unauthorized access into the shadow tree. With Light DOM though, the DOM is open for traversal by other components.
+
+Since Light DOM is not the default, the component author has to opt-in to it, the burden of security falls on them. They need to understand that they are "opening" their component for access from outside when they opt in to Light DOM.
+
+Light DOM will be behind a feature flag that can be set for the runtime. It can be turned on/off by the container.
+
+- **What is the behavior when it’s not allowed?**
+  - It will fallback to rendering in Shadow DOM
+- Some applications might disable light-dom as a whole
+  - It can be disabled by turning the flag off.
+- Some applications might disable light-dom selectively using a “privileged code” model
+  - Not supported. It can be either turned on/off on the whole.
 
 ### Component Migration
 
@@ -178,8 +188,8 @@ Shadow DOM and Light DOM are already names accepted by the industry, see: [Termi
 
 ## Open questions
 
-**How to deal with different namespaced packages claiming the same custom element name?** 
+**How to deal with different namespaced packages claiming the same custom element name?**
 
-As of today on the Salesforce platform, all the LWC components are authored under the `c` namespace. This namespace dictates the prefix for of the custom elements rendered in the DOM. When delivered via a namespaced package, the components are referenced using their actual namespace (eg. `lightning`, `my_ns`, etc.). However internal component references in the package is done using the `c` namespace. 
+As of today on the Salesforce platform, all the LWC components are authored under the `c` namespace. This namespace dictates the prefix for of the custom elements rendered in the DOM. When delivered via a namespaced package, the components are referenced using their actual namespace (eg. `lightning`, `my_ns`, etc.). However internal component references in the package is done using the `c` namespace.
 
-Because of this if 2 manage package publish a `button` component, the 2 components will be rendered as `c-button` in DOM. This is problematic because a custom element name can only be bound to a single element constructor. Even if this is not a new issue, the [scoped custom element registry proposal](https://github.com/WICG/webcomponents/issues/716) would solve this issue for shadow DOM components. This is still an issue for light DOM component as scoped custom elements registry can only be attached to a shadow root.  
+Because of this if 2 manage package publish a `button` component, the 2 components will be rendered as `c-button` in DOM. This is problematic because a custom element name can only be bound to a single element constructor. Even if this is not a new issue, the [scoped custom element registry proposal](https://github.com/WICG/webcomponents/issues/716) would solve this issue for shadow DOM components. This is still an issue for light DOM component as scoped custom elements registry can only be attached to a shadow root.

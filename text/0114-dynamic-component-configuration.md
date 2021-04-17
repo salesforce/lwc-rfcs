@@ -19,9 +19,9 @@ This RFC introduces a set of principles and invariants required to dynamically c
 ## Interface Example
 
 ```html
-    <template>
-		<c-lazy-cmp lwc:bind={configurations}></c-lazy-cmp>
-	</template>
+<template>
+   <c-lazy-cmp lwc:bind={configurations}></c-lazy-cmp>
+</template>
 ```
 ```js
 import { LightningElement, api } from "lwc";
@@ -68,13 +68,12 @@ This example shows a watered-down example of rendering a dynamic analytics dashb
 * *Events*: Some charts allow users to apply dashboard-wide filters when clicks occur on data points and some allow for data sorting. If we detect that a chart supports either, we bind the dashboard's handlers accordingly.
 
 ```html
-
-	<template>
-		<template for:each={chartItems} for:item="chartItem">
-			<c-lazy-cmp lwc:bind={chartItem}></c-lazy-cmp
+<template>
+   <template for:each={chartItems} for:item="chartItem">
+      <c-lazy-cmp lwc:bind={chartItem}></c-lazy-cmp
 >
-			</template>
-	</template>
+   </template>
+</template>
 ```
 ```js
 import { LightningElement, api } from "lwc";

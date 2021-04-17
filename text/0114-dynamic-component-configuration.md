@@ -70,8 +70,7 @@ This example shows a watered-down example of rendering a dynamic analytics dashb
 ```html
 <template>
    <template for:each={chartItems} for:item="chartItem">
-      <c-lazy-cmp lwc:bind={chartItem}></c-lazy-cmp
->
+      <c-lazy-cmp lwc:bind={chartItem}></c-lazy-cmp>
    </template>
 </template>
 ```

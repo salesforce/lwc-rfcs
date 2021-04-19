@@ -50,7 +50,7 @@ LWC compilation strips HTML comments because the browsers do not use them at run
 
 To preserve the performance of the existing components, we propose to introduce two options to enable comments:
 
-1. A new boolean attribute (`preserve-comments`) to the root template tag in the component template; `false` by default.
+1. A new boolean attribute (`lwc:preserve-comments`) to the root template tag in the component template; `false` by default.
 
 2. A new compile option (`preserveHTMLComments`) in the template compiler; `false` by default.
 
@@ -71,7 +71,7 @@ During rendering cycles, the LWC engine diffing algorithm will show/hide the com
 #### Invariants
 
 * HTML comments will be enabled based on the opt-in mechanism, either [option 1 or 2](#compile-time-behavior).
-* HTML comments will not support bindings (`{foo}`).
+* HTML comments will not support bindings (`{foo}`). Note: if you need to render some dynamic content in your comment, you may use the [lwc:inner-html directive](https://github.com/salesforce/lwc-rfcs/pull/15/files?short_path=e9f0a56#diff-e9f0a56e79f3840c76e53b10b430f4cd21be3e4bda91f2d41856fd151e525e93).
 * When enabled, comments must be rendered in engine/dom and engine/server.
 * HTML comments will behave the same way as other nodes with respect to slots and directives (`if:true`, `for:each`, etc.).
 

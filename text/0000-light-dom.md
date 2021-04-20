@@ -236,7 +236,40 @@ To support the cases where a shadow DOM element composes a light element, light 
 
 It is important to notice that the order in which light DOM components are rendered impacts the order in which stylesheets are injected into the root node and directly influences CSS rule specificity.
 
-**Note:** Different approaches to layer style scoping on top has been discussed while designing Light DOM, like introducing a new file extension for automatic style scoping (`.scoped.css`) or using a `<style scoped>` element in the template. This can be addressed in a future RFC.
+##### `:host` and `:host-context()`
+
+Also worth noting is that `:host` and `host-context()` are inserted as-is. Therefore, a light DOM component can style its
+shadow host. For example:
+
+```css
+/* x-light.css */
+:host { background: blue; }
+```
+
+```html
+<x-shadow>
+  #shadow-root
+    <style>:host { background: blue; }</style>
+    <x-light></x-light>
+</x-shadow>
+```
+
+In this case, `<x-light>` is able to style `<x-shadow>` via `:host`. Unlike shadow components, `:host` does not refer to the component but instead to its actual shadow host.
+
+##### Synthetic shadow
+
+In the case of synthetic shadow, no attempt is made to scope light DOM styles as described above. The styles are simply inserted as-is, and within a synthetic shadow root they will bleed into the rest of the page.
+
+This has some precedent – synthetic shadow always allowed global styles to leak into components (although styles could not leak out of those components). So in a synthetic shadow world, light DOM components' CSS will essentially act like
+`<style>`s inserted into the document `<head>`.
+
+##### Optimizations
+
+As an optimization, the above algorithm may be substituted by the equivalent usage of [constructable stylesheets](https://developers.google.com/web/updates/2019/02/constructable-stylesheets) in supporting browsers. This means that developers should not rely on the `<style>` elements being inserted at a specific place in the DOM; it's an implementation detail.
+
+##### Scoped styles
+
+Different approaches to layer style scoping on top have been discussed while designing Light DOM, such as introducing a new file extension for automatic style scoping (`.scoped.css`) or using a `<style scoped>` element in the template. This can be addressed in a future RFC.
 
 #### `LightningElement.prototype.template`
 

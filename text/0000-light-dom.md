@@ -256,9 +256,11 @@ shadow host. For example:
 
 In this case, `<x-light>` is able to style `<x-shadow>` via `:host`. Unlike shadow components, `:host` does not refer to the component but instead to its actual shadow host.
 
+This behavior is according to the specification – `:host` anywhere in the DOM refers to the nearest containing shadow root. At the top (document) level, it does nothing.
+
 ##### Synthetic shadow
 
-In the case of synthetic shadow, no attempt is made to scope light DOM styles as described above. The styles are simply inserted as-is, and within a synthetic shadow root they will bleed into the rest of the page.
+In the case of synthetic shadow, no attempt is made to scope light DOM styles as described above. The styles are simply inserted as-is, and within a synthetic shadow root they will bleed into the rest of the page, including components using synthetic shadow DOM.
 
 This has some precedent – synthetic shadow always allowed global styles to leak into components (although styles could not leak out of those components). So in a synthetic shadow world, light DOM components' CSS will essentially act like
 `<style>`s inserted into the document `<head>`.

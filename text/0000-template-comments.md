@@ -15,7 +15,7 @@ In most cases, HTML comments in templates only add information for other develop
 ### Basic example
 
 ```html
-<template preserve-comments>
+<template lwc:preserve-comments>
   <!-- Greeter container -->
   <div>
 	Hello <b>{name}</b>!

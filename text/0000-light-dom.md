@@ -55,9 +55,7 @@ Consumer applications require DOM traversal and observability of an application�
 
 - **Third party integrations**
 
-  Third party tools need to traverse the DOM, which breaks with Shadow DOM and the existing browser APIs (querySelector, ...). Note that the use of Light DOM fixes for Light DOM components, but not for native Shadow DOM ones if the page contains any.
-
-  - Analytics tools, Personalization platforms, Commerce tools like PriceSpider or Honey...
+  Third party tools need to traverse the DOM, which breaks with Shadow DOM and the existing browser APIs (querySelector, ...). Note that the use of Light DOM fixes for Light DOM components, but not for native Shadow DOM ones if the page contains any: Analytics tools, Personalization platforms, Commerce tools like PriceSpider or Honey...
 
 - **Testing software**
 
@@ -76,7 +74,7 @@ Most of the libraries designed to support Shadow DOM also propose a Light DOM op
 
 ## Detailed design
 
-### Rendering to the Light DOM
+### `LightningElement.shadow`
 
 Toggle between light DOM and shadow DOM is done via a new `shadowDOM` static property on the `LightningElement` constructor. This accepts a `boolean` value and is `true` by default. When set to `true`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `false` the component renders its content directly in the host element light DOM.
 
@@ -95,7 +93,7 @@ class LightDOMComponent extends LightningElement {
 console.log(LightningElement.shadowDOM); // true
 ```
 
-The `shadowDOM` property is looked up by the LWC engine when the component is instantiated for the first time and is cached for future instantiation. Changing the value of the `shadowDOM` static property after the first instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
+The `shadowDOM` property is looked up by the LWC engine when the component is instantiated to determine how it should render. Changing the value of the `shadowDOM` static property after the instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
 
 It also means that developers should be careful not to override the `shadowDOM` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.
 
@@ -111,11 +109,68 @@ class Child extends Base {
 }
 ```
 
-### Component features when using Light DOM
+### `LightningElement.prototype.template`
 
-Some of the LWC component capabilities are directly inherited from Shadow DOM, or emulated by the synthetic-shadow. Despite the use of Light DOM, we’d like to keep these features available, even if their behavior is slightly adapted to the Light DOM:
+When rendering to the shadow DOM, `LightningElement.prototype.template` returns the component associated `ShadowRoot`. When rendering to the light DOM, `LightningElement.prototype.template` value is `null`.
 
-#### Slots
+### DOM querying
+
+This proposal doesn't change the way component authors query the light DOM. Component can query their children elements via `LightningElement.prototype.querySelector` and `LightningElement.prototype.querySelectorAll`. It means that turning a shadow DOM component to a light DOM one, all the occurrences of `this.template.querySelector` have to replaced `this.querySelector`.
+
+### Styles
+
+Until now styles used in LWC components were scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles naturally leak out of the component; LWC doesn't do any style scoping out of the box. Developers are in charge of writing selectors that are specific enough to target the intended element or pseudo-element.
+
+To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM element, if all the ancestor components are also light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise, if any of the ancestors is a shadow DOM component, the style has to be injected into the closest shadow root. Upon insertion of a light DOM element, LWC does the following steps:
+
+1. look up for the closest root node (`Node.prototype.getRootNode()`)
+1. insert the stylesheet if not already present:
+    - if the root node is the HTML document, the style sheet is inserted as a `<style>` element in the `<head>`.
+    - if the root node is a shadow root, the stylesheet is inserted as a `<style>` element as the first shadow root child.
+
+> As an optimization, the above algorithm may be substituted by the equivalent usage of [constructable stylesheets](https://developers.google.com/web/updates/2019/02/constructable-stylesheets) in supporting browsers. This means that developers should not rely on the `<style>` elements being inserted at a specific place in the DOM; it's an implementation detail.
+
+It is important to notice that the order in which light DOM components are rendered impacts the order in which stylesheets are injected into the root node and directly influences CSS rule specificity.
+
+#### `:host` and `:host-context()`
+
+Also worth noting is that `:host` and `host-context()` are inserted as-is. Therefore, a light DOM component can style its shadow host. For example:
+
+```css
+/* x-light.css */
+:host {
+  background: blue;
+}
+```
+
+```html
+<x-shadow>
+  #shadow-root
+  <style>
+    :host {
+      background: blue;
+    }
+  </style>
+  <x-light></x-light>
+</x-shadow>
+```
+
+In this case, `<x-light>` is able to style `<x-shadow>` via `:host`. Unlike shadow components, `:host` does not refer to the component but instead to its actual shadow host.
+
+This behavior is according to the specification – `:host` anywhere in the DOM refers to the nearest containing shadow root. At the top (document) level, it does nothing.
+
+#### Synthetic shadow
+
+In the case of synthetic shadow, no attempt is made to scope light DOM styles as described above. The styles are simply inserted as-is, and within a synthetic shadow root they will bleed into the rest of the page, including components using synthetic shadow DOM.
+
+This has some precedent – synthetic shadow always allowed global styles to leak into components (although styles could not leak out of those components). So in a synthetic shadow world, light DOM components' CSS will essentially act like
+`<style>`s inserted into the document `<head>`.
+
+#### Scoped styles
+
+Different approaches to layer style scoping on top have been discussed while designing Light DOM, such as introducing a new file extension for automatic style scoping (`.scoped.css`) or using a `<style scoped>` element in the template. This can be addressed in a future RFC.
+
+### Slots
 
 As mentioned before, the component composition model in LWC is provided by slots. Light DOM will provide the same mental model for developers building Light DOM components.
 
@@ -125,9 +180,11 @@ Since the `<slot>` element itself isn't rendered, adding attributes or event lis
 
 Due to the above differences from regular `<slot>`, LWC compiler will enforce the presence of `<slot lwc:no-shadow>` on Light DOM slots to make it explicit to the user that these are different slots.
 
-##### Timing
+In terms of timing, slots in light DOM will behave similarly to the current synthetic shadow slots. 
 
-In terms of timing, slots in light DOM will behave similarly to the current synthetic shadow slots. For example:
+<details>
+  <summary>Light DOM vs. shadow DOM timing comparison</summary>
+For example:
 
 ```html
 <!-- x/slottable.html -->
@@ -182,15 +239,16 @@ Note that this timing is different from the equivalent for slots in native shado
 - `slottable` `renderedCallback`
 
 In native slots, the ordering is based on the order in the _consumer_ component, whereas in synthetic and light DOM slots, it's based on the ordering in the _slotted_ component.
+</details>
 
-##### Lazy slots
+#### Lazy slots
 
 The main reason for this difference is that synthetic shadow slots and light DOM slots are both _lazy_. For example:
 
 ```html
 <!-- x/slottable.html -->
 <template lwc:no-shadow>
-  <template if:true={foo}>
+  <template if:true="{foo}">
     <slot lwc:no-shadow></slot>
   </template>
 </template>
@@ -198,9 +256,9 @@ The main reason for this difference is that synthetic shadow slots and light DOM
 
 ```js
 // slottable.js
-import { LightningElement, track } from 'lwc'
+import { LightningElement, track } from "lwc";
 export default class Slottable extends LightningElement {
-  foo = false
+  foo = false;
 }
 ```
 
@@ -217,90 +275,19 @@ In this case, `<x-foo>` will never render at all, because it's within a `<templa
 
 These are all differences with native shadow slots, which render eagerly. However, these differences align with the current implementation of synthetic shadow slots. This behavior is maintained in light DOM slots for simplicity's sake in the LWC engine, as well as for the performance benefit of lazy slots.
 
-##### Events and other slot features
+#### Events and other slot features
 
 The `slotchange` event and `::slotted` CSS pseudo-selector are both unsupported for light DOM slots.
 
 In the case of `slotchange`, it's not clear what `event.target` would be. For `::slotted`, it's not really relevant or useful since light DOM slots can be styled the same as any other light DOM content.
 
-#### Styles
-
-Until now styles used in LWC components were scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles naturally leak out of the component; LWC doesn't do any style scoping out of the box. Developers are in charge of writing selectors that are specific enough to target the intended element or pseudo-element.
-
-To support the cases where a shadow DOM element composes a light element, light DOM styles are required to be injected to the closest root node. For a given light DOM element, if all the ancestor components are also light DOM components, the component style sheet will be injected in the document `<head>`. Otherwise, if any of the ancestors is a shadow DOM component, the style has to be injected into the closest shadow root. Upon insertion of a light DOM element, LWC does the following steps:
-
-- look up for the closest root node (`Node.prototype.getRootNode()`)
-- insert the stylesheet if not already present:
-  - if the root node is the HTML document, the style sheet is inserted as a `<style>` element in the `<head>`.
-  - if the root node is a shadow root, the stylesheet is inserted as a `<style>` element as the first shadow root child.
-
-It is important to notice that the order in which light DOM components are rendered impacts the order in which stylesheets are injected into the root node and directly influences CSS rule specificity.
-
-##### `:host` and `:host-context()`
-
-Also worth noting is that `:host` and `host-context()` are inserted as-is. Therefore, a light DOM component can style its
-shadow host. For example:
-
-```css
-/* x-light.css */
-:host { background: blue; }
-```
-
-```html
-<x-shadow>
-  #shadow-root
-    <style>:host { background: blue; }</style>
-    <x-light></x-light>
-</x-shadow>
-```
-
-In this case, `<x-light>` is able to style `<x-shadow>` via `:host`. Unlike shadow components, `:host` does not refer to the component but instead to its actual shadow host.
-
-This behavior is according to the specification – `:host` anywhere in the DOM refers to the nearest containing shadow root. At the top (document) level, it does nothing.
-
-##### Synthetic shadow
-
-In the case of synthetic shadow, no attempt is made to scope light DOM styles as described above. The styles are simply inserted as-is, and within a synthetic shadow root they will bleed into the rest of the page, including components using synthetic shadow DOM.
-
-This has some precedent – synthetic shadow always allowed global styles to leak into components (although styles could not leak out of those components). So in a synthetic shadow world, light DOM components' CSS will essentially act like
-`<style>`s inserted into the document `<head>`.
-
-##### Optimizations
-
-As an optimization, the above algorithm may be substituted by the equivalent usage of [constructable stylesheets](https://developers.google.com/web/updates/2019/02/constructable-stylesheets) in supporting browsers. This means that developers should not rely on the `<style>` elements being inserted at a specific place in the DOM; it's an implementation detail.
-
-##### Scoped styles
-
-Different approaches to layer style scoping on top have been discussed while designing Light DOM, such as introducing a new file extension for automatic style scoping (`.scoped.css`) or using a `<style scoped>` element in the template. This can be addressed in a future RFC.
-
-#### `LightningElement.prototype.template`
-
-When rendering to the shadow DOM, `LightningElement.prototype.template` returns the component associated `ShadowRoot`. When rendering to the light DOM, `LightningElement.prototype.template` value is `null`.
-
-#### DOM querying
-
-This proposal doesn't change the way component authors query the light DOM. Component can query their children elements via `LightningElement.prototype.querySelector` and `LightningElement.prototype.querySelectorAll`.
-
-> It means that turning a shadow DOM component to a light DOM one, all the occurrences of `this.template.querySelector` have to replaced `this.querySelector`.
-
 ### Security
 
-Shadow DOM (in combination with Locker) encapsulates components and prevents unauthorized access into the shadow tree. With Light DOM though, the DOM is open for traversal by other components.
+Shadow DOM (in combination with Lightning Locker) encapsulates components and prevents unauthorized access into the shadow tree. With Light DOM though, the DOM is open for traversal by other components. Since Light DOM is not the default, the component author has to opt-in to it, the burden of security falls on them. Developers need to understand that they are "opening" their component for access from outside when they opt in to Light DOM.
 
-Since Light DOM is not the default, the component author has to opt-in to it, the burden of security falls on them. They need to understand that they are "opening" their component for access from outside when they opt in to Light DOM.
+Light DOM will be behind a feature flag that can be set for the runtime. It can be turned on/off on a per container basis. The LWC engine will throw at runtime is a component attempts to render in the light DOM when the feature flag is disabled. 
 
-Light DOM will be behind a feature flag that can be set for the runtime. It can be turned on/off by the container.
-
-- **What is the behavior when it’s not allowed?**
-  - It will throw error.
-- Some applications might disable light-dom as a whole
-  - It can be disabled by turning the flag off.
-- Some applications might disable light-dom selectively using a “privileged code” model
-  - Not supported. It can be either turned on/off on the whole.
-
-### Component Migration
-
-There is no automated migration of the existing components. As discussed above, Light DOM components differs from Shadow DOM components from the API and runtime standpoint. If a component author wishes to use Light DOM for any of their existing components, they will have to make the relevant changes manually.
+It's important to note that there isn't a way to enable light DOM for a restricted set of namespaces. When the feature flag is turned on, the capability made available to all the components on the page.
 
 ### Server Side Rendering
 
@@ -308,9 +295,9 @@ The engine-server module should provide the SSR capability to seamlessly render 
 
 ## Adoption strategy
 
-This new feature does not break any existing components, it simply adds a new feature that developers have to opt for. There is no migration of the existing components needed.
+This new feature does not break any existing components, it simply adds a new feature that developers have to opt for.
 
-This feature should be exposed and explained to the component library developers as they might change how they develop their components internally.
+There is no automated migration of the existing components. As discussed above, Light DOM components differs from Shadow DOM components from the API and runtime standpoint. If a component author wishes to use Light DOM for any of their existing components, they will have to make the relevant changes manually.
 
 ## How we teach this
 

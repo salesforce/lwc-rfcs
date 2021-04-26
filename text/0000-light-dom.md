@@ -76,7 +76,7 @@ Most of the libraries designed to support Shadow DOM also propose a Light DOM op
 
 ### `LightningElement.shadow`
 
-Toggle between light DOM and shadow DOM is done via a new `shadowDOM` static property on the `LightningElement` constructor. This accepts a `boolean` value and is `true` by default. When set to `true`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `false` the component renders its content directly in the host element light DOM.
+Toggle between light DOM and shadow DOM is done via a new `shadow` static property on the `LightningElement` constructor. This accepts a `boolean` value and is `true` by default. When set to `true`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `false` the component renders its content directly in the host element light DOM.
 
 ```js
 import { LightningElement } from "lwc";
@@ -86,16 +86,16 @@ class ShadowDOMComponent extends LightningElement {}
 
 // Example of a light DOM component
 class LightDOMComponent extends LightningElement {
-  static shadowDOM = false;
+  static shadow = false;
 }
 
 // Default value
-console.log(LightningElement.shadowDOM); // true
+console.log(LightningElement.shadow); // true
 ```
 
-The `shadowDOM` property is looked up by the LWC engine when the component is instantiated to determine how it should render. Changing the value of the `shadowDOM` static property after the instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
+The `shadow` property is looked up by the LWC engine when the component is instantiated to determine how it should render. Changing the value of the `shadow` static property after the instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
 
-It also means that developers should be careful not to override the `shadowDOM` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.
+It also means that developers should be careful not to override the `shadow` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.
 
 ```js
 import { LightningElement } from "lwc";
@@ -103,9 +103,9 @@ import { LightningElement } from "lwc";
 class Base extends LightningElement {}
 
 class Child extends Base {
-  // ⚠️ Changing the shadowDOM static property value in a component class inheriting from a base
+  // ⚠️ Changing the shadow static property value in a component class inheriting from a base
   // will certainly class some unexpected issue.
-  static shadowDOM = false;
+  static shadow = false;
 }
 ```
 

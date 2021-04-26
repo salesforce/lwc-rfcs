@@ -292,7 +292,7 @@ Since Light DOM is not the default, the component author has to opt-in to it, th
 Light DOM will be behind a feature flag that can be set for the runtime. It can be turned on/off by the container.
 
 - **What is the behavior when it’s not allowed?**
-  - It will fallback to rendering in Shadow DOM
+  - It will throw error.
 - Some applications might disable light-dom as a whole
   - It can be disabled by turning the flag off.
 - Some applications might disable light-dom selectively using a “privileged code” model

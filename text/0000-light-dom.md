@@ -1,5 +1,5 @@
 ---
-title: Light DOM Support
+title: Light DOM Component
 status: DRAFTED
 created_at: 2020-09-10
 updated_at: 2020-09-10

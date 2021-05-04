@@ -1,14 +1,14 @@
 ---
-title: Canonical specification of metadata for LWC modules
-status: DRAFTED
+title: LWC Component Metadata
+status: REVIEWED
 created_at: 2020-05-07
-updated_at: 2020-10-30
+updated_at: 2021-05-03
 rfc: https://github.com/salesforce/lwc-rfcs/pull/33
 champion: Aliaksandr Papko (@apapko) | Ravi Jayaramappa (@ravijayaramappa)
 implementation: https://git.soma.salesforce.com/lwc/lwc-platform/tree/master/packages/lwc-metadata-next
 ---
 
-# Canonical specification of metadata for LWC modules
+# LWC Component Metadata
 
 Table of Content:
 * [Summary](#summary)
@@ -31,7 +31,6 @@ Table of Content:
 * [References](#reference)
 
 # Summary
-> The [dictionary definition](https://www.merriam-webster.com/dictionary/canonical%20form) of **Canonical form** is `the simplest form of something`. 
 
 This RFC aims to document the shape of metadata collected by statically analyzing the source code of Lightning Web Component(LWC) modules. The scope of this RFC is strictly the shape of the metadata and does not cover the implementation details.
 
@@ -41,6 +40,7 @@ This RFC aims to document the shape of metadata collected by statically analyzin
 - Eliminate redundancy: There should be only one way to get a desired information about a module.
 - Consistency in property names
 - Flexibility: Allow for new data to be collected in the future.
+- Analyze HTML, JS and CSS files only
 
 # Use Cases
 ## Referential Integrity
@@ -50,7 +50,7 @@ Referential integrity is how the platform allows a given resource to be safely u
 Metadata about components can be used to augment the standard developer experience in code editors with code completion, attribute name & type validation, peek definition, etc.
 
 ## Documentation
-LWC components Metadata can be used to automatically generate documentation about components. Standard javascript documentation formats like JSDoc provided in component can also be gathered as metadata.
+LWC components Metadata can be used to automatically generate documentation about components.
 
 ## Dependency analysis and pre-fetching
 Components depend on static resources such as images, javascript files, css files and component definitions to name a few. For offline usage, knowing these dependencies at compile time allows the dependencies to be pre-fetched and avoid a network call.
@@ -61,8 +61,8 @@ Metadata can also be transformed to generate components in various eco-systems l
 
 # Current State of Art
 ## Web Components community
-There is no well established standard or format for declaratively defining a web component. [custom-elements-json](https://github.com/webcomponents/custom-elements-json) is making an attempt to define a standard. It is in a very early stage. However there is a ecosystem developing around this standard. 
-[web-component-analyzer](https://www.npmjs.com/package/web-component-analyzer) can analyze web components written in vanilla javascript and other popular web component libraries. It also supports custom-elements-json as an output format.
+There is no well established standard or format for declaratively defining a web component. [custom-elements-json](https://github.com/webcomponents/custom-elements-json) was making an attempt to define a standard. That project has since been renamed to [custom-elements-manifest](https://github.com/webcomponents/custom-elements-manifest). It is in a very early stage.
+[web-component-analyzer](https://www.npmjs.com/package/web-component-analyzer) can analyze web components written in vanilla javascript and other popular web component libraries.
 
 ## LWC Platform
 Currently, LWC platform gathers metadata as part of the compilation process. This metadata shape and implementation is currently private. This [document](https://salesforce.quip.com/DdncANrJA0ko)<sup>*</sup> captures the information collected and the metadata shape currently gathered. Here is a summary of problems with the current implementation:
@@ -161,7 +161,7 @@ These are the entities that will be analyzed and metadata gathered about:
     * Custom element references
         * Tag name
         * Attributes
-        * Slot content - default and named slots
+        * Slot names
     * Dynamic components
     * Nodes with special directives
         * for:each
@@ -187,10 +187,6 @@ These are the entities that will be analyzed and metadata gathered about:
         * Default exports
         * Named exports
         * Re-exports
-    * JSDoc
-        * Class
-        * Properties
-        * Methods
     * Programmatically generated events
         * type
         * options: composed, bubbles
@@ -198,6 +194,12 @@ These are the entities that will be analyzed and metadata gathered about:
 * CSS file
     * Custom property declaration([--*](https://developer.mozilla.org/en-US/docs/Web/CSS/--*))
     * CSS imports
+
+## Non-backwards compatible changes
+During the RFC process and implementation, some features from the existing version of lwc-platform metadata were dropped. This section details those:
+
+### Inline code documentation
+Inline code documentation, written in a standard format like JSDoc or just plain text, is not gathered as part of LWC component metadata. Code is the source of truth, documentation can be outdated. For this reason, only metadata gathered from static analysis of code and not comments will be relied upon.
 
 ## Definitions
 * **Component class:** Any class declared using the ES6 class syntax and extending 'LightningElement' binding imported from the built-in 'lwc' module.
@@ -265,8 +267,9 @@ interface HTMLTemplateFile extends File {
     fileType: 'html';
     // List of unique components referenced in the template
     componentReferences: ComponentReference[];
-    // Template in AST format starting with the root <template> node. Note: this is a partial AST
-    experimentalAST?: RootNode;
+    // A strigified version of template in AST format starting with the root <template> node.
+    // Note: this is a partial AST
+    experimentalAST?: string;
 }
 
 // Represents a component referenced in the template.
@@ -281,6 +284,7 @@ interface ComponentReference {
     type: 'external';
     // element's tag name as it appears in the template, retains the kebab casing
     tagName: string;
+    locations: SourceLocation[];
 }
 ```
 
@@ -1067,6 +1071,7 @@ type CSSCustomPropertyFallback = string | CSSCustomProperty;
 1. Should gathering metadata about configuration(`*.js-meta.xml`) file in a bundle be in the scope of this RFC?
     - **Answer:** Dean Moses from Builder Framework team says it is not required.
 2. Is documentation(.md) in the scope of this RFC? Will it overlap with [this RFC](https://github.com/salesforce/lwc-rfcs/pull/26)
+    - **Answer:** No. Documentation should be separated from the metadata gathering
 3. Does svg file have any useful metadata?
     - **Answer:** Not in the scope of this RFC.
 4. For a script file, should the metadata gathering be restricted to only ComponentClasses or be more broad and gather metadata about all classes?

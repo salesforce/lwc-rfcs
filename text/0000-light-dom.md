@@ -287,7 +287,7 @@ Shadow DOM (in combination with Lightning Locker) encapsulates components and pr
 
 Light DOM will be behind a feature flag that can be set for the runtime. It can be turned on/off on a per container basis. The LWC engine will throw at runtime is a component attempts to render in the light DOM when the feature flag is disabled. 
 
-It's important to note that there isn't a way to enable light DOM for a restricted set of namespaces. When the feature flag is turned on, the capability made available to all the components on the page.
+It's important to note that there isn't a way to enable light DOM for a restricted set of namespaces. When the feature flag is turned on, the capability is made available to all components on the page.
 
 ### Server Side Rendering
 

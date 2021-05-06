@@ -317,8 +317,18 @@ There is no automated migration of the existing components. As discussed above, 
 
 Shadow DOM and Light DOM are already names accepted by the industry, see: [Terminology: light DOM vs. shadow DOM](https://developers.google.com/web/fundamentals/web-components/shadowdom?hl=en). We need to provide the proper documentation to educate the LWC developers:
 
-- What are the differences between Shadow DOM and Light DOM
-- We need a guide on when to use one or the other
+- What are the differences between Shadow DOM and Light DOM.
+- When to use one compared to the other.
+
+Some tradeoffs we might make explicit to developers:
+
+- In LEX, using light DOM exposes potentially sensitive information to DOM scraping.
+- With light DOM, you have to do your own style scoping, e.g. using classes or attributes. 
+- With light DOM, styles can bleed in or out of the component.
+- With light DOM, the slotting mechanism is slightly different than with shadow DOM, and may have performance/timing implications (especially for native shadow DOM).
+- With light DOM, there is no event retargeting, so e.g. `<button>`s contained within multiple layers of light DOM components will still trigger `click` events that can be caught at the `document` level, and whose `event.target` is the `<button>` itself rather than the containing component.
+- With light DOM, IDs are not scoped to the shadow, so for accessibility purposes, two separate components can reference each other's IDs. For instance, a `<label for="foo">` can reference an `<input type="text" id="foo">` even if the two live in separate components.
+- If you have complex, deeply-nested components, you may prefer to have a single shadow component at the top level and light DOM components within, to avoid the overhead of shadows-within-shadows where they're not needed. For instance, a data table component can probably just have one big shadow component around the whole thing, rather than a shadow for every table row and table cell.
 
 ## Open questions
 

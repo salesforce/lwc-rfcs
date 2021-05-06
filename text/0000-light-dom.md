@@ -117,6 +117,19 @@ When rendering to the shadow DOM, `LightningElement.prototype.template` returns 
 
 This proposal doesn't change the way component authors query the light DOM. Component can query their children elements via `LightningElement.prototype.querySelector` and `LightningElement.prototype.querySelectorAll`. It means that turning a shadow DOM component to a light DOM one, all the occurrences of `this.template.querySelector` have to replaced `this.querySelector`.
 
+### Template
+
+Any template associated with a light DOM component should use `lwc:no-shadow` to indicate that it is a light DOM template:
+
+```html
+<template lwc:no-shadow>
+  <!-- light DOM content -->
+</template>
+```
+
+This may or may not actually result in compiler differences, but it will be required to allow us the flexibility to have
+the compiler behave differently for light DOM components versus shadow DOM components.
+
 ### Styles
 
 Until now styles used in LWC components were scoped to the component thanks to shadow DOM (or synthetic shadow DOM) style scoping. In the light DOM, component styles naturally leak out of the component; LWC doesn't do any style scoping out of the box. Developers are in charge of writing selectors that are specific enough to target the intended element or pseudo-element.
@@ -178,7 +191,8 @@ In Light DOM, `<slot>` will denote the place where the slotted component will be
 
 Since the `<slot>` element itself isn't rendered, adding attributes or event listeners to the `<slot>` element in the template will throw a compiler error.
 
-Due to the above differences from regular `<slot>`, LWC compiler will enforce the presence of `<slot lwc:no-shadow>` on Light DOM slots to make it explicit to the user that these are different slots.
+A template cannot contain both light DOM and shadow DOM slots. Inside of `<template lwc:no-shadow>`, all `<slot>`s are light,
+and inside of `<template>`, all `<slot>`s are shadow.
 
 In terms of timing, slots in light DOM will behave similarly to the current synthetic shadow slots. 
 
@@ -189,9 +203,9 @@ For example:
 ```html
 <!-- x/slottable.html -->
 <template lwc:no-shadow>
-  <slot lwc:no-shadow name="foo"></slot>
-  <slot lwc:no-shadow></slot>
-  <slot lwc:no-shadow name="bar"></slot>
+  <slot name="foo"></slot>
+  <slot></slot>
+  <slot name="bar"></slot>
 </template>
 ```
 
@@ -249,7 +263,7 @@ The main reason for this difference is that synthetic shadow slots and light DOM
 <!-- x/slottable.html -->
 <template lwc:no-shadow>
   <template if:true="{foo}">
-    <slot lwc:no-shadow></slot>
+    <slot></slot>
   </template>
 </template>
 ```

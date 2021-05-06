@@ -55,8 +55,7 @@ Consumer applications require DOM traversal and observability of an applicationâ
 
 - **Third party integrations**
 
-  Third party tools need to traverse the DOM, which breaks with Shadow DOM and the existing browser APIs (querySelector, ...). Note that the use of Light DOM fixes for Light DOM components, but not for native Shadow DOM ones if the page contains any: Analytics tools, Personalization platforms, Commerce tools like PriceSpider or Honey...
-
+  Third party tools need to traverse the DOM, which doesn't work with Shadow DOM and standard browser query APIs such as `querySelector` and `querySelectorAll`. This affects analytics tools, personalization platforms, commerce tools, etc.
 - **Testing software**
 
   Tools like Selenium, Cypress etc. face the same issues as third party tools when it comes to traversing the DOM.

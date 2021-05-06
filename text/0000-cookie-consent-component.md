@@ -22,13 +22,31 @@ Omit this section if it's not applicable.
 
 ## Motivation
 
-Why are we doing this? What use cases does it support? What is the expected
-outcome?
+We want customers to be able to manipulate the Consent cookie in LWC.
+For customers and internal developers, we want to give them support to
+be able to check the state of the cookie before setting any additional 
+cookies.
+We would like to have a versioned (and ideally an abstraction) of the 
+format so that customers don’t need to worry about our internal 
+serialization formats.
 
-Please focus on explaining the motivation so that if this RFC is not accepted,
-the motivation could be used to develop alternative solutions. In other words,
-enumerate the constraints you are trying to solve without coupling them too
-closely to the solution you have in mind.
+Use Cases
+* As a customer, I’d like to be able to check if a user has granted 
+consent before I set a cookie
+* As a customer, I’d like to set the consent state
+* As a customer, I’d like to be able to build a UI component where I 
+display the current state of consent.
+* As a customer, I build a component where I can modify the state of 
+the consent, for example revoke access to Performance cookies.
+* As a customer, I’d like to be able to build a native banner in 
+Salesforce for managing cookie compliance, with an Opt-In option.
+* As a customer, I only need my cookie consent code to run in 
+Experiences (Communities)
+* As a customer, I need to be able to use the consent cookie for 
+authenticated and unauthenticated (guest) users.
+* As a customer, I’d like to be able to set the duration that the 
+consent cookie is granted for.
+
 
 ## Detailed design
 

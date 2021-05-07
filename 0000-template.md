@@ -1,31 +1,32 @@
 ---
-title: Short Title
+title: Mixed Shadow Mode
 status: DRAFTED
-created_at: YYYY-MM-DD
+created_at: 2021-05-07
 updated_at: YYYY-MM-DD
 pr: (leave this empty until the PR is created)
 ---
 
-# Short Title
+# Mixed Shadow Mode
 
-## Summary
+## Introduction
 
-Brief explanation of the feature.
+LWC implements a collection of polyfills that implement Shadow DOM features. These polyfills are
+collectively referred to as "synthetic Shadow DOM" and are published to npm under the
+`@lwc/synthetic-shadow` package. Synthetic shadow DOM provides a consistent experience for LWC web
+components across the Salesforce-supported browser matrix.
 
-## Basic example
+Shadow DOM support has greatly increased since the start of the LWC project but applications
+continue to rely on the synthetic shadow polyfill for various backwards-compatibility reasons. These
+reasons include consistency of Shadow DOM features across targeted browsers, or reliance on escape
+hatches for styling and accessibility.
 
-If the proposal involves a new or changed API, include a basic code example.
-Omit this section if it's not applicable.
+Due to how `@lwc/synthetic-shadow` globally polyfills native APIs, applications that wish to use
+LWC components in a native Shadow DOM context simply need to omit the inclusion of the polyfill;
+however, this is not a realistic option for existing applications that cannot afford a complete
+rewrite.
 
-## Motivation
-
-Why are we doing this? What use cases does it support? What is the expected
-outcome?
-
-Please focus on explaining the motivation so that if this RFC is not accepted,
-the motivation could be used to develop alternative solutions. In other words,
-enumerate the constraints you are trying to solve without coupling them too
-closely to the solution you have in mind.
+This proposal opens up an incremental migration path for applications moving to native Shadow DOM by
+allowing the usage of both native and synthetic Shadow DOM in the same document.
 
 ## Detailed design
 

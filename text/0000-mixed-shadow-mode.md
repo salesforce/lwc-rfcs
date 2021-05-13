@@ -10,7 +10,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/49
 
 ## Introduction
 
-LWC implements a collection of polyfills that implement Shadow DOM features. These polyfills are
+LWC offers a collection of polyfills that implement Shadow DOM features. These polyfills are
 collectively referred to as "synthetic Shadow DOM" and are published to npm under the
 `@lwc/synthetic-shadow` package. Synthetic shadow DOM provides a consistent experience for LWC web
 components across the Salesforce-supported browser matrix.

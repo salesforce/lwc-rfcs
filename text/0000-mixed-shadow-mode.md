@@ -44,38 +44,26 @@ export default class extends LightningElement {
 }
 ```
 
+If this property is not defined, a default value of `false` will be used. The value of this property
+will be read once during component construction and cached for the lifetime of the component. The
+LWC engine will throw an exception if the value of `preferNativeShadow` is not a boolean value.
+
 All polyfills applied by `@lwc/synthetic-shadow` will look to this property as a signal to invoke
 either the polyfilled API or the native browser API. If the browser does not support Shadow DOM
 (e.g., IE11), then LWC will fallback to synthetic mode regardless of which mode the component
 prefers.
 
-It is likely that components will need to know which mode it is currently operating in, due to
-observable differences between the two. Any indication of this by the framework should only be
-available to components that set the `preferNativeShadow` property to `true`.
+Due to observable differences between the two modes, it is likely that components that prefer native
+will need to know whether it is currently operating in native or synthetic Shadow DOM. Any hints
+provided by the framework will only be available to components that set the `preferNativeShadow`
+property to `true` because this information is not useful to components that only support synthetic
+Shadow DOM.
 
 In terms of composition, a synthetic mode component can contain a native mode component, but the
 inverse is not allowed. Not only does this make things easier to reason about, but many existing
 components rely on workarounds in synthetic mode that are not possible to support in native mode.
-This is further discussed below as observable differences.
-
-### Accessibility
-
-The most common accessibility issue in LWC is related to id-referencing across shadow boundaries.
-The current workaround for this is to bypass the LWC engine's id-mangling by setting attributes
-dynamically, but such a workaround would not work in native Shadow DOM.
-
-### Instrumentation
-
-Applications that rely on instrumentation libraries that don't yet support Shadow DOM are currently
-able to obtain references to descriptors like `addEventListener()` before they are patched and use
-them to override `@lwc/synthetic-shadow` polyfills where needed. Such workarounds would not work for
-events originating from components that prefer native Shadow DOM.
-
-### Styling
-
-Applications currently rely on global stylesheets to apply deeply throughout the DOM. With native
-Shadow DOM, this would not be possible. All of a component's styles would have to be generated and
-added to the component bundle.
+These observable differences are further discussed below. As this invariant cannot be asserted
+during compile-time, the engine will assert it during runtime.
 
 ### Testing
 
@@ -122,13 +110,24 @@ native shadow.
 This observable difference will not be remediated as such a change would be non-trivial and
 backwards-incompatible with the current synthetic shadow implementation.
 
+### Lifecycle timing
+
+Due to the way that slotting is implemented in `@lwc/synthetic-shadow`, there is an observable
+difference in the timing of lifecycle hooks for slotted elements.
+
+As mentioned previously, in synthetic mode, slotted elements that are never assigned to a slot are
+not rendered. This means that their lifecycle hooks are never invoked.
+
+Another difference is that for synthetic mode, lifecycle hooks are invoked in the order of
+appearance after they are assigned, whereas in native mode, they are invoked in the order of
+appearance in the template.
+
 ### this.shadowRoot vs this.template
 
-`this.shadowRoot` references the component's shadow root in native Shadow DOM while `this.template`
-references the component's shadow root in synthetic Shadow DOM. This observable difference can be
-remediated for components that favor native Shadow DOM by aliasing `this.template` to
-`this.shadowRoot`. There are no plans to enable `this.shadowRoot` for existing components as the
-current LWC-ism is to use `this.template`.
+`this.shadowRoot` and `this.template` reference the component's shadow root in native Shadow DOM
+while `this.template` references the component's shadow root in synthetic Shadow DOM. There are no
+plans to enable `this.shadowRoot` for existing components that only support synthetic Shadow DOM as
+the current LWC-ism is to use `this.template`.
 
 ### this.shadowRoot instanceof ShadowRoot
 
@@ -142,6 +141,25 @@ using `Symbol.hasInstance`.
 There currently exists logic that allows listeners to handle non-composed events outside of the root
 LWC node if the event originates from a non-LWC component in the subtree. This behavior exists for
 legacy reasons and cannot be preserved for components that prefer native Shadow DOM.
+
+### Accessibility
+
+The most common accessibility issue in LWC is related to id-referencing across shadow boundaries.
+The current workaround for this is to bypass the LWC engine's id-mangling by setting attributes
+dynamically, but such a workaround would not work in native Shadow DOM.
+
+### Instrumentation
+
+Applications that rely on instrumentation libraries that don't yet support Shadow DOM are currently
+able to obtain references to descriptors like `addEventListener()` before they are patched and use
+them to override `@lwc/synthetic-shadow` polyfills where needed. Such workarounds would not work for
+events originating from components that prefer native Shadow DOM.
+
+### Styling
+
+Applications currently rely on global stylesheets to apply deeply throughout the DOM. With native
+Shadow DOM, this would not be possible. All of a component's styles would have to be generated and
+added to the component bundle.
 
 ## Drawbacks
 
@@ -173,3 +191,6 @@ they get started. Any unresolved observable differences should be documented to 
 whether a component is a candidate for native Shadow DOM.
 
 # Unresolved questions
+
+1. Light DOM components - What does the runtime assertion for preventing synthetic mode components
+   in the native mode component subtree look like with Light DOM components in play?

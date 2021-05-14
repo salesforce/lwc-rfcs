@@ -27,35 +27,226 @@ This RFC introduces a set of principles and invariants required to dynamically c
 import { LightningElement, api } from "lwc";
 
 export default class LazyCmp extends LightningElement {
+	@api attributes;
+	@api properties;
+	@api handlers;
 
-customCtor;
-
-@api
-attributes;
-
-@api
-moduleName;
-
-connectedCallback() {
-
-this.loadCtor();
-
-async loadCtor() {
-	const ctor = await import(this.moduleName);
-	this.customCtor = ctor.default;
-}
-
-get configurations() {
-	return {
-		ctor: this.customCtor,
-		attributes: this.attributes,
-		properties: this.properties,
-		eventHandlers: this.handlers,
+	get configurations() {
+		return {
+			attributes: this.attributes,
+			properties: this.properties,
+			eventHandlers: this.handlers,
+		}
 	}
 }
 ```
 ## Working Example
 
+This example shows how we render dynamic analytics dashboard with one type of chart. The component has dashboard data that it will assign to the chart item and it renders to the screen.
+
+* *Properties*: Different chart type often requires different input property shapes. We set chart item's properties from dashboard data.
+
+* *Attributes*: For application purposes, we assign different css class values based on chart type.
+
+* *Events*: Different chart types support different operations on them. If we detect that a chart supports dashboard-wide filters, we bind the dashboard's handlers to it.
+
+```html
+<template>
+	<c-lazy-cmp lwc:bind={chartItem}></c-lazy-cmp>
+</template>
+```
+```js
+import { LightningElement, api } from "lwc";
+
+export default class LazyCmp extends LightningElement {
+	@api dashboardId;
+	@api dashboardData;
+
+	get chartItem() {
+		return this.chartItem;
+	}
+
+	@wire(myAdapter, { id: 'someDashboardId' }) {
+		chartDefinitions({ data, error }) {
+			let chart = data.chart;
+
+			let attributes = {};
+			let props = {};
+			let eventHandlers = {};
+			
+			// Populate 'attributes', change style based on some config data
+			attributes.style = {
+				classname: chart.type === 'donut' ? 'chart-small' : 'chart-medium'
+			};
+
+			// Populate 'props', set the dimensions into charts that support them.
+			if (chart.supportsDimensions) {
+				props.dimensions = dashboardData.dimensions;
+			}
+
+			// Populate 'events', bind the event handler if it supports that
+			if (chart.canFilter) {
+				eventHandlers.onfilter = this.handleFilter;
+			}
+
+			chartItem =  {
+				attributes,
+				properties: props,
+				events: eventHandlers
+			}
+		}
+	}
+}
+```
+## Motivation
+
+Before this proposal, dynamic component creation was done using the `lwc:dynamic` directive. This directive required a component author to know component configuration details like the properties and event names at design time, which breaks down for use cases that need true dynamic component creation. For instance, in the case of property values or event handlers one would have to keep a reference to the element and set the information retrieved at runtime manually.
+
+Also, when connetedCallback called on child and the component has been inserted into DOM, but its properties/attributes/eventHandlers have not been initiated, we also need to wait for another cycle to get them rendered with the correct properties. This breaks the framework's life cycle.
+
+```js
+export default class LazyCmp extends LightningElement {
+	element;
+
+	@api moduleName;
+
+	connectedCallback() {
+		const ctor = await import(this.moduleName);
+		this.element = createComponent('c-lazy-cmp', { is: ctor , p});
+		// element must be manually inserted into the dom
+		this.template.querySelector('div').appendChild(this.element)
+	}
+
+	@api
+	set properties(newProperties) {
+		this.props = newProperties;
+		Object.assign(this.element, this.props);
+	}
+
+	get properties() { return this.props; }
+}
+
+```
+A new mechanism must be introduced that will allow component authors to configure their components with information retrieved at runtime without relying on maintaining element references or manually manipulating the DOM.
+
+## How other frameworks are approaching this issue
+
+* Vue.js
+
+In the wrapper component(currentComponent) level, they do "bind" to props, and they return the corresponding props for different child level components(e.g. myComponent). In this way, they don't need to rerender to get the component with the correct props. But different child components' props are exposed at wrapper component level.
+
+example:
+
+```html
+<template>
+	<c-cmp :is="currentComponent" v-bind="currentProperties"></c-cmp>
+</template>
+```
+```js
+data: function () {
+  return {
+    currentComponent: 'myComponent',
+  }
+},
+computed: {
+  currentProperties: function() {
+    if (this.currentComponent === 'myComponent') {
+      return { foo: 'bar' }
+    }
+  }
+}
+```
+
+* React.js
+
+In reactJS, it binds handler to that component, so when the hanlder event is called, it knows which context "this" is in and what value it wants to set, similarly for properties and attributes. But in wrapper component level it also exposes the values.
+
+example:
+```html
+<div>
+	<h1>Name:{this.state.name}</h1>
+	<h1>Click here to change the name</h1>
+
+	{/* Passing the name as an argument 
+		to the handler() function */}
+
+	<button onClick={this.handler.bind(this, 'GeeksForGeeks')}>
+		Click Here
+	</button>
+</div>
+```
+```js
+import React from 'react';
+class App extends React.Component {
+	// Initialising state
+	state = {
+		name: 'GFG',
+	};
+
+	handler = (name) => {
+		// Changing the state
+		this.setState({ name: name });
+	};
+}
+```
+
+## Our Proposal
+
+The proposal involves adding a new directive that captures the relevant information to configure a web component at runtime. The assumption is that this directive will be used in cases where the component constructor is unknown until runtime and zero or more of the following are unknown until runtime: properties, attributes, or event handlers.
+
+The directive `lwc:bind` can retrieve component configuration data via a JavaScript object with a pre-defined shape. Constructor is the only required property in the configuration data.
+
+## Design Decisions Based On Our Proposal
+
+* Changes to the configuration object must be reflected in the component (ie changing the properties will cause component properties to be set again)
+
+* Changing the constructor on a parent component will also trigger unmounting the existing child components and creating new child components.
+
+* Ex: changing the "dashboard" constructor will create new child "chart" components
+
+* Will work regardless of whether one uses dynamic imports to retrieve the component constructor
+
+* How a component author retrieves the configurations is unrelated to the proposal
+
+* In cases of invalid component ctor, same behavior as existing `lwc:dynamic` feature
+
+* This should reuse the same mechanism as `lwc:dynamic` and must not require additional development time to add support in environments that currently support `lwc:dynamic`.
+
+* `lwc:bind` directive can be used with other directives (includes lwc:dynamic, if/else), attributes and event handlers. But "for each" will only work when it's used in array components.
+
+* When the lwc:bind contains an attribute that is already defined via the template, we overwrite that attribute with the bind value. For example, <x-foo lwc:bind={config} class="error"></x-foo> with config = { attributes: { class: 'success' } }, we will overwrite default class 'success' with 'error', which we get from "bind".
+
+* Updating properties, attributes and eventHandler by updating the bind configurations.
+
+* Semantic of the following attribute values: when it's null or undefined, we will use the default attribute value. When that attribute value is a boolean, then we treat false as the default value.
+
+## General Invariants
+
+* It must not break the reactivity model or the general framework lifecycle
+
+* After the component is loaded, it should function within the lifecycle of the parent component
+
+## Drawbacks
+
+Identifying the dependencies for static analysis could be difficult especially if the configurations are not derived from @api properties or statically analyzable strings. Additionally, this proposal would enable true dynamic component creation which has been abused in the past - proper guardrails would need to be implemented to prevent improper use of this pattern.
+
+## Adoption Strategy
+
+This feature will be available in Salesforce Lightning Platform and LWR to certain teams depending on their use cases
+
+## Unresolved Questions
+
+* Naming for directive
+
+* What can be statically analyzable when a component uses this feature?
+
+* Implementation details
+
+* Scope
+
+* Should we start with only constructor & properties or is it trivial to include attributes and event handlers?
+
+## Appendix for more complexed example
 
 This example shows a watered-down example of rendering a dynamic analytics dashboard. The component has some dashboard data that it will assign to the chart items it renders to the screen.
 
@@ -77,157 +268,61 @@ This example shows a watered-down example of rendering a dynamic analytics dashb
 ```js
 import { LightningElement, api } from "lwc";
 
-import { } from "lds/...";
-
-
-
 export default class LazyCmp extends LightningElement {
+	@api dashboardId;
+	@api dashboardData;
+	@api colorPalette;
+	@api defaultKpiBreaks;
 
-@api dashboardId;
+	chartItems = [];
 
-@api dashboardData;
+	@wire(myAdapter, { id: 'someDashboardId' }) {
+		chartDefinitions({ data, error }) {
+			chartItems = data.charts.map((chart) => {
+				let props = {};
+				let attributes = {};
+				let eventHandlers = {};
 
-@api colorPalette;
+				// Populate 'attributes'
+				// For example, change style based on some config data and pass
+				// in a unique id
+				attributes.style = {
+					classname: chart.type === 'donut' ? 'chart-small' : 'chart-medium'
+				};
+				attributes.id = `${dashboardId}-${chart.id}`;
 
-@api defaultKpiBreaks;
-
-chartItems = [];
-
-@wire(myAdapter, { id: 'someDashboardId' }) {
-
-	chartDefinitions({ data, error }) {
-
-	chartItems = data.charts.map((chart) => {
-		let ctor;
-		let props = {};
-		let attributes = {};
-		let eventHandlers = {};
-		// Populate 'ctor'
-		// For simplicity assume they've been loaded async elsewhere
-		ctor = chart.ctor;
-		// Populate 'attributes'
-		// For example, change style based on some config data and pass
-		// in a unique id
-		attributes.style = {
-			classname: chart.type === 'donut' ? 'chart-small' : 'chart-medium'
-		};
-		attributes.id = `${dashboardId}-${chart.id}`;
-		// Populate 'props'
-		// Set the dimensions into charts that support them.
-		// For example, a KPI doesn't have a dimensions prop
-		// and would throw if you tried to supply one:
-		if (chart.supportsDimensions) {
-			props.dimensions = dashboardData.dimensions;
+				// Populate 'props'
+				// Set the dimensions into charts that support them.
+				// For example, a KPI doesn't have a dimensions prop
+				// and would throw if you tried to supply one:
+				if (chart.supportsDimensions) {
+					props.dimensions = dashboardData.dimensions;
+				}
+				// Some chart items, like a dimension filter card,
+				// might not support measures as inputs:
+				if (chart.supportsMeasures) {
+					props.measures = dashboardData.measures
+				}
+				// Some charts support colors in different ways:
+				if (chart.type === 'kpi' || chart.type === 'gauge') {
+					props.breakpoints = chart.customBreaks || this.defaultKpiBreaks;
+				} else if (chart.supportsColorPalette) {
+					props.colorPalette = this.colorPalette;
+				}
+				// Populate 'events'
+				if (chart.canFilter) {
+					eventHandlers.onfilter = this.handleFilter;
+				}
+				if (chart.canSort) {
+					eventHandlers.onsort = this.handleSort;
+				}
+				return {
+					attributes,
+					properties: props,
+					events: eventHandlers
+				}
+			});
 		}
-
-		// Some chart items, like a dimension filter card,
-
-		// might not support measures as inputs:
-
-		if (chart.supportsMeasures) {
-			props.measures = dashboardData.measures
-		}
-
-		// Some charts support colors in different ways:
-		if (chart.type === 'kpi' || chart.type === 'gauge') {
-			props.breakpoints = chart.customBreaks || this.defaultKpiBreaks;
-		} else if (chart.supportsColorPalette) {
-			props.colorPalette = this.colorPalette;
-		}
-		// Populate 'events'
-		if (chart.canFilter) {
-			eventHandlers.onfilter = this.handleFilter;
-		}
-		if (chart.canSort) {
-			eventHandlers.onsort = this.handleSort;
-		}
-		return {
-			ctor,
-			attributes,
-			properties: props,
-			events: eventHandlers
-		}
-
-	});
-
-}
-
+	}
 }
 ```
-## Motivation
-
-Before this proposal, dynamic component creation was done using the `lwc:dynamic` directive. This directive required a component author to know component configuration details like the property and event names at design time which breaks down for use cases that need true dynamic component creation. For instance, in the case of property values or event handlers one would have to keep a reference to the element and set the information retrieved at runtime manually.
-
-```js
-element;
-
-@api
-moduleName;
-
-connectedCallback() {
-	const ctor = await import(this.moduleName);
-	this.element = createComponent('c-lazy-cmp', { is: ctor });
-	// element must be manually inserted into the dom
-	this.template.querySelector('div').appendChild(this.element)
-}
-
-@api
-
-set properties(newProperties) {
-
-this.props = newProperties;
-
-Object.assign(this.element, this.props);
-
-}
-
-get attributes() { return this.props; }
-
-```
-A new tool must be introduced that will allow component authors to configure their components with information retrieved at runtime without relying on maintaining element references or manually manipulating the DOM.
-
-## Proposal
-
-The proposal involves adding a new directive that captures the relevant information to configure a web component at runtime. The assumption is that this directive will be used in cases where the component module is unknown at runtime (therefore used alongside dynamic imports) and zero or more of the following are unknown at runtime: properties, attributes, or event handlers.
-
-The directive `lwc:bind` can retrieve component configuration data via a JavaScript object with a pre-defined shape. Constructor is the only required property in the configuration data.
-
-## General Invariants
-
-* It must not break the reactivity model or the general framework lifecycle
-
-* After the component is loaded, it should function within the lifecycle of the parent component
-
-* Changes to the configuration object must be reflected in the component (ie changing the properties will cause component properties to be set again)
-
-* Changing the constructor on a parent component will also trigger a cascade re-render of any child components 
-
-* Ex: changing the "dashboard" constructor will re-render any child "chart" components
-
-* Will work regardless of whether one uses dynamic imports to retrieve the component constructor
-
-* How a component author retrieves the configurations is unrelated to the proposal
-
-* In cases of invalid component ctor, same behavior as existing `lwc:dynamic` feature
-
-* This should reuse the same mechanism as `lwc:dynamic` and must not require additional development time to add support in environments that currently support `lwc:dynamic`.
-
-## Drawbacks
-
-Identifying the dependencies for static analysis could be difficult especially if the configurations are not derived from @api properties or statically analyzable strings. Additionally, this proposal would enable true dynamic component creation which has been abused in the past - proper guardrails would need to be implemented to prevent improper use of this pattern.
-
-## Adoption Strategy
-
-This feature will be available in Salesforce Lightning Platform and LWR to certain teams depending on their use cases
-
-## Unresolved Questions
-
-* Naming for directive
-
-* What can be statically analyzable when a component uses this feature?
-
-* Implementation details
-
-* Scope
-
-* Should we start with only constructor & properties or is it trivial to include attributes and event handlers?

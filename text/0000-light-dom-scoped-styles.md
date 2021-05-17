@@ -143,6 +143,18 @@ This is a lot of extra machinery to support style scoping. Users need to know ab
 
 We would like to avoid this for light DOM style scoping, so we have a simpler system: dynamically-inserted elements are not scoped. Incidentally, this is how Vue and Svelte scoped styles work – there's no expectation that you can mutate the DOM with vanilla DOM APIs and still have the scoping token applied.
 
+### `:host`, `:host-context`, and `:root`
+
+With both global and scoped light DOM styles, it should be possible to style the component's root element using e.g.:
+
+```css
+x-mycomponent {}
+```
+
+In global light DOM styles, `:host`, `:host-context`, and `:root` are inserted as-is. This can be used, for instance, to target the shadow parent from within a light child.
+
+So in the case of scoped light DOM styles, `:host`, `:host-context`, and `:root` don't really make much sense. If these selectors are used within `*.scoped.css`, they will throw an error.
+
 ## Drawbacks
 
 Conceptually, it's a bit awkward that `foo.css` in a shadow DOM component is scoped, whereas `foo.css` is unscoped for a light DOM component, so you need `foo.scoped.css` instead. However, this default behavior actually matches the native DOM behavior: when you insert a `<style>` into a shadow-DOM-using component, it's scoped, whereas it's unscoped if the component doesn't use shadow DOM.
@@ -189,6 +201,10 @@ If developers want a component to contain styles that affect its children, it's 
 
 This is the same solution one might use with global styles in Vue (`<style>`) or Svelte (`:global()`).
 
+### `:host`, `:host-context`, and `:root`
+
+Having these selector do something "clever" in scoped light DOM styles was considered, but ultimately it seemed unnecessary since the developer can target the root DOM node using e.g. `x-mycomponent`. Plus, these selectors can still be used in global light DOM styles. So it made more sense to have them just throw an error so that the developer isn't misled.
+
 ## Adoption strategy
 
 Light DOM components are already opt-in (using `static shadow = false`), and scoped light DOM styles would also be opt-in, using `*.scoped.css`.
@@ -199,9 +215,4 @@ Conceptually, scoped light DOM styles will have to be bundled up into a larger d
 
 # Unresolved questions
 
-What should `:host` and `:host-context()` do in the context of scoped shadow DOM styles?
-
-- Throw an error?
-- Refer to the "host" (i.e. the light DOM component's root DOM node)?
-
-Similarly, what should `:root` do?
+There are no unresolved questions at this time.

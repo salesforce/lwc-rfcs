@@ -5,7 +5,7 @@ created_at: YYYY-MM-DD
 updated_at: YYYY-MM-DD
 pr: (leave this empty until the PR is created)
 ---
-
+ 
 # ePrivacy Cookie Consent LWC Component
 
 ## Summary

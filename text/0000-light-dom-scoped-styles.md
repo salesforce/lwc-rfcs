@@ -153,7 +153,41 @@ However, our goal here is not to maintain synthetic shadow DOM for all eternity.
 
 ## Alternatives
 
+### Not scoping
+
 We could simply not implement scoped CSS for light DOM. However, given how popular it is in other frameworks (Svelte, Vue, the wide ecosystem of React CSS-in-JS libraries), it seems like a shame for LWC not to support it.
+
+### Descendant selectors
+
+Another alternative is to use CSS selectors that can style all of a component's descendants. For instance:
+
+```css
+/* input */
+div {}
+```
+
+```css
+/* output */
+.scope-token div {}
+```
+
+This approach was rejected because, although it's similar to the style scoping used in Aura, it's dissimilar from the style scoping used in native shadow DOM, Vue, Svelte, Stencil, `styled-components`, etc. Our hope is that the current approach will be more familiar to more developers.
+
+If developers want a component to contain styles that affect its children, it's always possible to use non-scoped light DOM styles, and to target the child component's classes, attributes, etc.:
+
+```css
+/* parent.css */
+.my-child {}
+```
+
+```html
+<!-- child.html -->
+<template>
+  <div class="my-child"></div>
+</template>
+```
+
+This is the same solution one might use with global styles in Vue (`<style>`) or Svelte (`:global()`).
 
 ## Adoption strategy
 

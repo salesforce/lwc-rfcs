@@ -23,7 +23,7 @@ LWC Component JS file
 ```js
 // Component JS file
 import { LightningElement,track } from 'lwc';
-import {*isCategoryAllowedForCurrentConsent**,**setCookieConsent*} from 'force/ePrivacyConsentCookie'
+import {isCategoryAllowedForCurrentConsent,setCookieConsent} from 'force/ePrivacyConsentCookie'
 export default class HelloIteration extends LightningElement {
     @track
     categories = [
@@ -31,19 +31,19 @@ export default class HelloIteration extends LightningElement {
             Id: 1,
             Name: 'Preferences',
             Title: 'Preference Cookies',
-            consent: *isCategoryAllowedForCurrentConsent*("Preferences")
+            consent: isCategoryAllowedForCurrentConsent("Preferences")
         },
         {
             Id: 2,
             Name: 'Marketing',
             Title: 'Marketing cookies',
-            consent: *isCategoryAllowedForCurrentConsent*("Marketing")
+            consent: isCategoryAllowedForCurrentConsent("Marketing")
         },
         {
             Id: 3,
             Name: 'Statistics',
             Title: 'Statistic Cookies',
-            consent: *isCategoryAllowedForCurrentConsent*("Statistics")
+            consent: isCategoryAllowedForCurrentConsent("Statistics")
         },
     ];
 }
@@ -95,15 +95,16 @@ Aura Component controller file
 
 ## Motivation
 
-We want customers to be able to manipulate the Consent cookie in LWC.
+We want to provide the cookie consent mechanism to our customers.
 For customers and internal developers, we want to give them support to
-be able to check the state of the cookie before setting any additional 
-cookies.
+make the cookies regulated and give them the ability to check the state 
+of the cookie before setting any additional cookies.
+
 We would like to have a versioned (and ideally an abstraction) of the 
 format so that customers don’t need to worry about our internal 
 serialization formats.
 
-Use Cases
+### Use Cases
 * As a customer, I’d like to be able to check if a user has granted 
 consent before I set a cookie
 * As a customer, I’d like to set the consent state
@@ -126,23 +127,16 @@ consent cookie is granted for.
 This LWC component provide utility functions which allow teams to incorporate 
 Cookie Consent mechanism in their components. This abstracts all the cookie 
 fetching, reading, writing, updating logic and provide library functions to 
-achieve the functionality. The component primarily export four functions :
+achieve the functionality. The component primarily export two functions :
 
 
-1. *isCategoryAllowedForCurrentConsentOptanon(categoryName*) - to check consent 
-of specified category based on preferences set in OptanonConsent cookie. It is 
-primarily used by customers using Onetrust.
-
-2. *isCategoryAllowedForCurrentConsent(categoryName*) - to check consent of 
+- *isCategoryAllowedForCurrentConsent(categoryName*) - to check consent of 
 specified category based on preferences set in “CookieConsent”.
 
-3. *setCookieConsent(cookieClassifications)*- This cookie will be provided by 
+- *setCookieConsent(cookieClassifications)*- This cookie will be provided by 
 Salesforce and you can set preferences using setCookieConsent(cookieClassifications).
 
-4. *setCookieConsentOptanon(cookieClassifications)*- This cookie will be provided by 
-Salesforce and you can set preferences using setCookieConsent(cookieClassifications).
-
-The goal is to enable this component to be exported by other teams so they can utilize 
+The goal is to enable this component to be exported by other teams, so they can utilize 
 the cookie consent mechanism using the libraries provided. Teams can build their own 
 components by using the library functions and embed the cookie consent functionality in 
 their component without actually dealing with cookie values.
@@ -152,23 +146,38 @@ their component without actually dealing with cookie values.
 
 ## Drawbacks
 The biggest drawback of this feature is the improper use of consent cookies in the 
-Lightning Platform. We have added guardrails which comply with Lightning Locker and will
-be updating them in future.
+Lightning Platform and relying on cookies which can be modified. We have added guardrails 
+which comply with Lightning Locker and will be updating them in the future.
 
 
 ## Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
+The alternative approach was to accomplish the functionality by using a WireAdapter and 
+making API call to the server.
+
+However, our approach has following pros over the alternative approach
+- Reduced load on backend server
+- Low latency due to no calls being made to server
+- Same architecture as other market leaders for Cookie Consent.
+
 
 ## Adoption strategy
 
-This is a brand new feature and will be initially used by very limited number of customers.
+This is a brand-new feature and will be initially used by very limited number of customers.
+Eventually, any customer using cookies in their component and wants to have cookie regulation
+should use this component.
+
+The impact of not having this service component would be that customers would not be able to
+implement and use the cookie consent mechanism and would have to deal with cookies directly
+in order to be compliant with privacy laws. This would add a lot of overhead to our customers.
+
 Public documentation will be provided to customers on how to utilize this service component.
 
 # How we teach this
 
 The consumer aspect of it is very straight forward and customers will be provided with a
-public document on how to use the libraries exposed.
+public document on how to use the libraries exposed. In the future, the team also plans to 
+release a trailhead module explaining how to utilize this component for cookie consent.
 
 # Unresolved questions
 

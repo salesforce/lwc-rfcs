@@ -143,17 +143,31 @@ This is a lot of extra machinery to support style scoping. Users need to know ab
 
 We would like to avoid this for light DOM style scoping, so we have a simpler system: dynamically-inserted elements are not scoped. Incidentally, this is how Vue and Svelte scoped styles work – there's no expectation that you can mutate the DOM with vanilla DOM APIs and still have the scoping token applied.
 
-### `:host`, `:host-context`, and `:root`
+### Targeting the root element
 
-With both global and scoped light DOM styles, it should be possible to style the component's root element using e.g.:
+With both global and scoped light DOM styles, it is possible to style the component's root element using e.g.:
 
 ```css
 x-mycomponent {}
 ```
 
-In global light DOM styles, `:host`, `:host-context`, and `:root` are inserted as-is. This can be used, for instance, to target the shadow parent from within a light child.
+Note that this means that, in scoped light DOM styles, a light parent and light child can both style the child's root element. For instance:
 
-So in the case of scoped light DOM styles, `:host`, `:host-context`, and `:root` don't really make much sense. If these selectors are used within `*.scoped.css`, they will throw an error.
+```css
+/* parent.scoped.css */
+x-child {}
+```
+
+```css
+/* child.scoped.css */
+x-child {}
+```
+
+This will result in two scoping tokens being applied to the `<x-child>` element – one from the parent, and another from the child. Precendence order is not guaranteed.
+
+As for selectors like `:host`, `:host-context`, and `:root`: with global light DOM styles, these are inserted as-is. This can be used, for instance, to target the shadow parent from within a light child.
+
+In the case of scoped light DOM styles, however, `:host`, `:host-context`, and `:root` don't make much sense, since there is no shadow context – just a "scoped" context. So if these selectors are used within `*.scoped.css`, they will throw an error.
 
 ## Drawbacks
 

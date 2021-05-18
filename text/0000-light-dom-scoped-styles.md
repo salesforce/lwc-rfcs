@@ -163,7 +163,8 @@ x-child {}
 x-child {}
 ```
 
-This will result in two scoping tokens being applied to the `<x-child>` element – one from the parent, and another from the child. Precendence order is not guaranteed.
+This will result in two scoping tokens being applied to the `<x-child>` element – one from the parent, and another from the child. Order of precedence is not guaranteed.
+
 
 As for selectors like `:host`, `:host-context`, and `:root`: with global light DOM styles, these are inserted as-is. This can be used, for instance, to target the shadow parent from within a light child.
 

@@ -151,7 +151,9 @@ their component without actually dealing with cookie values.
 
 
 ## Drawbacks
-
+The biggest drawback of this feature is the improper use of consent cookies in the 
+Lightning Platform. We have added guardrails which comply with Lightning Locker and will
+be updating them in future.
 
 
 ## Alternatives
@@ -170,7 +172,7 @@ public document on how to use the libraries exposed.
 
 # Unresolved questions
 
-- Naming for the directive can be changed.
-- Some exposed APIs can be removed in future
-- Future changes may be required based on Locker developments
+- Naming for the component can be changed.
+- Some exposed APIs can be removed or added in future.
+- Future functionality changes may be required based on Locker developments.
 

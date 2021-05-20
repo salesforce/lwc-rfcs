@@ -75,26 +75,28 @@ Most of the libraries designed to support Shadow DOM also propose a Light DOM op
 
 ### `LightningElement.shadow`
 
-Toggle between light DOM and shadow DOM is done via a new `shadow` static property on the `LightningElement` constructor. This accepts a `boolean` value and is `true` by default. When set to `true`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `false` the component renders its content directly in the host element light DOM.
+Toggle between light DOM and shadow DOM is done via a new `renderMode` static property on the `LightningElement` constructor. `renderMode` is an enum with `shadow` (default) and `light` as values. When the value is `shadow`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `light` the component renders its content directly in the host element light DOM.
 
 ```js
 import { LightningElement } from "lwc";
 
 // Example of a shadow DOM component
-class ShadowDOMComponent extends LightningElement {}
+class ShadowDOMComponent extends LightningElement {
+  static renderMode = `shadow`; // can be omitted since it's default
+}
 
 // Example of a light DOM component
 class LightDOMComponent extends LightningElement {
-  static shadow = false;
+  static renderMode = `light`;
 }
 
 // Default value
 console.log(LightningElement.shadow); // true
 ```
 
-The `shadow` property is looked up by the LWC engine when the component is instantiated to determine how it should render. Changing the value of the `shadow` static property after the instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
+The `renderMode` property is looked up by the LWC engine when the component is instantiated to determine how it should render. Changing the value of the `renderMode` static property after the instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
 
-It also means that developers should be careful not to override the `shadow` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.
+It also means that developers should be careful not to override the `renderMode` static property value when inheriting from another component. Switching a component mode from shadow DOM to light DOM (and vice-versa) in the child class would certainly break logic in the base class.
 
 ```js
 import { LightningElement } from "lwc";
@@ -104,7 +106,7 @@ class Base extends LightningElement {}
 class Child extends Base {
   // ⚠️ Changing the shadow static property value in a component class inheriting from a base
   // will certainly class some unexpected issue.
-  static shadow = false;
+  static renderMode = `light`;
 }
 ```
 
@@ -118,16 +120,17 @@ This proposal doesn't change the way component authors query the light DOM. Comp
 
 ### Template
 
-Any template associated with a light DOM component should use `lwc:no-shadow` to indicate that it is a light DOM template:
+Any template associated with a light DOM component should use `lwc:render-mode="light"` to indicate that it is a light DOM template:
 
 ```html
-<template lwc:no-shadow>
+<template lwc:render-mode="light">
   <!-- light DOM content -->
 </template>
 ```
 
-This may or may not actually result in compiler differences, but it will be required to allow us the flexibility to have
-the compiler behave differently for light DOM components versus shadow DOM components.
+Similarly, shadow DOM components can use `lwc:render-mode="shadow"`, but it's not necessary since it's the default value for that attribute.
+
+Setting the attribute may or may not actually result in compiler differences, but it will be required to allow us the flexibility to have the compiler behave differently for light DOM components versus shadow DOM components.
 
 ### Styles
 
@@ -201,7 +204,7 @@ For example:
 
 ```html
 <!-- x/slottable.html -->
-<template lwc:no-shadow>
+<template lwc:render-mode="light">
   <slot name="foo"></slot>
   <slot></slot>
   <slot name="bar"></slot>
@@ -260,7 +263,7 @@ The main reason for this difference is that synthetic shadow slots and light DOM
 
 ```html
 <!-- x/slottable.html -->
-<template lwc:no-shadow>
+<template lwc:render-mode="light">
   <template if:true="{foo}">
     <slot></slot>
   </template>

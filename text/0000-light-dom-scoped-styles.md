@@ -108,7 +108,8 @@ The main reason for this is that two component templates can contain `*.css` fil
 
 Many of these design decisions were made to emulate native shadow DOM, which is perfectly content to `@import` shared CSS files within separate shadow roots, and to scope them accordingly. However, for light DOM style scoping, we don't have the same constraint of needing to match native shadow DOM semantics.
 
-So for light DOM style scoping, we can have a simpler system: disallow `@import` entirely, and evaluate the scoped CSS at compile time. This has performance benefits, at the cost of a probably-niche feature for developers.
+So for light DOM style scoping, we can have a simpler system: disallow `@import` entirely, and generating the scoped CSS string at compile time. This has performance benefits, at the cost of a probably-niche feature for developers.
+
 
 #### `lwc:dom="manual"` and `MutationObserver`
 

@@ -95,7 +95,7 @@ The current design of LWC's synthetic shadow scoped styles has several features 
 
 - Using attributes over classes.
 - Allowing `@import` to import other CSS files.
-- Evaluating scoped CSS at runtime rather than compile time.
+- Generating CSS strings at runtime rather than compile time.
 - Using `lwc:dom="manual"` and `MutationObserver` to dynamically update the scoping token for new DOM nodes.
 
 The classes vs attribute issue is already addressed above. So let's cover the other differences.

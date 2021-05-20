@@ -67,6 +67,38 @@ Prior art:
 
 ## Detailed design
 
+### Scoped region
+
+CSS is scoped to all elements defined in the template HTML file. For instance:
+
+```html
+<!-- foo.html -->
+<div>
+  <span></span>
+  <button class="my-button"></button>
+</div>
+```
+
+```css
+/* foo.scoped.css */
+div {}
+span {}
+button {}
+div > span {}
+div button {}
+.my-button {}
+```
+
+In the above CSS, all selectors would match the relevant elements in the template, and only those elements.
+
+In addition, the root element (in this case `x-foo`) can also be targeted with scoped CSS:
+
+```css
+x-foo {}
+```
+
+More on this [below](#targeting-the-root-element).
+
 ### Scoping token
 
 For the purposes of this document, a _scoping token_ is some string that we use to scope CSS selectors to a particular region of the DOM.

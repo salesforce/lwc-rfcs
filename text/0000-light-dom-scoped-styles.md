@@ -67,9 +67,17 @@ Prior art:
 
 ## Detailed design
 
+### File format
+
+A new `*.scoped.css` file can be used alongside an existing `*.css` file. The component author can include either one, both, or neither. `*.scoped.css` is only supported for light DOM templates (marked with `lwc:render-mode="light"`).
+
+The `*.scoped.css` file is automatically picked up by the compiler, similar to the existing `*.css` file.
+
+In terms of ordering, `*.css` stylesheets are injected before `*.scoped.css` stylesheets.
+
 ### Scoped region
 
-CSS is scoped to all elements defined in the template HTML file. For instance:
+Inside of `*.scoped.css`, the CSS selectors are scoped to all elements defined in the template HTML file. For instance:
 
 ```html
 <!-- foo.html -->

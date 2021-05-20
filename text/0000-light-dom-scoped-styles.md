@@ -19,7 +19,7 @@ Since there is already `*.css` for unscoped light DOM CSS files, we add `*.scope
 
 ```html
 <!-- x/foo.html -->
-<template>
+<template lwc:render-mode="light">
   <div>Hello</div>
 </template>
 ```
@@ -29,7 +29,7 @@ Since there is already `*.css` for unscoped light DOM CSS files, we add `*.scope
 import { LightningElement } from 'lwc'
 
 export default class Foo extends LightningElement {
-  static shadow = false
+  static renderMode = 'light'
 }
 ```
 
@@ -209,7 +209,7 @@ If developers want a component to contain styles that affect its children, it's 
 
 ```html
 <!-- child.html -->
-<template>
+<template lwc:render-mode="light">
   <div class="my-child"></div>
 </template>
 ```
@@ -222,7 +222,7 @@ Having these selector do something "clever" in scoped light DOM styles was consi
 
 ## Adoption strategy
 
-Light DOM components are already opt-in (using `static shadow = false`), and scoped light DOM styles would also be opt-in, using `*.scoped.css`.
+Light DOM components are already opt-in (using `static renderMode = 'light'`), and scoped light DOM styles would also be opt-in, using `*.scoped.css`.
 
 # How we teach this
 

@@ -130,7 +130,7 @@ Any template associated with a light DOM component should use `lwc:render-mode="
 
 Similarly, shadow DOM components can use `lwc:render-mode="shadow"`, but it's not necessary since it's the default value for that attribute.
 
-Setting the attribute may or may not actually result in compiler differences, but it will be required to allow us the flexibility to have the compiler behave differently for light DOM components versus shadow DOM components.
+For light DOM components, this directive is needed to allow the compiler to behave differently for light DOM components versus shadow DOM components. For example, the `lwc:dom` directive is disallowed within light DOM templates (since it's only needed for synthetic shadow DOM).
 
 ### Styles
 

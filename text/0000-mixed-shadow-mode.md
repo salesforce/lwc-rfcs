@@ -124,10 +124,13 @@ appearance in the template.
 
 ### this.shadowRoot vs this.template
 
-`this.shadowRoot` and `this.template` reference the component's shadow root in native Shadow DOM
-while `this.template` references the component's shadow root in synthetic Shadow DOM. There are no
-plans to enable `this.shadowRoot` for existing components that only support synthetic Shadow DOM as
-the current LWC-ism is to use `this.template`.
+`this.shadowRoot` and `this.template` will both reference the component's shadow root in native
+Shadow DOM while `this.template` currently references the component's shadow root in synthetic
+Shadow DOM.  When a component specifies a preference for native Shadow DOM, `this.shadowRoot` will
+be made available as an alias to `this.template`.
+
+There are no plans to enable `this.shadowRoot` for existing components that only support synthetic
+Shadow DOM as the current LWC-ism is to use `this.template`.
 
 ### this.shadowRoot instanceof ShadowRoot
 
@@ -140,7 +143,8 @@ using `Symbol.hasInstance`.
 
 There currently exists logic that allows listeners to handle non-composed events outside of the root
 LWC node if the event originates from a non-LWC component in the subtree. This behavior exists for
-legacy reasons and cannot be preserved for components that prefer native Shadow DOM.
+legacy reasons, is only possible to allow in a synthetic Shadow DOM environment, and cannot be
+preserved in a native Shadow DOM context.
 
 ### Accessibility
 
@@ -186,11 +190,13 @@ affects the functionality of the framework itself.
 # How we teach this
 
 Developers should know about mixed mode and the ability for a component to favor native Shadow DOM
-before they start implementing new components. This would eliminate any potential tech debt before
-they get started. Any unresolved observable differences should be documented to assist in deciding
-whether a component is a candidate for native Shadow DOM.
+before they start implementing new components. This would eliminate any potential tech debt from
+accumulating before crossing the start line. Any unresolved observable differences should be
+documented to assist in deciding whether a component is a candidate for native Shadow DOM.
 
 # Unresolved questions
 
 1. Light DOM components - What does the runtime assertion for preventing synthetic mode components
-   in the native mode component subtree look like with Light DOM components in play?
+   in the native mode component subtree look like with Light DOM components in play? Can we just
+   use a disallow list for synthetic mode components that would allow light DOM components, or is it
+   more complicated than that?

@@ -20,7 +20,7 @@ This RFC introduces a set of principles and invariants required to dynamically c
 
 ```html
 <template>
-   <c-lazy-cmp lwc:bind={configurations}></c-lazy-cmp>
+   <c-my-cmp lwc:bind={configurations}></c-my-cmp>
 </template>
 ```
 ```js
@@ -52,7 +52,7 @@ This example shows how we render dynamic analytics dashboard with one type of ch
 
 ```html
 <template>
-	<c-lazy-cmp lwc:bind={chartItem}></c-lazy-cmp>
+	<c-lazy-cmp lwc:bind={chartItem} lwc:dynamic={ctor}></c-lazy-cmp>
 </template>
 ```
 ```js
@@ -70,6 +70,9 @@ export default class LazyCmp extends LightningElement {
 		chartDefinitions({ data, error }) {
 			let chart = data.chart;
 
+			// Populate 'ctor'
+			// For simplicity assume they've been loaded async elsewhere
+			this.ctor = chart.ctor;
 			let attributes = {};
 			let props = {};
 			let eventHandlers = {};
@@ -112,7 +115,7 @@ export default class LazyCmp extends LightningElement {
 
 	connectedCallback() {
 		const ctor = await import(this.moduleName);
-		this.element = createComponent('c-lazy-cmp', { is: ctor , p});
+		this.element = createComponent('c-lazy-cmp', { is: ctor.default });
 		// element must be manually inserted into the dom
 		this.template.querySelector('div').appendChild(this.element)
 	}
@@ -131,7 +134,7 @@ A new mechanism must be introduced that will allow component authors to configur
 
 ## How other frameworks are approaching this issue
 
-* Vue.js
+### Vue.js
 
 In the wrapper component(currentComponent) level, they do "bind" to props, and they return the corresponding props for different child level components(e.g. myComponent). In this way, they don't need to rerender to get the component with the correct props. But different child components' props are exposed at wrapper component level.
 
@@ -157,39 +160,6 @@ computed: {
 }
 ```
 
-* React.js
-
-In reactJS, it binds handler to that component, so when the hanlder event is called, it knows which context "this" is in and what value it wants to set, similarly for properties and attributes. But in wrapper component level it also exposes the values.
-
-example:
-```html
-<div>
-	<h1>Name:{this.state.name}</h1>
-	<h1>Click here to change the name</h1>
-
-	{/* Passing the name as an argument 
-		to the handler() function */}
-
-	<button onClick={this.handler.bind(this, 'GeeksForGeeks')}>
-		Click Here
-	</button>
-</div>
-```
-```js
-import React from 'react';
-class App extends React.Component {
-	// Initialising state
-	state = {
-		name: 'GFG',
-	};
-
-	handler = (name) => {
-		// Changing the state
-		this.setState({ name: name });
-	};
-}
-```
-
 ## Our Proposal
 
 The proposal involves adding a new directive that captures the relevant information to configure a web component at runtime. The assumption is that this directive will be used in cases where the component constructor is unknown until runtime and zero or more of the following are unknown until runtime: properties, attributes, or event handlers.
@@ -212,7 +182,7 @@ The directive `lwc:bind` can retrieve component configuration data via a JavaScr
 
 * This should reuse the same mechanism as `lwc:dynamic` and must not require additional development time to add support in environments that currently support `lwc:dynamic`.
 
-* `lwc:bind` directive can be used with other directives (includes lwc:dynamic, if/else), attributes and event handlers. But "for each" will only work when it's used in array components.
+* `lwc:bind` directive can be used with other directives (including `lwc:dynamic`, `if:true|false`, `key`), attributes and event handlers. `lwc:bind` should not be used with array directives (including `for:each`, `for:item`, `for:index`) or `lwc:dom`
 
 * When the lwc:bind contains an attribute that is already defined via the template, we overwrite that attribute with the bind value. For example, <x-foo lwc:bind={config} class="error"></x-foo> with config = { attributes: { class: 'success' } }, we will overwrite default class 'success' with 'error', which we get from "bind".
 
@@ -261,7 +231,7 @@ This example shows a watered-down example of rendering a dynamic analytics dashb
 ```html
 <template>
    <template for:each={chartItems} for:item="chartItem">
-      <c-lazy-cmp lwc:bind={chartItem}></c-lazy-cmp>
+      <c-lazy-cmp lwc:bind={chartItem} lwc:dynamic={ctor}></c-lazy-cmp>
    </template>
 </template>
 ```
@@ -279,6 +249,9 @@ export default class LazyCmp extends LightningElement {
 	@wire(myAdapter, { id: 'someDashboardId' }) {
 		chartDefinitions({ data, error }) {
 			chartItems = data.charts.map((chart) => {
+				// Populate 'ctor'
+				// For simplicity assume they've been loaded async elsewhere
+				this.ctor = chart.ctor;
 				let props = {};
 				let attributes = {};
 				let eventHandlers = {};

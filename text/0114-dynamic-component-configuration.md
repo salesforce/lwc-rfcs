@@ -15,7 +15,6 @@ This RFC introduces a set of principles and invariants required to dynamically c
 
 * *Dynamic Configuration*: The process of setting a dynamically instantiated component's constructor, properties, attributes, or event handlers at runtime
 
-
 ## Interface Example
 
 ```html

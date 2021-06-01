@@ -56,6 +56,7 @@ Consumer applications require DOM traversal and observability of an applicationâ
 - **Third party integrations**
 
   Third party tools need to traverse the DOM, which doesn't work with Shadow DOM and standard browser query APIs such as `querySelector` and `querySelectorAll`. This affects analytics tools, personalization platforms, commerce tools, etc.
+
 - **Testing software**
 
   Tools like Selenium, Cypress etc. face the same issues as third party tools when it comes to traversing the DOM.
@@ -73,7 +74,7 @@ Most of the libraries designed to support Shadow DOM also propose a Light DOM op
 
 ## Detailed design
 
-### `LightningElement.shadow`
+### `LightningElement.renderMode`
 
 Toggle between light DOM and shadow DOM is done via a new `renderMode` static property on the `LightningElement` constructor. `renderMode` is an enum with `shadow` (default) and `light` as values. When the value is `shadow`, the LightningElement creates a shadow root on the host element and renders the component content in the shadow root. When set to `light` the component renders its content directly in the host element light DOM.
 
@@ -89,9 +90,6 @@ class ShadowDOMComponent extends LightningElement {
 class LightDOMComponent extends LightningElement {
   static renderMode = `light`;
 }
-
-// Default value
-console.log(LightningElement.shadow); // true
 ```
 
 The `renderMode` property is looked up by the LWC engine when the component is instantiated to determine how it should render. Changing the value of the `renderMode` static property after the instantiation doesn't influence whether components are rendered in the light DOM or in the shadow DOM.
@@ -140,8 +138,8 @@ To support the cases where a shadow DOM element composes a light element, light 
 
 1. look up for the closest root node (`Node.prototype.getRootNode()`)
 1. insert the stylesheet if not already present:
-    - if the root node is the HTML document, the style sheet is inserted as a `<style>` element in the `<head>`.
-    - if the root node is a shadow root, the stylesheet is inserted as a `<style>` element as the first shadow root child.
+   - if the root node is the HTML document, the style sheet is inserted as a `<style>` element in the `<head>`.
+   - if the root node is a shadow root, the stylesheet is inserted as a `<style>` element as the first shadow root child.
 
 > As an optimization, the above algorithm may be substituted by the equivalent usage of [constructable stylesheets](https://developers.google.com/web/updates/2019/02/constructable-stylesheets) in supporting browsers. This means that developers should not rely on the `<style>` elements being inserted at a specific place in the DOM; it's an implementation detail.
 
@@ -196,7 +194,7 @@ Since the `<slot>` element itself isn't rendered, adding attributes or event lis
 A template cannot contain both light DOM and shadow DOM slots. Inside of `<template lwc:no-shadow>`, all `<slot>`s are light,
 and inside of `<template>`, all `<slot>`s are shadow.
 
-In terms of timing, slots in light DOM will behave similarly to the current synthetic shadow slots. 
+In terms of timing, slots in light DOM will behave similarly to the current synthetic shadow slots.
 
 <details>
   <summary>Light DOM vs. shadow DOM timing comparison</summary>
@@ -255,6 +253,7 @@ Note that this timing is different from the equivalent for slots in native shado
 - `slottable` `renderedCallback`
 
 In native slots, the ordering is based on the order in the _consumer_ component, whereas in synthetic and light DOM slots, it's based on the ordering in the _slotted_ component.
+
 </details>
 
 #### Lazy slots
@@ -301,7 +300,7 @@ In the case of `slotchange`, it's not clear what `event.target` would be. For `:
 
 Shadow DOM (in combination with Lightning Locker) encapsulates components and prevents unauthorized access into the shadow tree. With Light DOM though, the DOM is open for traversal by other components. Since Light DOM is not the default, the component author has to opt-in to it, the burden of security falls on them. Developers need to understand that they are "opening" their component for access from outside when they opt in to Light DOM.
 
-Light DOM will be behind a feature flag that can be set for the runtime. It can be turned on/off on a per container basis. The LWC engine will throw at runtime is a component attempts to render in the light DOM when the feature flag is disabled. 
+Light DOM will be behind a feature flag that can be set for the runtime. It can be turned on/off on a per container basis. The LWC engine will throw at runtime is a component attempts to render in the light DOM when the feature flag is disabled.
 
 It's important to note that there isn't a way to enable light DOM for a restricted set of namespaces. When the feature flag is turned on, the capability is made available to all components on the page.
 
@@ -325,7 +324,7 @@ Shadow DOM and Light DOM are already names accepted by the industry, see: [Termi
 Some tradeoffs we might make explicit to developers:
 
 - In LEX, using light DOM exposes potentially sensitive information to DOM scraping.
-- With light DOM, you have to do your own style scoping, e.g. using classes or attributes. 
+- With light DOM, you have to do your own style scoping, e.g. using classes or attributes.
 - With light DOM, styles can bleed in or out of the component.
 - With light DOM, the slotting mechanism is slightly different than with shadow DOM, and may have performance/timing implications (especially for native shadow DOM).
 - With light DOM, there is no event retargeting, so e.g. `<button>`s contained within multiple layers of light DOM components will still trigger `click` events that can be caught at the `document` level, and whose `event.target` is the `<button>` itself rather than the containing component.

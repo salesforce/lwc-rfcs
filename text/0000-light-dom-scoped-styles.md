@@ -188,7 +188,7 @@ We would like to avoid this for light DOM style scoping, so we have a simpler sy
 
 With global light DOM styles, the `:host` selector is inserted as-is. This means that a light DOM child component can use `:host` to target its shadow parent's host container.
 
-With scoped styles, the intuition around `:host` should be a bit different. Rather than inserting the CSS as-is, scoped styles imitate the encapsulation of shadow DOM components. Therefore it makes sense for `:host` to follow shadow DOM-like semantics.
+With scoped styles, the intuition around `:host` should be a bit different. Rather than inserting the CSS as-is, scoped styles imitate the encapsulation of shadow DOM components. So it makes sense for `:host` to follow shadow DOM-like semantics. This means that `:host` should refer to the root element of the light DOM component – i.e., the root of the scoped DOM region.
 
 So for instance:
 

@@ -186,30 +186,55 @@ We would like to avoid this for light DOM style scoping, so we have a simpler sy
 
 ### Targeting the root element
 
-With both global and scoped light DOM styles, it is possible to style the component's root element using e.g.:
+With global light DOM styles, the `:host` selector is inserted as-is. This means that a light DOM child component can use `:host` to target its shadow parent's host container.
+
+With scoped styles, the intuition around `:host` should be a bit different. Rather than inserting the CSS as-is, scoped styles imitate the encapsulation of shadow DOM components. Therefore it makes sense for `:host` to follow shadow DOM-like semantics.
+
+So for instance:
 
 ```css
-x-mycomponent {}
-```
-
-Note that this means that, in scoped light DOM styles, a light parent and light child can both style the child's root element. For instance:
-
-```css
-/* parent.scoped.css */
-x-child {}
+/* light.css */
+:host {
+    background: red;
+}
 ```
 
 ```css
-/* child.scoped.css */
-x-child {}
+/* light.scoped.css */
+:host {
+    background: blue;
+}
+* {
+    background: green;
+}
 ```
 
-This will result in two scoping tokens being applied to the `<x-child>` element – one from the parent, and another from the child. Order of precedence is not guaranteed.
+```html
+<!-- light.html -->
+<template>
+  <div>Hello</div>
+</template>
+```
 
+This would render:
 
-As for selectors like `:host`, `:host-context`, and `:root`: with global light DOM styles, these are inserted as-is. This can be used, for instance, to target the shadow parent from within a light child.
+```html
+<x-shadow> <!-- red background -->
+  #shadow-root
+    <style>
+      :host { background: red; }
+      .x-light_light-host { background: blue; }
+      *.x-light_light { background: green; }
+    </style>
+    <x-light class="x-light_light-host"> <!-- blue background -->
+      <div class="x-light_light">Hello</div> <!-- green background -->
+    </x-light>
+</x-shadow>
+```
 
-In the case of scoped light DOM styles, however, `:host`, `:host-context`, and `:root` don't make much sense, since there is no shadow context – just a "scoped" context. So if these selectors are used within `*.scoped.css`, they will throw an error.
+In the above example, observe that `:host` is inserted as-is for the global style, whereas `:host` is transformed for the scoped style. Also note that the styling token is different for `:host` compared to other selectors, such as `*`.
+
+Note that `:host-context()` is not supported because it [lacks buy-in from Apple and Mozilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1082060#c76).
 
 ## Drawbacks
 
@@ -257,9 +282,19 @@ If developers want a component to contain styles that affect its children, it's 
 
 This is the same solution one might use with global styles in Vue (`<style>`) or Svelte (`:global()`).
 
-### `:host`, `:host-context`, and `:root`
+### Targeting the root element with `x-component`
 
-Having these selector do something "clever" in scoped light DOM styles was considered, but ultimately it seemed unnecessary since the developer can target the root DOM node using e.g. `x-mycomponent`. Plus, these selectors can still be used in global light DOM styles. So it made more sense to have them just throw an error so that the developer isn't misled.
+In theory, a light DOM component can target its own root element in both global and scoped styles by using its own tag name, e.g. `x-component`:
+
+```css
+x-component {
+    background: red;
+}
+```
+
+The problem with this approach is that templates do not really "own" their tag names. A subclass of a `LightningElement`, for instance, could end up with a totally different tag name. Or we may rename tags at the platform level. Therefore it's not safe for developers to use this technique to "guess" their own tag name.
+
+This is why we support the `:host` selector in scoped CSS instead.
 
 ## Adoption strategy
 

@@ -204,6 +204,31 @@ So for instance:
 :host {
     background: blue;
 }
+```
+
+This would render:
+
+```html
+<x-shadow> <!-- red background -->
+  #shadow-root
+    <x-light class="x-light_light-host"> <!-- blue background -->
+      <style>
+        :host { background: red; }
+        .x-light_light-host { background: blue; }
+      </style>
+    </x-light>
+</x-shadow>
+```
+
+In the above example, observe that `:host` is inserted as-is for the global style, whereas `:host` is transformed for the scoped style.
+
+In order for `:host` to properly mimic shadow DOM semantics, it also needs a separate styling token from other selectors. Consider this example:
+
+```css
+/* light.scoped.css */
+:host {
+    background: blue;
+}
 * {
     background: green;
 }
@@ -216,23 +241,19 @@ So for instance:
 </template>
 ```
 
-This would render:
+This should render the HTML:
 
 ```html
-<x-shadow> <!-- red background -->
-  #shadow-root
-    <style>
-      :host { background: red; }
-      .x-light_light-host { background: blue; }
-      *.x-light_light { background: green; }
-    </style>
-    <x-light class="x-light_light-host"> <!-- blue background -->
-      <div class="x-light_light">Hello</div> <!-- green background -->
-    </x-light>
-</x-shadow>
+<x-light class="x-light_light-host"> <!-- blue background -->
+  <style>
+    .x-light_light-host { background: blue; }
+    *.x-light_light { background: green; }
+  </style>
+  <div class="x-light_light">Hello</div> <!-- green background -->
+</x-light>
 ```
 
-In the above example, observe that `:host` is inserted as-is for the global style, whereas `:host` is transformed for the scoped style. Also note that the styling token is different for `:host` compared to other selectors, such as `*`.
+This matches the same developer intuition at play with native shadow DOM, where `*` refers to elements defined inside the `<template>`, whereas `:host` refers to the "root" containing element.
 
 Note that `:host-context()` is not supported because it [lacks buy-in from Apple and Mozilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1082060#c76).
 

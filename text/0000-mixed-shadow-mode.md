@@ -178,25 +178,29 @@ Other alternatives have not been considered but contributions to this proposal a
 ## Adoption strategy
 
 Component authors must opt-in when implementing components that prefer native shadow in a mixed
-shadow DOM environment due to observable differences between synthetic mode and native mode that are
-not statically verifiable. As such, identifying and resolving for any breaking changes when an
-existing component signals that it prefers native Shadow DOM would be the responsibility of the
-component.
+shadow DOM environment due to observable differences between synthetic mode and native mode. As
+such, it is the responsibility of the component auther to identify and resolve any breaking changes
+for existing components.
 
-Note that the current proposal for mixed mode considers polyfills as all-or-nothing.  LWC is not in
-the business of providing workarounds for discrepancies in browser implementations, unless it
-affects the functionality of the framework itself.
+Note that the current proposal for mixed mode considers polyfills as all-or-nothing. LWC is not in
+the business of providing workarounds for browser implementation issues, unless it affects the
+functionality of the framework itself.
 
 # How we teach this
 
 Developers should know about mixed mode and the ability for a component to favor native Shadow DOM
 before they start implementing new components. This would eliminate any potential tech debt from
-accumulating before crossing the start line. Any unresolved observable differences should be
-documented to assist in deciding whether a component is a candidate for native Shadow DOM.
+accumulating before crossing the start line. Observable differences should be documented to assist
+in deciding whether a component is a candidate for native Shadow DOM.
 
 # Unresolved questions
 
+N/A
+
+# Resolved questions
+
 1. Light DOM components - What does the runtime assertion for preventing synthetic mode components
-   in the native mode component subtree look like with Light DOM components in play? Can we just
-   use a disallow list for synthetic mode components that would allow light DOM components, or is it
-   more complicated than that?
+   in the native mode component subtree look like with Light DOM components in play?
+
+   Enforcing the invariant that a synthetic mode component cannot have any native mode component
+   ancestors would allow native mode components to contain light DOM components.

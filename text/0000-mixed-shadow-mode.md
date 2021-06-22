@@ -37,29 +37,35 @@ ability for a component to access native Shadow DOM APIs, even if the synthetic 
 applied. Mixed mode should be transparent to components and the framework should guarantee this
 through integration testing, which is further discussed below.
 
+### Opting in
+
 A component can signal that it prefers native Shadow DOM by setting a static property called
-`defaultShadowMode` to `native`.
+`preferNativeShadow` to `true`.
 
 ```js
 export default class extends LightningElement {
-    static defaultShadowMode = 'native';
+    static preferNativeShadow = true;
 }
 ```
 
-If this property is not defined, a default value of `false` will be used. The value of this property
-will be read before component construction and cached for the lifetime of the application. The LWC
-engine will throw an exception if the value of `defaultShadowMode` is unrecognized.
+Using this property to opt in will result in the whole component subtree to operate in native shadow
+mode. and it is the responsibility of the component author to ensure that all components are
+compatible with native Shadow DOM. Due to the nature of this feature, it is expected that initial
+usage will start at the leaf components and work its way up the component tree.
 
-All polyfills applied by `@lwc/synthetic-shadow` will look to the value of this property to choose
-whether to invoke the polyfilled API or the native browser API. If the browser does not support
-Shadow DOM (e.g., IE11), then LWC will fallback to synthetic mode regardless of which mode the
-component prefers.
+If this property is not defined, a default value of `false` will be used internally. A value of
+`false` has the same effect as not setting a value at all. The value of this property will be read
+before component construction and cached for the lifetime of the application. The LWC engine will
+throw an exception if the value of `preferNativeShadow` is unrecognized.
 
-Due to observable differences between the two modes, it is likely that components that prefer native
-will need to know whether it is currently operating in native or synthetic Shadow DOM. Any hints
-provided by the framework will only be available to components that set the `defaultShadowMode`
-property to `native` because this information is not useful to components that only support
-synthetic Shadow DOM.
+If the browser does not support Shadow DOM (e.g., IE11), then LWC will fallback to synthetic mode
+even if `preferNativeShadow` is set to `true`. The test to determine whether the browser supports
+Shadow DOM will be to check whether `window.ShadowRoot` is defined. The level of Shadow DOM support
+in the current browser will not be considered when deciding which mode a component will operate in.
+This is because our synthetic shadow polyfill is designed as an all-or-nothing polyfill and cannot,
+for example, allow native event retargeting while using synthetic focus delegation.
+
+### Composition
 
 In terms of composition, a synthetic mode component can contain a native mode component, but the
 inverse is not allowed. Not only does this make things easier to reason about, but many existing

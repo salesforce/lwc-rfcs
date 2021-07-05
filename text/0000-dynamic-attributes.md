@@ -4,7 +4,7 @@ status: DRAFTED
 created_at: 2021-07-05
 updated_at: YYYY-MM-DD
 champion: Mohammed Abdul Sattar (abdulsattar)
-pr: https://github.com/salesforce/lwc-rfcs/pull/51
+pr: https://github.com/salesforce/lwc-rfcs/pull/52
 ---
 
 # Passing Dynamic Attributes/Properties

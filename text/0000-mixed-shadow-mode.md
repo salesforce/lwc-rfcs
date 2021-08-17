@@ -54,6 +54,10 @@ synthetic shadow mode. If the browser supports Shadow DOM the shadow mode will b
 browser does not support Shadow DOM (e.g., IE11) the shadow mode will be synthetic. The test to
 determine Shadow DOM support will be to check whether `window.ShadowRoot` is defined.
 
+Setting `shadowMode` to `undefined` is equivalent to not setting the property at all. A value of
+`undefined` results in the default behavior where the shadow mode of the component depends only on
+the inclusion of the `@lwc/synthetic-shadow` polyfill.
+
 The component must be tested to ensure that all utilized APIs are available in both modes across the
 supported browser matrix, as the level of Shadow DOM support will not be considered when computing
 the shadow mode of a component. A Shadow DOM API should be considered unavailable if it is not

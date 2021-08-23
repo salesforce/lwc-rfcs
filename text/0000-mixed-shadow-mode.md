@@ -58,11 +58,7 @@ Setting `shadowSupportMode` to `default` is equivalent to not setting the proper
 of `default` results in the default behavior where the shadow mode of the component depends only
 on the inclusion of the `@lwc/synthetic-shadow` polyfill.
 
-The component must be tested to ensure that all utilized APIs are available in both modes across the
-supported browser matrix, as the level of Shadow DOM support will not be considered when computing
-the shadow mode of a component. A Shadow DOM API should be considered unavailable if it is not
-implemented in the synthetic polyfill or if it is not natively implemented across all supported
-browsers.
+The only valid values are `default` and `any`. Any other value will result in a compiler error.
 
 ### Implementation
 
@@ -86,16 +82,26 @@ As this invariant cannot be asserted during compile-time, the engine will assert
 
 ### Testing
 
+#### Framework
+
 The LWC framework currently has integration tests for synthetic shadow mode and native shadow mode.
 A third testing mode will be introduced for mixed shadow mode. This test environment will ensure
 that components running in native mode will work correctly even when synthetic Shadow DOM polyfills
 are present.
 
+The existing WPT (Web Platform Tests) test suite for Shadow DOM APIs will also be run to identify
+any coverage gaps in LWC integration tests.
+
+#### Component
+
 Components that support both shadow modes will also need to be tested in both modes. LWC test
 utilities will be updated to facilitate this.
 
-The existing WPT (Web Platform Tests) test suite for Shadow DOM APIs will also be run to identify
-any coverage gaps in LWC integration tests.
+The component must also be tested to ensure that all utilized APIs are available in both modes
+across the supported browser matrix, as the level of Shadow DOM support will not be considered when
+computing the shadow mode of a component. A Shadow DOM API should be considered unavailable if it is
+not implemented in the synthetic polyfill or if it is not natively implemented across all supported
+browsers.
 
 ## Observable differences
 

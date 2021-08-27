@@ -183,9 +183,20 @@ added to the component bundle.
 A potential (non-verified) drawback is that existing components may experience a slight performance
 degradation due to the fact that mixed mode may require some logic-forking.
 
+The code to implement mixed shadow mode will be non-trivial and will eventually be thrown away when
+all supported browsers have mature support for Shadow DOM.
+
 ## Alternatives
 
-Other alternatives have not been considered but contributions to this proposal are welcome.
+One alternative which would allow us to sidestep the mixed mode feature is to simply deprecate LWC's
+synthetic Shadow DOM polyfill.
+
+This alternative is not feasible because Salesforce experiences are composed of components that are
+implemented by multiple parties (e.g., Salesforce developers, customers, AppExchange partners, etc)
+and coordinating such a switch is nearly impossible.
+
+Introducing a smooth transition path would allow customers to prepare for the native Shadow DOM
+rollout without disruption.
 
 ## Adoption strategy
 

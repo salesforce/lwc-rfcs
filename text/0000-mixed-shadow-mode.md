@@ -54,6 +54,13 @@ synthetic shadow mode. If the browser supports Shadow DOM the shadow mode will b
 browser does not support Shadow DOM (e.g., IE11) the shadow mode will be synthetic. The test to
 determine Shadow DOM support will be to check whether `window.ShadowRoot` is defined.
 
+### Opting out
+
+A component that is extending a component class that opted in to native shadow mode can opt out of
+native shadow mode by setting its own static `shadowSupportMode` property to `default`; however,
+this does not allow it to opt out of native shadow mode if any of its ancestor components set their
+static `shadowSupportMode` property to `any`.
+
 Setting `shadowSupportMode` to `default` is equivalent to not setting the property at all. A value
 of `default` results in the default behavior where the shadow mode of the component depends only
 on the inclusion of the `@lwc/synthetic-shadow` polyfill.
@@ -163,7 +170,7 @@ dynamically, but such a workaround would not work in native Shadow DOM.
 Applications that rely on instrumentation libraries that don't yet support Shadow DOM are currently
 able to obtain references to descriptors like `addEventListener()` before they are patched and use
 them to override `@lwc/synthetic-shadow` polyfills where needed. Such workarounds would not work for
-events originating from components that prefer native Shadow DOM.
+events originating from components operating in native shadow mode.
 
 ### Styling
 
@@ -182,11 +189,12 @@ Other alternatives have not been considered but contributions to this proposal a
 
 ## Adoption strategy
 
-When setting `shadowSupportMode` to `any`, it will be the responsibility of the component author to
-ensure that all components in the subtree are compatible with native Shadow DOM. Due to the nature
-of this feature, it is expected that initial usage will start at the leaf components and work its
-way up the component tree. If a component in the subtree does not support native Shadow DOM, the
-component author should work with the other component author to make the appropriate updates.
+When setting `shadowSupportMode` to `any`, the expectation is that all components in the subtree are
+compatible with native Shadow DOM. Due to the transitive nature of this feature, it is expected that
+initial usage will start at the leaf components and work its way up the component tree, but it is
+also possible that things "just work". If a component in the subtree does not function in native
+shadow mode, the component author should work with the other component author to make the
+appropriate updates.
 
 # How we teach this
 

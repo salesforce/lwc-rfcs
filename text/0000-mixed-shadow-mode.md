@@ -81,9 +81,13 @@ only support synthetic Shadow DOM.
 ### Composition
 
 In terms of composition, a synthetic mode component can contain a native mode component, but the
-inverse is not allowed. Not only does this make things easier to reason about, but many existing
+inverse is not allowed. This invariant makes things easier to reason about, and many existing
 components rely on workarounds in synthetic mode that are not possible to support in native mode.
 Examples of these observable differences are further discussed below.
+
+There is also a technical reason for this invariant--slot elements introduced by components
+operating in synthetic mode will end up being "owned" by a native mode ancestor, resulting in
+unintended consequences when distributing slotted content.
 
 As this invariant cannot be asserted during compile-time, the engine will assert it during runtime.
 

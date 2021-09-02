@@ -324,7 +324,7 @@ This is why we support the `:host` selector in scoped CSS instead.
 ```css
 :global(.foo) .bar {} /* .foo is global, .bar is scoped */
 .foo :global(.bar) {} /* .foo is scoped, .bar is global */
-:global(.foo bar) {}  /* both .foo and .bar are global */
+:global(.foo .bar) {}  /* both .foo and .bar are global */
 ```
 
 We choose not to adopt this modifier, because it is non-standard and may never be on the standards track. Whereas with the [CSS Scoping proposal](https://css.oddbird.net/scope/explainer/), we could potentially remove most of the CSS transforms and use the browser's built-in scoping behavior. (The exception is `:host`, but `:host` is at least a standard pseudo-class.)

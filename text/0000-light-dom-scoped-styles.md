@@ -339,11 +339,8 @@ However, the biggest drawback is that `*.global.css` wouldn't work well with ena
 
 ```html
 <x-shadow>
-    <div>Hello</div>
     #shadow-root
-        <x-light>
-            <div>Hello</div>
-        </x-light>
+        <x-light></x-light>
 </x-shadow>
 ```
 
@@ -357,7 +354,7 @@ To be clear: we will not disable `*.scoped.css` for shadow DOM components – it
 
 ## Adoption strategy
 
-Scoped styles would also be opt-in, using `*.scoped.css`.
+Scoped styles would be opt-in, using `*.scoped.css`.
 
 # How we teach this
 

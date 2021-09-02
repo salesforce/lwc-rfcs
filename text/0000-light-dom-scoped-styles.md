@@ -99,17 +99,17 @@ div button {}
 
 In the above CSS, all selectors would match the relevant elements in the template, and only those elements.
 
-In addition, the root element (in this case `x-foo`) can also be targeted with scoped CSS:
+In addition, the root element (in this case `x-foo`) can also be targeted with scoped CSS using `:host`:
 
 ```css
-x-foo {}
+:host {}
 ```
 
 More on this [below](#targeting-the-root-element).
 
 ### Scoping token
 
-For the purposes of this document, a _scoping token_ is some string that we use to scope CSS selectors to a particular region of the DOM.
+For the purposes of this document, a _scoping token_ is a string used to scope CSS selectors to a particular region of the DOM.
 
 In general, there are two approaches for applying scoping tokens to the DOM: classes or attributes. Both have [the same CSS specificity](https://alistapart.com/article/braces-to-pixels/#section4), but [historically](https://github.com/threepointone/glamor/issues/339) and [presently](https://github.com/salesforce/lwc/pull/2329), classes are faster than attributes in terms of the browser's [style calculation](https://developers.google.com/web/fundamentals/performance/rendering/#the_pixel_pipeline) process. So we prefer classes.
 
@@ -317,9 +317,47 @@ The problem with this approach is that templates do not really "own" their tag n
 
 This is why we support the `:host` selector in scoped CSS instead.
 
+### `:global()`
+
+[CSS Modules](https://github.com/css-modules/css-modules#exceptions) and [Svelte](https://svelte.dev/docs#style) both allow the `:global()` modifier to selectively disable scoping:
+
+```css
+:global(.foo) .bar {} /* .foo is global, .bar is scoped */
+.foo :global(.bar) {} /* .foo is scoped, .bar is global */
+:global(.foo bar) {}  /* both .foo and .bar are global */
+```
+
+We choose not to adopt this modifier, because it is non-standard and may never be on the standards track. Whereas with the [CSS Scoping proposal](https://css.oddbird.net/scope/explainer/), we could potentially remove most of the CSS transforms and use the browser's built-in scoping behavior. (The exception is `:host`, but `:host` is at least a standard pseudo-class.)
+
+### `*.global.css`
+
+Another alternative is to make `foo.css` the default (scoped) stylesheet, and `foo.global.css` the global stylesheet.
+
+This solution has some benefits, namely that styles are conceptually "scoped" by default for both light DOM and shadow DOM components. It also encourages developers to use "scoped" by default, which is a good practice for encapsulation.
+
+However, the biggest drawback is that `*.global.css` wouldn't work well with enabling scoped styles for shadow DOM components.  This may seem redundant, but it's actually valuable in the case of a light child within a shadow parent:
+
+```html
+<x-shadow>
+    <div>Hello</div>
+    #shadow-root
+        <x-light>
+            <div>Hello</div>
+        </x-light>
+</x-shadow>
+```
+
+A developer may naïvely assume that styles are "scoped" to both `<x-shadow>` and `<x-light>` as they are in frameworks like Vue and Svelte. However, that's not true – styles from `<x-shadow>` will "bleed" into `<x-light>`. (Sometimes this is desired, sometimes not.)
+
+By using the `*.css` / `*.scoped.css` system, `*.css` acts as "global" (i.e. injected _in situ_ with no transformations) consistently for both light DOM and shadow DOM components. `*.scoped.css` is also consistently applied in both cases.
+
+For developers who prefer to have styles scoped on a per-component basis, regardless of light or shadow DOM, they can use `*.scoped.css` in all their components, and everything will "just work." (Sometimes the scoping will be redundant, e.g. for shadow components within other shadow components, but it's just extra classes.)
+
+To be clear: we will not disable `*.scoped.css` for shadow DOM components – it will work in all LWC components.
+
 ## Adoption strategy
 
-Light DOM components are already opt-in (using `static renderMode = 'light'`), and scoped light DOM styles would also be opt-in, using `*.scoped.css`.
+Scoped styles would also be opt-in, using `*.scoped.css`.
 
 # How we teach this
 

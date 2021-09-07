@@ -11,7 +11,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/50
 
 ## Summary
 
-This proposal adds a mechanism for light DOM components ([#44](https://github.com/salesforce/lwc-rfcs/pull/44)) to have co-located CSS files that only apply to that component.
+This proposal adds a mechanism for components ([#44](https://github.com/salesforce/lwc-rfcs/pull/44)) to have co-located CSS files that are scoped to that component, but without relying on shadow DOM.
 
 ## Basic example
 
@@ -65,11 +65,20 @@ Prior art:
 - [Stencil: scoped styles in light DOM](https://stenciljs.com/docs/styling#scoped-css)
 - [BEM: Block, Element, Modifier](https://en.bem.info/)
 
+Furthermore, scoped styles are useful even for shadow DOM. Consider a shadow parent component with a light child component: the parent's styles "bleed" into the child, which may be surprising for developers who are accustomed to the Vue/Svelte model.
+
+## Invariants
+
+Whatever we design, we would prefer for it to:
+
+1. Use standard CSS syntax rather than non-standard CSS syntax.
+2. Be compatible with the emergent [CSS Scoping Proposal](https://css.oddbird.net/scope/explainer/) (`@scope`).
+
 ## Detailed design
 
 ### File format
 
-A new `*.scoped.css` file can be used alongside an existing `*.css` file. The component author can include either one, both, or neither. `*.scoped.css` is only supported for light DOM templates (marked with `lwc:render-mode="light"`).
+A new `*.scoped.css` file can be used alongside an existing `*.css` file. The component author can include either one, both, or neither.
 
 The `*.scoped.css` file is automatically picked up by the compiler, similar to the existing `*.css` file.
 
@@ -99,7 +108,7 @@ div button {}
 
 In the above CSS, all selectors would match the relevant elements in the template, and only those elements.
 
-In addition, the root element (in this case `x-foo`) can also be targeted with scoped CSS using `:host`:
+In addition, the root element (in this case `x-foo`) can also be targeted using `:host` (even in a light DOM component):
 
 ```css
 :host {}
@@ -259,11 +268,9 @@ Note that `:host-context()` is not supported because it [lacks buy-in from Apple
 
 ## Drawbacks
 
-Conceptually, it's a bit awkward that `foo.css` in a shadow DOM component is scoped, whereas `foo.css` is unscoped for a light DOM component, so you need `foo.scoped.css` instead. However, this default behavior actually matches the native DOM behavior: when you insert a `<style>` into a shadow-DOM-using component, it's scoped, whereas it's unscoped if the component doesn't use shadow DOM.
+Conceptually, it's a bit awkward that `foo.css` in a shadow DOM component is "scoped," whereas `foo.css` is "unscoped" for a light DOM component (using naïve developer expectations about shadow DOM scoping). However, this default behavior actually matches the native DOM behavior: when you insert a `<style>` into a shadow-DOM-using component, it's scoped to that shadow root, whereas a light DOM component doesn't have shadow DOM to make the same guarantee.
 
-It's also a bit awkward that scoped light DOM styles behave differently from shadow DOM styles. Developers will have to understand the difference, and in some cases perhaps prefer shadow DOM over light DOM (e.g. to support dynamically-inserted elements being scoped).
-
-However, our goal here is not to maintain synthetic shadow DOM for all eternity. So if light DOM scoped styles differ from native shadow DOM in favor of simplicity, then this will be better in the long run for performance and maintainability.
+It's also a bit awkward that scoped light DOM styles behave differently from shadow DOM styles. Developers will have to understand the difference, and in some cases perhaps prefer shadow DOM over light DOM (e.g. having one shadow root wrapper component around multiple light DOM components).
 
 ## Alternatives
 
@@ -271,9 +278,11 @@ However, our goal here is not to maintain synthetic shadow DOM for all eternity.
 
 We could simply not implement scoped CSS for light DOM. However, given how popular it is in other frameworks (Svelte, Vue, the wide ecosystem of React CSS-in-JS libraries), it seems like a shame for LWC not to support it.
 
+We have also had feedback from pilot customers that light DOM style scoping is a must-have.
+
 ### Descendant selectors
 
-Another alternative is to use CSS selectors that can style all of a component's descendants. For instance:
+One alternative is to use CSS selectors that can style all of a component's descendants. For instance:
 
 ```css
 /* input */
@@ -354,7 +363,7 @@ To be clear: we will not disable `*.scoped.css` for shadow DOM components – it
 
 ## Adoption strategy
 
-Scoped styles would be opt-in, using `*.scoped.css`.
+Scoped styles would be opt-in, using `*.scoped.css`. Existing CSS (in `*.css` files) would not be affected.
 
 # How we teach this
 

@@ -1,13 +1,13 @@
 ---
 title: Light DOM Component
-status: DRAFTED
+status: APPROVED
 created_at: 2020-09-10
-updated_at: 2020-09-10
-champion: Philippe Riand (priand), Ted Conn (tconn)
-pr: https://github.com/salesforce/lwc-rfcs/pull/44
+updated_at: 2021-09-09
+champion: Nolan Lawson (nlowason) | Mohammed Abdul Sattar (abdulsattar)
+rfc: https://github.com/salesforce/lwc-rfcs/pull/44
 ---
 
-# RFC: Light DOM Component
+# Light DOM Component
 
 ## Summary
 
@@ -333,8 +333,10 @@ Some tradeoffs we might make explicit to developers:
 
 ## Open questions
 
-**How to deal with different namespaced packages claiming the same custom element name?**
+### How to deal with different namespaced packages claiming the same custom element name?
 
 As of today on the Salesforce platform, all the LWC components are authored under the `c` namespace. This namespace dictates the prefix for of the custom elements rendered in the DOM. When delivered via a namespaced package, the components are referenced using their actual namespace (eg. `lightning`, `my_ns`, etc.). However internal component references in the package is done using the `c` namespace.
 
 Because of this if 2 managed packages publish a `button` component, the 2 components will be rendered as `c-button` in DOM. This is problematic because a custom element name can only be bound to a single element constructor. Even if this is not a new issue, the [scoped custom element registry proposal](https://github.com/WICG/webcomponents/issues/716) would solve this issue for shadow DOM components. This is still an issue for light DOM components because scoped custom elements registry can only be attached to a shadow root.
+
+**Resolution:** This issue will be addressed when LWC engine adoption scoped custom element registry.

@@ -144,25 +144,17 @@ The current design of LWC's synthetic shadow scoped styles has several features 
 
 - Using attributes over classes.
 - Allowing `@import` to import other CSS files.
-- Generating CSS strings at runtime rather than compile time.
 - Using `lwc:dom="manual"` and `MutationObserver` to dynamically update the scoping token for new DOM nodes.
 
 The classes vs attribute issue is already addressed above. So let's cover the other differences.
 
-#### `@import` and runtime scoping
+#### `@import`
 
-On the server, synthetic shadow scoped styles are compiled to a JavaScript function which takes the scoping tokens as input and outputs a string. This means that styles are scoped at runtime rather than compile time.
-
-The main reason for this is that two component templates can contain `*.css` files that `@import` the same shared CSS file. This shared CSS file would need to be separately scoped for the two components. Since these shared CSS files could be very large (e.g. a CSS framework), and since they may `@import` further CSS files, it would be impractical to scope all of these files at compile time for each component. It would lead to a lot of duplicated code being generated on the server and sent to the client.
-
-Many of these design decisions were made to emulate native shadow DOM, which is perfectly content to `@import` shared CSS files within separate shadow roots, and to scope them accordingly. However, for light DOM style scoping, we don't have the same constraint of needing to match native shadow DOM semantics.
-
-So for light DOM style scoping, we can have a simpler system: disallow `@import` entirely, and generating the scoped CSS string at compile time. This has performance benefits, at the cost of a probably-niche feature for developers.
-
+For the time being, `@import` will be disallowed within `*.scoped.css` files. It may be enabled in the future, but for now, the invariant that "only files ending in `.scoped.css` are scoped" makes the implementation much simpler, and matches other scoped CSS implementations such as Vue and Svelte, which do not allow `@import`. (In addition, native constructable stylesheets [do not support `@import`](https://chromestatus.com/feature/4735925877735424).)
 
 #### `lwc:dom="manual"` and `MutationObserver`
 
-Like the issue with `@import`, this one arises from the need to match native shadow DOM semantics. Consider this example:
+Consider this example:
 
 ```html
 <!-- example.html -->

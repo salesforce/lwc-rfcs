@@ -1,8 +1,8 @@
 ---
 title: Mixed Shadow Mode
-status: DRAFTED
+status: APPROVED
 created_at: 2021-05-07
-updated_at: YYYY-MM-DD
+updated_at: 2021-09-14
 pr: https://github.com/salesforce/lwc-rfcs/pull/49
 ---
 
@@ -11,10 +11,11 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/49
 ## Introduction
 
 LWC offers a collection of polyfills that implement Shadow DOM features. These polyfills are
-collectively referred to as synthetic Shadow DOM and are published to npm under the
-`@lwc/synthetic-shadow` package. Synthetic Shadow DOM provides a consistent experience for LWC web
-components across the Salesforce-supported browser matrix by implementing Shadow DOM semantics in
-older browsers that do not support it.
+collectively referred to as "the synthetic shadow polyfill" and are published to npm under the
+`@lwc/synthetic-shadow` package. This polyfill implements what we refer to as "the synthetic shadow
+DOM". The synthetic shadow DOM provides a consistent experience for LWC web components across the
+Salesforce-supported browser matrix by implementing Shadow DOM semantics in older browsers that do
+not support it.
 
 Native Shadow DOM support has become more common since the start of the LWC project but applications
 continue to rely on the synthetic shadow polyfills to maintain backwards-compatibility. The removal
@@ -50,28 +51,30 @@ export default class extends LightningElement {
 ```
 
 This mode will result in the whole component subtree to operate in either native shadow mode or
-synthetic shadow mode. If the browser supports Shadow DOM the shadow mode will be native. If the
-browser does not support Shadow DOM (e.g., IE11) the shadow mode will be synthetic. The test to
+synthetic shadow mode. If the browser supports Shadow DOM, the shadow mode will be native. If the
+browser does not support Shadow DOM (e.g., IE11), the shadow mode will be synthetic. The test to
 determine Shadow DOM support will be to check whether `window.ShadowRoot` is defined.
 
 ### Opting out
 
-A component that is extending a component class that opted in to native shadow mode can opt out of
-native shadow mode by setting its own static `shadowSupportMode` property to `default`; however,
+A component that is extending a component class that opts in to native shadow mode can opt out of
+native shadow mode by setting its own static `shadowSupportMode` property to `reset`; however,
 this does not allow it to opt out of native shadow mode if any of its ancestor components set their
 static `shadowSupportMode` property to `any`.
 
-Setting `shadowSupportMode` to `default` is equivalent to not setting the property at all. A value
-of `default` results in the default behavior where the shadow mode of the component depends only
-on the inclusion of the `@lwc/synthetic-shadow` polyfill.
+Setting `shadowSupportMode` to `reset` acts to reset the shadow mode to the original default
+behavior where the mode depends only on the inclusion of the `@lwc/synthetic-shadow` polyfill:
+synthetic mode if the polyfill is present and native mode if it isn't.
 
-The only valid values are `default` and `any`. Any other value will result in a compiler error.
+The only valid values are `reset` and `any`. Any other value will result in a compiler error.
 
 ### Implementation
 
 The value of this property will be read before component construction and cached for the lifetime of
 the application. All instances of a component will operate in the same shadow mode and an error will
-be thrown if the value of `shadowSupportMode` is unrecognized.
+be thrown if the value of `shadowSupportMode` is unrecognized. Note that this is different for
+components that transitively participate in native mode during runtime; the shadow mode of these
+components depends on the structure of the component tree and may be different for each instance.
 
 The `shadowSupportMode` property is implemented as an enum to keep the door open for additional
 shadow modes. For example, we might implement a `native-only` shadow mode for components that only
@@ -80,16 +83,14 @@ only support synthetic Shadow DOM.
 
 ### Composition
 
-In terms of composition, a synthetic mode component can contain a native mode component, but the
-inverse is not allowed. This invariant makes things easier to reason about, and many existing
-components rely on workarounds in synthetic mode that are not possible to support in native mode.
-Examples of these observable differences are further discussed below.
+In terms of composition, the transitive nature of this feature implies that synthetic mode
+components can contain native mode components, but the inverse is not possible. This invariant makes
+things easier to reason about and allows us to completely remove polyfilled behavior from DOM APIs
+being used. There is also a technical reason for this invariant--slot elements introduced by
+components operating in synthetic mode will end up being "owned" by a native mode ancestor,
+resulting in unintended consequences when distributing slotted content.
 
-There is also a technical reason for this invariant--slot elements introduced by components
-operating in synthetic mode will end up being "owned" by a native mode ancestor, resulting in
-unintended consequences when distributing slotted content.
-
-As this invariant cannot be asserted during compile-time, the engine will assert it during runtime.
+There is no need to assert this invariant during runtime, as it is built into the design.
 
 ### Testing
 
@@ -97,8 +98,8 @@ As this invariant cannot be asserted during compile-time, the engine will assert
 
 The LWC framework currently has integration tests for synthetic shadow mode and native shadow mode.
 A third testing mode will be introduced for mixed shadow mode. This test environment will ensure
-that components running in native mode will work correctly even when synthetic Shadow DOM polyfills
-are present.
+that components running in native mode will work correctly even when the synthetic shadow polyfill
+is present.
 
 The existing WPT (Web Platform Tests) test suite for Shadow DOM APIs will also be run to identify
 any coverage gaps in LWC integration tests.
@@ -123,8 +124,8 @@ child component's shadow DOM. This means that elements will exist in the DOM reg
 they are assigned to a slot. This is not the case for LWC--elements that are passed down to child
 components are never rendered unless they are assigned to a slot.
 
-In the following example, `span` will not exist in the DOM in synthetic shadow, but it will exist in
-native shadow.
+In the following example, `span` is not assigned to a slot in `x-child`. In native mode, the `span`
+will exist in the DOM. In synthetic mode, the `span` will not exist in the DOM.
 
 ```html
 <!-- x-parent -->
@@ -159,22 +160,31 @@ appearance in the template.
 
 There currently exists an escape hatch that allows listeners to handle non-composed events outside
 of the root LWC node if the event originates from a non-LWC component in the subtree. This behavior
-exists for legacy reasons, is only possible to allow in a synthetic Shadow DOM environment, and
-cannot be preserved in a native Shadow DOM context.
+exists for legacy reasons, is only possible in a synthetic Shadow DOM environment, and cannot be
+preserved in a native Shadow DOM context.
 
 ### Accessibility
 
-The most common accessibility issue in LWC is related to id-referencing across shadow boundaries
-(e.g., an aria-describedby attribute that references an element outside of its shadow tree). The
-current workaround for this is to bypass the LWC engine's id-mangling by setting attributes
-dynamically, but such a workaround would not work in native Shadow DOM.
+A common accessibility workaround in LWC is related to id-referencing across shadow boundaries
+(e.g., an aria-describedby attribute that references an element outside of its shadow tree). In
+synthetic mode, it is possible to create references across shadow boundaries by dynamically setting
+attributes in both the parent and child components. Such a workaround would not work in native
+Shadow DOM because of native id-scoping.
+
+The workaround for this would be to dynamically set text in the right places to keep id-referencing
+contained in the same shadow root. Components in the `lightning` namespace have been doing this
+successfully for some time now.
 
 ### Instrumentation
 
 Applications that rely on instrumentation libraries that don't yet support Shadow DOM are currently
-able to obtain references to descriptors like `addEventListener()` before they are patched and use
-them to override `@lwc/synthetic-shadow` polyfills where needed. Such workarounds would not work for
-events originating from components operating in native shadow mode.
+able to obtain references to descriptors like `addEventListener()` before they are patched by the
+synthetic shadow polyfill, and use them to override `@lwc/synthetic-shadow` polyfills where needed.
+This allows them to handle non-composed events that should never have been able to cross shadow
+boundaries.
+
+Such a workaround would not work for events originating from components operating in native shadow
+mode because the composedness of an event is controlled natively by the browser.
 
 ### Styling
 

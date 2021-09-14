@@ -53,7 +53,8 @@ The result will be:
 
 ## Motivation
 
-For Light DOM ([#44](https://github.com/salesforce/lwc-rfcs/pull/44)), the default assumption is that styles are unscoped. In other words, a light DOM component essentially just contains `<style>` tags that are inserted into the DOM _in situ_. (The actual implementation may be slightly different, but this is the basic mental model.)
+For ([light DOM components](./0114-light-dom.md)), the default assumption is that styles are unscoped. In other words, a light DOM component essentially just contains `<style>` tags that are inserted into the DOM _in situ_. (The actual implementation may be slightly different, but this is the basic mental model.)
+
 
 Many frameworks, however, have a concept of _scoped styles_, even without using shadow DOM. These offer good developer ergonomics, because developers can concentrate on the CSS co-located with a particular component, without worrying how that CSS might affect other components.
 

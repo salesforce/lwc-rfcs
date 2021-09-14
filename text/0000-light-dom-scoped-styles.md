@@ -11,7 +11,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/50
 
 ## Summary
 
-This proposal adds a mechanism for components ([#44](https://github.com/salesforce/lwc-rfcs/pull/44)) to have co-located CSS files that are scoped to that component, but without relying on shadow DOM.
+This proposal adds a mechanism for components (including [light DOM components](./0114-light-dom.md)) to have co-located CSS files that are scoped to that component, but without relying on shadow DOM.
 
 ## Basic example
 

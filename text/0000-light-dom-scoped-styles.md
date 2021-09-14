@@ -91,12 +91,12 @@ Inside of `*.scoped.css`, the CSS selectors are scoped to all elements defined i
 
 ```html
 <!-- foo.html -->
-</template>
+<template>
   <div>
     <span></span>
     <button class="my-button"></button>
   </div>
-<template>
+</template>
 ```
 
 ```css

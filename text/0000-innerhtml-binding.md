@@ -58,7 +58,7 @@ This proposal introduces a new `lwc:inner-html` directive to inject raw HTML con
 
 At runtime the `lwc:inner-html` directive binds the directive value to the `Element.innerHTML` property. During each rendering cycle, the LWC engine diff the current value with its previous value. If the value changes between two rendering cycles, the LWC engine sets the element `innerHTML` property to the new value.
 
-`Element.innerHTML` is a wellknown XSS sink. To prevent malicious content injection via this `lwc:inner-html` directive, a new `sanitizeHtmlContent` hook is introduced on the LWC engine. This hook is invoked during the LWC component rendering cycle and can be used to strip out malicious code from the content to be injected. The hook accepts a single `content` string argument. The `content` is raw HTML content passed to the `lwc:inner-html` directive. The `sanitizeHtmlContent` hook is expected to return the sanitized HTML content as a string. By default, the `sanitizeHtmlContent` hook is a pass-through.
+`Element.innerHTML` is a wellknown XSS sink. To prevent malicious content injection via this `lwc:inner-html` directive, a new `sanitizeHtmlContent` hook is introduced on the LWC engine. This hook is invoked during the LWC component rendering cycle and can be used to strip out malicious code from the content to be injected. The hook accepts a single `content` argument, which is the value passed to the `lwc:inner-html` directive. The `sanitizeHtmlContent` hook is expected to return the sanitized HTML content as a `string`. By default, the `sanitizeHtmlContent` hook will throw an error indicating that it needs to be overridden.
 
 ```js
 import * as lwc from 'lwc';

@@ -66,7 +66,7 @@ Prior art:
 - [Stencil: scoped styles in light DOM](https://stenciljs.com/docs/styling#scoped-css)
 - [BEM: Block, Element, Modifier](https://en.bem.info/)
 
-Furthermore, scoped styles are useful even for shadow DOM. Consider a shadow parent component with a light child component: the parent's styles "bleed" into the child, which may be surprising for developers who are accustomed to the Vue/Svelte model.
+Furthermore, scoped styles are useful even for shadow DOM. Consider a shadow parent component with a light child component: the parent's styles "bleed" into the child, which may be surprising for developers who are accustomed to the Vue/Svelte model. (Note that this only applies to native shadow DOM, not synthetic shadow DOM.)
 
 ## Invariants
 

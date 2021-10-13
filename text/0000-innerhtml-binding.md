@@ -60,13 +60,17 @@ At runtime the `lwc:inner-html` directive binds the directive value to the `Elem
 
 `Element.innerHTML` is a wellknown XSS sink. To prevent malicious content injection via this `lwc:inner-html` directive, a new `sanitizeHtmlContent` hook is introduced on the LWC engine. This hook is invoked during the LWC component rendering cycle and can be used to strip out malicious code from the content to be injected. The hook accepts a single `content` argument, which is the value passed to the `lwc:inner-html` directive. The `sanitizeHtmlContent` hook is expected to return the sanitized HTML content as a `string`. By default, the `sanitizeHtmlContent` hook will throw an error indicating that it needs to be overridden.
 
+You can override the `sanitizeHtmlContent` hook by calling the `setHooks` API. For example:
+
 ```js
-import * as lwc from 'lwc';
+import { setHooks } from 'lwc';
 import DOMPurify from 'dompurify';
 
-lwc.sanitizeHtmlContent = function (content) {
-    return DOMPurify.sanitize(content);
-};
+setHooks({
+  sanitizeHtmlContent(content) {
+      return DOMPurify.sanitize(content);
+  }
+});
 ```
 
 When running in native shadow, the shadow DOM style automatically gets applied to injected content. In synthetic shadow, the `lwc:inner-html` relies on the same mechanism than `lwc:dom="manual"` to apply the scoped styles to the manually injected content. The synthetic shadow DOM attaches a MutationObserver on the root element and watches for DOM changes in the subtree to apply the styling attributes.

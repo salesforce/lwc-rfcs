@@ -98,11 +98,17 @@ Programmatically importing a stylesheet module from JavaScript using an import d
 
 However, until now, the compile-time behavior and runtime behavior for stylesheet modules have never been fully specified. This section fills this specification gap.
 
-Stylesheets modules are identifiable by their `.css` extension. This kind of module only exposes a single default export. The exported value is an opaque object, in other words, the internal implementation of the stylesheet is not exposed to developers. Keeping the exported value opaque is necessary until all the browser vendors agree on [Constructable Stylesheets](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet) implementation.
+Stylesheets modules are identifiable by their `.css` extension. This kind of module only exposes a single default export. The exported value is an opaque object, in other words, the internal implementation of the stylesheet is not exposed to developers. Developers shouldn't rely on the shape of those objects as it may change.
 
 ```js
 import stylesheetA from './styles-a.css';
 import stylesheetB from './styles-b.css';
+```
+
+Scoped stylesheet modules work similarly than standard stylesheet modules. They can be imported using the `.scoped.css` extension.
+
+```js
+import scopedStylesheet from './styles.scoped.css';
 ```
 
 #### Comparison with CSS module script

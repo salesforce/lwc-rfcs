@@ -137,6 +137,14 @@ import styles from "./styles.css?optional=true";
 
 This query string should only be used by the LWC template compiler to differentiate between the optional stylesheet imported from templates and the required stylesheet explicitly imported by developers.
 
+The import assertion proposal leaves the the door open for [potential future extensions](https://github.com/tc39/proposal-import-assertions#follow-up-proposal-evaluator-attributes) to avoid bloating the query string.
+
+```js
+// This syntax was discussed as part of the import assertion proposal and might be added in a
+// follow-up proposal.
+import styles from "./styles.css" assert { type: "lwc/css" } with { optional: true };
+```
+
 ## Drawbacks
 
 With this proposal, developers have now the capability to extends any other component to inject their own styles. This is an issue if those components aren't meant to be extended. 

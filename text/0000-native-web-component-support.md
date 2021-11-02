@@ -3,7 +3,7 @@ title: Native Web Component Support
 status: DRAFTED
 created_at: 2021-10-21
 updated_at: YYYY-MM-DD
-pr: (leave this empty until the PR is created)
+pr: https://github.com/salesforce/lwc-rfcs/pull/58
 ---
 
 # Native Web Component Support
@@ -49,26 +49,25 @@ architecture, and as such, it relies on a directory-based module resolution syst
 compatible with how developers create components on the platform. This basically guarantees that no
 two parties can define the same component, allowing LWC to side-step a variety of security concerns.
 
-Once the specification for [Scoped Custom Element
-Registries](https://github.com/WICG/webcomponents/issues/716) reaches consensus.
-
-This proposal is about adding support for native web components for off-platform users, with the
-additional goal of exploring how we might do the same for platform users.
+This proposal is about adding native web component support for off-platform users, with the
+additional goal of exploring how we might do the same for platform users. Any solution should be
+forward-compatible with [Scoped Custom Element Registries].
 
 ## Motivation
 
 The long term goal of LWC is to provide a thin abstraction layer on top of native browser APIs.
-Adding support for the custom element registry would be a step towards that goal. In addition, if we
-are able to figure out a secure way to support native web components on the platform through
-forward-compatible abstractions, that would allow a smooth migration path for customers tasked with
-migrating existing web components to the platform.
+Adding support for the custom element registry for off-platform applications would be a step towards
+that goal.
+
+For platform applications, the major motivation is to facilitate platform integration and allow
+developers to migrate existing tooling and solutions without having to utilize LWC.
 
 ## Detailed design
 
 ### OSS restriction
 
-In order for LWC to support native web components registered via `customElements.define()`, the
-following needs to happen.
+In order for LWC to support native web components for OSS applications, the following needs to
+happen.
 
 1. Prevent LWC components from using the same custom element as a native web component.
 2. Prevent native web components from using the same custom element as an LWC component.
@@ -78,24 +77,29 @@ In order to prevent namespace collisions between LWC components and native web c
 components should be registered in the same custom element registry that native web components will
 be registered in.
 
-The third item about relaxing the restriction that LWC must know about all available components
-before rendering would be a big change. LWC currently needs to know about all available components
-when rendering an application. If it encounters an unknown component, an exception is thrown. This
-behavior could be modified so that unrecognized custom elements are rendered as-is with the
-expectation that they will be natively upgraded. To ensure that only off-platform applications can
-use this feature, it should be implemented behind a feature flag.
+The third requirement of relaxing the restriction that LWC must know about all available components
+before rendering, would be a significant change. Currently, if an unknown component is encountered,
+an exception is thrown. This behavior should be modified so that unrecognized custom elements are
+rendered as-is with the expectation that they will be natively upgraded. This opens up the
+possibility of rendering custom elements that are `HTMLUnknownElement`, which is basically an
+extension of `HTMLElement` without any additional fields or methods.
 
-It would seem that the reason we have this restriction in
-place is to disallow components to be defined during runtime. (Look into whether this is a
-platform-specific restriction.)
+To ensure that only off-platform applications can use this feature, it should be implemented behind
+a feature flag (e.g., `ENABLE_CUSTOM_ELEMENT_REGISTRY_RESOLUTION`).
 
 ### Platform restriction
 
-1. Prevent the registering of custom elements in different namespaces.
+In addition to the OSS restrictions outlined above, in order for LWC to support native web
+comopnents for platform applications, the following needs to happen.
 
+1. Prevent registration of custom elements in a namespace different from the current one.
 
-This behavior allowed us to avoid the problem where different namespaces compete to register the
-same custom element as the page is rendered, so to ensure that
+As mentioned earlier, platform applications at Salesforce are based on a multi-tenant architecture.
+This means that, on any given page, components can be authored by internal developers, customers,
+and third party developers. In such an environment, keeping data secure is a major concern, and
+exposing a global registry is problematic because a bad actor could hijack an existing component
+by registering it first. This concern can be alleviated by restricting the registration of custom
+elements to the current namespace.
 
 ## Drawbacks
 
@@ -132,5 +136,8 @@ How should this feature be taught to existing Lightning Web Components developer
 
 # Unresolved questions
 
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
+1. Are there any concerns with allowing the rendering of custom elements that are
+   `HTMLUnknownElement`?
+
+
+[Scoped Custom Element Registries]: https://github.com/WICG/webcomponents/blob/gh-pages/proposals/Scoped-Custom-Element-Registries.md

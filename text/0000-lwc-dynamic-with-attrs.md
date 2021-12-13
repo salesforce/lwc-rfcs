@@ -11,11 +11,11 @@ pr: (leave this empty until the PR is created)
 ## Summary
 
 This proposal augments `lwc:dynamic` to not just accept the constructor, but also
-the properties/attributes/event listeners that are passed to the component.
-This allows them to be changed dynamically.
+the properties that are passed to the component. This allows them to be changed dynamically.
+Support for attributes/event listeners will be added later if required.
 
 ## Terminology
-*component config*: properties/attributes/event/constructor listeners on a component
+*component config*: properties/constructor listeners on a component. Will be amended later to include attributes/event listeners.
 
 ## Basic example
 
@@ -35,16 +35,14 @@ export default class App extends LightningElement {
     async loadCtor() {
         const constructor = await import("x/child");
 
-        const attrs = { style: 'color: red;' };
         const props = { name: 'John Foo' };
-        const eventListeners = { onchange: handleChange };
 
-        this.cmpConfig = { constructor, attrs, props, eventListeners };
+        this.cmpConfig = { constructor, props };
     }
 }
 ```
 In the above example, `<x-cmp>` is created with the constructor `x/child`. The `<x-cmp>` element will have
-the `style` as an attribute, `name` assigned as a property and `handleChange` added as an event listener of type `change`.
+ `name` .
 
 ## Motivation
 
@@ -69,16 +67,14 @@ proposal, we modify it to accept `LightningElementConstructor | LightningElement
 ```ts
 type LightningElementConfig = {
     constructor: LightningElementConstructor,
-    attrs: Record<string, any>,
     props: Record<string, any>,
-    eventListeners: Record<`on${string}`, any>,
 }
 ```
 
 LWC engine should continue working as before when `lwc:dynamic` receives a `LightningElementConstructor`.
 
 However, if it receives an object, it should consider it *config* The newly created component should be instantiated
-with the above attributes, keys and event listeners.
+with the above properties.
 
 It is worth noting that event listeners declared in the template are bound to the component. Event listeners declared
 via `lwc:dynamic` in this proposal should also be bound to the component.
@@ -88,17 +84,10 @@ via `lwc:dynamic` in this proposal should also be bound to the component.
 The object passed to `lwc:dynamic` is reactive. If the `constructor` changes, it is equivalent to how `lwc:dynamic` works
 currently: a new component is created along with the *config*
 
-Reactivity on the*config* significantly from what we had earlier because:
+Reactivity on the*config* significantly from what we had earlier because properties
+can't change shape: we can't have new props that we didn't have in the previous render, currently.
 
-1. Attributes and Properties can't change shape: we can't have new attributes that we didn't have in the previous render, currently. Same for properties.
-2. Event listeners can't be changed at all: we can't have new event listeners or even change earlier ones.
-
-The above restrictions need to be removed for accepting a *config* `lwc:dynamic`.
-
-**Attributes change**
-1. Key in new render, but not in old render: attribute is added.
-2. Key in old render, but not in new render: attribute is removed.
-3. Key in old render and also in new render: attribute is present and is subject to current diffing algo.
+The above restrictions need to be removed for accepting a *config* in `lwc:dynamic`.
 
 **Properties change**
 1. Key in new render, but not in old render: property is set to the value passed.
@@ -106,30 +95,18 @@ The above restrictions need to be removed for accepting a *config* `lwc:dynamic`
 3. Key in old render and also in new render: property is set to the value passed.
 Essentially, for properties, we just go over the property set everytime and set those properties.
 
-**Listeners change**
-1. Key in new render, but not in old render: listener is added.
-2. Key in old render, but not in new render: listener is removed.
-3. Key in old render and also in new render: if the value is same as older one, do nothing. Else remove old listener and add new listener.
-
 ### Duplicate properties
 
 **Duplicate keys within *config***
 
-Duplicate keys cannot exist within attrs, props and eventListeners since these are objects. However, the same key can be
-present in `attrs` as well as in `props`. Moreover, some keys that are different actually do the same function, e.g.
-`aria-label` as an attribute does the same thing as `ariaLabel` as a property.
-
-For handling this problem, we simply apply `attrs` and then apply `props`, leading to `props` overriding `attrs`.
-
-This is not a problem for event listeners since they don't conflict with `attrs` or `props`. All event listeners should
-start with `on` and we should a runtime throw error when attrs/props start with `on`.
+Duplicate keys cannot exist within props since these are objects.
 
 **Duplicate keys within config and template**
 A property can be declared in both the template and the *config*.
 
 ```html
 <template>
-    <x-cmp style="color: red;" lwc:dynamic={cmp}></x-cmp>
+    <x-cmp name="lwc" lwc:dynamic={cmp}></x-cmp>
 </template>
 ```
 ```js
@@ -137,12 +114,12 @@ A property can be declared in both the template and the *config*.
 loadCtor = async () => {
     this.cmp = {
         constructor: await import("x/child"),
-        attrs: { style: "color: blue; " }
+        props: { name: 'raptor' }
     }
 }
 ```
-One solution is to throw on detecting any attributes in the template when `lwc:dynamic` accepts an object. Since, the *config*
-can contain all the attributes/properties/event listeners, it's not required to declare any in the template.
+One solution is to throw on detecting any properties in the template when `lwc:dynamic` accepts an object. Since, the *config*
+can contain all the props, it's not required to declare any in the template.
 This needs to be a runtime check, since we can't know at compile time if `lwc:dynamic` is accepting an object or
 a function (in which case it can accept *config* the template itself).
 

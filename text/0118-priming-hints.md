@@ -28,11 +28,98 @@ In order to increase the scope of priming possible, we suggest allowing componen
 
 ## Example
 
-// TODO: example based on lightning-tab/lightning-tabset
+Consider a "bar" container that acts like a tab set. It holds a collection of items, and allows the user to interactively choose an item to be displayed in its default slot:
+
+```html
+<!-- bar.html -->
+<template>
+    <div class={computedClass} title={title}>
+        <bar-header></bar-header>
+        <slot></slot>
+    </div>
+</template>
+```
+
+The items look like the following:
+
+```js
+export default class BarItem extends LightningElement {
+    @track _loadContent = false;
+
+    @api
+    loadContent() {
+        this._loadContent = true;
+
+        this.dispatchEvent(new CustomEvent('active'));
+    }
+
+    ...
+}
+```
+
+```html
+<!-- barItem.html -->
+<template>
+    <template if:true={_loadContent}>
+        <slot></slot>
+    </template>
+</template>
+```
+
+The container lazily loads the contents of its children only when they are first selected for view. The bar container can control the currently visible barItem by calling the loadContent() method to load its content and using CSS to hide any previously displayed barItem.
+
+For a prefetch mechanism based on static analysis, this structure poses a barrier. The conditional loading of barItem is governed by a member _loadContent that is triggered by user interaction. If the prefetch mechanism extracts composition information from markup, and executes resolution based on that analysis without a DOM or user interaction, the best it could hope for it priming the contents of the barItem that is first displayed by default. For some use cases of priming that is reasonable (such as for speeding up render while online). However, for priming for an offline use case one may desire a greater scope of priming - priming the contents of all the barItems. In this case, it would be desirable to provide a hint to the priming mechanism to say "please assume this if:true condition is true for priming purposes".
 
 ## Design
 
-// TODO: exact format
+We propose adding new meaningful comments to LWC which allow components to opt-in to marking properties that a priming mechanisms could assume to be true. This will allow priming mechanisms to prime a greater scope of component contents.
+
+These comments would be used on property getters, and their format would be:
+
+```js
+/**
+ * priming-hint: <scope> <value>
+ */
+```
+
+With the following values for "scope":
+- always: priming mechanisms should always evaluate the given property with the given value for the purposes of priming through the component tree
+- offline: priming mechanisms should evaluate the given property with the given value for the purposes of priming through the component tree only if the priming is targeted at an offline use case
+
+We differentiate between these 2 scopes because online and offline priming use cases can be qualitatively different. Online priming is aimed at enhancing performance of rendering, with the assumption that further resources and data can be pulled from the server later on as necessary. Offline priming aims to prime a complete useful set of resources and data from the server up-front with no additional requests later. In general, online priming is more sensitive to performance and offline priming is more sensitive to missing scope.
+
+For our bar example, we could modify the barItem component by replacing the use of a @track member with a new @api property that uses could make use of this priming hint to guide a priming mechanism to always prime its contents:
+
+```js
+export default class BarItem extends LightningElement {
+
+    /**
+     * priming-hint: always true
+     */
+    @api
+    viewContent() {
+        return this._loadContent;
+    }
+
+    @api
+    loadContent() {
+        this._loadContent = true;
+
+        this.dispatchEvent(new CustomEvent('active'));
+    }
+
+    ...
+}
+```
+
+```html
+<!-- barItem.html -->
+<template>
+    <template if:true={viewContent}>
+        <slot></slot>
+    </template>
+</template>
+```
 
 ## Other Possible Strategies
 
@@ -80,7 +167,7 @@ We could express the priming overrides within metadata XML. This feels a little 
 
 ## How we teach this
 
-// TODO
+Teaching about priming hints should be part of more comprehensive user docuemntation around static analysis and priming in LWC.
 
 # Survey of prior art
 

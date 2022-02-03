@@ -3,7 +3,7 @@ title: Priming Hints
 status: DRAFTED
 created_at: 2022-01-04
 updated_at: 2022-01-04
-pr: https://github.com/salesforce/lwc/pull/????
+pr: https://github.com/salesforce/lwc/pull/61
 champion: Andrew Huffman (andrew.huffman@salesforce.com)
 ---
 

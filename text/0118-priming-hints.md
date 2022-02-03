@@ -4,6 +4,7 @@ status: DRAFTED
 created_at: 2022-01-04
 updated_at: 2022-01-04
 pr: https://github.com/salesforce/lwc/pull/????
+champion: Andrew Huffman (andrew.huffman@salesforce.com)
 ---
 
 # Priming Hints
@@ -12,7 +13,7 @@ pr: https://github.com/salesforce/lwc/pull/????
 
 Priming is an out-of-band mechanism for ensuring that context-specific LWC modules and dependencies are made available in client caches prior to rendering. Priming is useful for both speeding up rendering of components when online, and for ensuring the ability to render unvisited components when offline.
 
-One priming mechanism available for LWC is [Komaci] (https://rfcs.lwc.dev/rfcs/komaci)
+One priming mechanism available for LWC is [Komaci](https://rfcs.lwc.dev/rfcs/komaci)
 
 This document suggests an enhancement to LWC that would allow components to provide hints to help drive more complete priming.
 
@@ -88,7 +89,7 @@ With the following values for "scope":
 
 We differentiate between these 2 scopes because online and offline priming use cases can be qualitatively different. Online priming is aimed at enhancing performance of rendering, with the assumption that further resources and data can be pulled from the server later on as necessary. Offline priming aims to prime a complete useful set of resources and data from the server up-front with no additional requests later. In general, online priming is more sensitive to performance and offline priming is more sensitive to missing scope.
 
-For our bar example, we could modify the barItem component by replacing the use of a @track member with a new @api property that uses could make use of this priming hint to guide a priming mechanism to always prime its contents:
+For our bar example, we could modify the barItem component by replacing the use of a `@track` member with a new `@api` property that uses could make use of this priming hint to guide a priming mechanism to always prime its contents:
 
 ```js
 export default class BarItem extends LightningElement {
@@ -128,7 +129,7 @@ Here is a brief survey of other strategies we considered for priming hints.
 ### Contextual Import
 
 ```js
-import {primingContext} from @salesforce/priming;
+import {primingContext} from `@salesforce/priming`;
 ...
 get loadContent {
     return primingContext?.isPriming || _loadContent;
@@ -140,7 +141,7 @@ Here we have the property itself explicitly import an indicator of priming statu
 ### Annotation
 
 ```js
-import {forcePriming} from @salesforce/priming;
+import {forcePriming} from `@salesforce/priming`;
 ...
 
 @forcePriming

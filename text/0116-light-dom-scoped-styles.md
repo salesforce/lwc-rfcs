@@ -1,8 +1,8 @@
 ---
 title: Light DOM Scoped Styles
-status: DRAFTED
+status: APPROVED
 created_at: 2021-05-14
-updated_at: YYYY-MM-DD
+updated_at: 2022-06-21
 champion: Nolan Lawson (nolanlawson), Abdulsattar Mohammed (abdulsattar)
 pr: https://github.com/salesforce/lwc-rfcs/pull/50
 ---

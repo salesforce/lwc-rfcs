@@ -96,7 +96,8 @@ Light DOM is considered "beta" and has not officially shipped in LEX yet. Howeve
 
 ### More complexity in the design
 
-The old system (`*.css` is unscoped, `*.scoped.css` is scoped) was simple to describe. The new system has a 3x3 table to explain how it works.
+The old system (`*.css` is unscoped, `*.scoped.css` is scoped) was simple to describe. The new system has a 2x3 table to explain how it works.
+
 
 Arguably the new system is "simpler," in that developers can mostly just use `*.css` and it will be "scoped." However, once you get into the weeds of what "scoped" actually means (e.g. the fact that scoping is useful for shadow DOM as well, e.g. in the case of a shadow-parent-light-child situation or [multiple templates](https://lwc.dev/guide/html_templates#render-multiple-templates)), then the existing system is actually much simpler.
 

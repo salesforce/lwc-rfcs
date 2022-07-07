@@ -2,7 +2,7 @@
 title: Native Web Components Support
 status: DRAFTED
 created_at: 2022-07-05
-updated_at: 2022-07-05
+updated_at: 2022-07-06
 pr: https://github.com/salesforce/lwc-rfcs/pull/66
 ---
 
@@ -54,8 +54,10 @@ could default to attributes and set properties when setting a data structure.
 
 When passing data to a native web component, we can take a heuristical approach where if the
 property exists, the property is set. Otherwise the attribute is set. While it may be advantageous
-to require an explicit signal in the form of a directive, this approach seems to strike a good
-balance between developer experience and API semantics.
+to require an explicit signal in the form of a directive (both in terms of static analysis and
+performance), this approach seems to strike a good balance between developer experience and API
+semantics. It should be noted that this heuristical approach will require a check on the element's
+prototype to see whether a property is defined, which will incur a runtime performance cost.
 
 ### Events
 
@@ -64,23 +66,35 @@ through the synthetic shadow polyfill due to those methods and properties being 
 This is the current status quo for native shadow roots and should not be an issue for supporting
 third party web components.
 
-LWC's declarative event bindings only support lowercase events. Events using anything other than
-lowercase must be listened to imperatively. This would not need to change in order to support native
-web components.
+Today, LWC's declarative event bindings only support lowercase events. Events using anything other
+than lowercase must be listened to imperatively. There are ongoing discussions (e.g., [#1811](1811)
+and [#1904](1904)) to relax this constraint but the current behavior would not need to change in
+order to support native web components.
 
 ### Serverside rendering (SSR)
 
-LWC's SSR implementation is tailored specifically for LWC and may not be compatible with a native
-web component implementation. We would probably need to implement the entire synchronous DOM API if
-we wanted to support SSR for native web components.
+If an external element is marked with a directive that identifies it as such, its custom element
+should be rendered and its attributes should be set. Properties will not be set and no attempt will
+be made to render the subtree.
 
-## Drawbacks
+### Custom element conflicts
 
-As with any new feature, adding support for native web components introduces additional complexity.
+In environments like the Salesforce platform which employ a multitenant architecture, developers
+will certainly run into custom element conflicts when given the freedom to register their own
+components. This can be managed in some environments (i.e., internal developers or applications
+consuming OSS LWC) but will require virtualization per sandbox before we can GA the feature.
+
+#### Proposed solution
 
 From the platform perspective, there are a few things that Locker vNext needs to implement in order
 to GA this feature. 1) Lift the restriction on `customElements.define()` and 2) provide the
 virtualization mechanism to allow different namespaces to use the same component name.
+
+## Drawbacks
+
+As with any new feature, adding support for native web components introduces additional complexity.
+One such change will involve the prevention of external custom elements from being hoisted when
+optimizing static content.
 
 ## Alternatives
 
@@ -101,3 +115,7 @@ asking for. Documentation of the new `lwc:external` directive would be required.
   web components from referential integrity?
 - Investigate whether the synthetic shadow slotting implementation is compatible with native web
   components.
+
+
+[1811]: https://github.com/salesforce/lwc/issues/1811
+[1904]: https://github.com/salesforce/lwc/issues/1904

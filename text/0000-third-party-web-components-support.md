@@ -20,8 +20,8 @@ While there are several ways to do this today (e.g., through the use of iframes 
 `lwc:dom="manual"` directive), the preferred way would be to enable this use case through the
 rendering of native web components. Browser support for native web components was still in the early
 stages when LWC was first implemented, but it is quite good today. In addition, many frameworks now
-support native web components as a compilation target so it makes sense to add native web component
-support as a first class citizen.
+support native web components as a compilation target so it makes sense to add first class support
+for native web components.
 
 ## Detailed design
 
@@ -29,9 +29,8 @@ This section covers the identified work to add native web component support.
 
 ### Constructor resolution
 
-By convention, LWC implicitly resolves component constructors for every custom element in its
-template. This behavior needs to be modified to allow authors the flexibility to resolve their own
-components.
+By convention, LWC implicitly resolves component constructors for custom elements in its template.
+This behavior needs to be modified to allow authors the flexibility to resolve their own components.
 
 #### Proposed solution
 
@@ -39,6 +38,39 @@ LWC would provide a directive (e.g., `lwc:external`) which signals that componen
 be delegated to the browser. LWC will not attempt to resolve components for custom elements tagged
 with this directive. If it happens that the component was not registered, the custom element will
 simply render as an HTMLUnknownElement, which is the default browser behavior.
+
+For example, given the following template:
+```html
+<template>
+  <lwc-foo bar={bar}></lwc-foo>
+  <native-foo lwc:external bar={bar}></native-foo>
+</template>
+```
+
+The template compiler would output the following:
+```js
+import _lwcFoo from "lwc/foo";
+import { registerTemplate } from "lwc";
+function tmpl($api, $cmp, $slotset, $ctx) {
+  const { c: api_custom_element, h: api_element } = $api;
+  return [
+    api_custom_element("lwc-foo", _lwcFoo, {
+      props: {
+        foo: $cmp.bar,
+      },
+      key: 0,
+    }),
+    api_element("native-foo", {
+      attrs: {
+        foo: $cmp.bar,
+      },
+      key: 1,
+    }),
+  ];
+}
+export default registerTemplate(tmpl);
+tmpl.stylesheets = [];
+```
 
 ### Passing data
 
@@ -55,21 +87,24 @@ could default to attributes and set properties when setting a data structure.
 When passing data to a native web component, we can take a heuristical approach where if the
 property exists, the property is set. Otherwise the attribute is set. While it may be advantageous
 to require an explicit signal in the form of a directive (both in terms of static analysis and
-performance), this approach seems to strike a good balance between developer experience and API
-semantics. It should be noted that this heuristical approach will require a check on the element's
-prototype to see whether a property is defined, which will incur a runtime performance cost.
+performance), the proposed solution strikes a good balance between developer experience and API
+semantics. This heuristical approach will require a check on the element's prototype to see whether
+a property is defined. This will incur a runtime performance cost, which can be amortized over the
+lifetime of the component by caching the result of the check.
 
 ### Events
+
+Today, LWC's declarative event bindings only support lowercase events. Events using anything other
+than lowercase can be listened for using the imperative `addEventListener()` API. There are several
+historical discussions (e.g., [#1811][1811] and [#1904][1904]) about relaxing this constraint;
+however, the current behavior would not need to change in order to support native web components. It
+should be noted that adding support for events has always been about improved interoperability, as
+the browser's imperative API has no restriction regarding the event type.
 
 EventTarget polyfilled methods and properties such as `add/removeEventListener` and `target` go
 through the synthetic shadow polyfill due to those methods and properties being globally patched.
 This is the current status quo for native shadow roots and should not be an issue for supporting
 third party web components.
-
-Today, LWC's declarative event bindings only support lowercase events. Events using anything other
-than lowercase must be listened to imperatively. There are ongoing discussions (e.g., [#1811](1811)
-and [#1904](1904)) to relax this constraint but the current behavior would not need to change in
-order to support native web components.
 
 ### Serverside rendering (SSR)
 
@@ -111,11 +146,10 @@ asking for. Documentation of the new `lwc:external` directive would be required.
 
 # Unresolved questions
 
-- More of a platform-related question, but do we need to make metadata adjustments to exclude native
-  web components from referential integrity?
 - Investigate whether the synthetic shadow slotting implementation is compatible with native web
   components.
-
+  - We should be fine assuming we can enforce the disabling of synthetic shadow slotting logic for
+  external custom elements in the engine. Good test to have either way.
 
 [1811]: https://github.com/salesforce/lwc/issues/1811
 [1904]: https://github.com/salesforce/lwc/issues/1904

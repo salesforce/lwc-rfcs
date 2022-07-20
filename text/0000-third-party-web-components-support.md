@@ -112,13 +112,6 @@ If an external element is marked with a directive that identifies it as such, it
 should be rendered and its attributes should be set. Properties will not be set and no attempt will
 be made to render the subtree.
 
-### Custom element conflicts
-
-In environments like the Salesforce platform which employ a multitenant architecture, developers
-will certainly run into custom element conflicts when given the freedom to register their own
-components. This can be managed in some environments (i.e., internal developers or applications
-consuming OSS LWC) but will require virtualization per sandbox before we can GA the feature.
-
 #### Proposed solution
 
 From the platform perspective, there are a few things that Locker vNext needs to implement in order

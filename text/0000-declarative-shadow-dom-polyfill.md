@@ -45,7 +45,7 @@ Let the following snippet represent the server-rendered output of an LWC app:
 </body>
 ```
 
-it renders correctly in Google Chrome but does not in browsers that not support Declarative ShadowDOM (e.g. Safari).
+it renders correctly in Google Chrome but not in browsers that don't yet support Declarative ShadowDOM (e.g. Safari).
 
 ## Motivation
 

@@ -66,7 +66,7 @@ This section describes different terms and solutions to polyfill the Declarative
 
 ### Implementations
 
-For the proposed polyfill to the Declarative Shadow DOM API spec, when comparing them to the native implementation in Chrome, the main comparison points are:
+When comparing the proposed polyfill to the native implementation in Chrome, the main comparison points are:
 
 1. Performance: how fast does the polyfill transform LWC SSR rendered HTML into the proper DOM structure? There’s an extensive [analysis](https://github.com/mfreed7/declarative-shadow-dom/blob/master/README.md#performance) in the spec, comparing chrome native vs polyfills in chrome. For completion, the [Performance comparison in Chrome, Safari, and Firefox](#performance-comparison-in-chrome-safari-and-firefox) sections compare them in Safari and Firefox.
 2. Does the polyfill take advantage of the browser streaming capability? For example, when you load a large page like https://html.spec.whatwg.org/ on a slow connection, you don’t need to wait for the page to load entirely to see content, the content will show immediately after it is parsed. Some examples are provided in [this repository](https://github.com/jodarove/dec-shadow-dom-polyfill-spike#examples).

@@ -204,23 +204,23 @@ Despite Chrome natively supporting declarative shadow dom, we measure the speeds
     <b>Fig.1: Performance comparison in Google Chrome</b>
   </figcaption>
 </figure>
- 
+<br></br>
  
  
 **SAFARI**
 <figure>
-  <img src="../assets/declarative-shadow-dom-polyfill/perf-chrome.png" alt="Performance comparison in Safari">
+  <img src="../assets/declarative-shadow-dom-polyfill/perf-safari.png" alt="Performance comparison in Safari">
   <figcaption align="center">
     <b>Fig.2: Performance comparison in Safari</b>
   </figcaption>
 </figure>
- 
+<br></br>
  
  
 **FIREFOX**
 
 <figure>
-  <img src="../assets/declarative-shadow-dom-polyfill/perf-chrome.png" alt="Performance comparison in Mozilla Firefox">
+  <img src="../assets/declarative-shadow-dom-polyfill/perf-firefox.png" alt="Performance comparison in Mozilla Firefox">
   <figcaption align="center">
     <b>Fig.3: Performance comparison in Mozilla Firefox</b>
   </figcaption>

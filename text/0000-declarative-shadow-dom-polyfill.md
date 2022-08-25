@@ -14,7 +14,7 @@ This RFC describes and compares different methods to polyfill [declarative Shado
 
 ## Basic example
 
-Let the following snippet represents an LWC SSR app output:
+Let the following snippet represent the server-rendered output of an LWC app:
 
 ```html
 <body>

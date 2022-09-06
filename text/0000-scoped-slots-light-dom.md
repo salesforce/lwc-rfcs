@@ -2,7 +2,8 @@
 title: Scoped Slots in Light DOM
 status: DRAFTED
 created_at: 2022-06-10
-updated_at: 2022-06-22
+updated_at: 2022-08-31
+champion: Mohammed Abdul Sattar
 pr: 
 ---
 
@@ -10,15 +11,147 @@ pr:
 
 ## Summary
 
-[Scoped slots](https://v3.vuejs.org/guide/component-slots.html#scoped-slots) is a feature from the Vue
-framework, that allows passing data from a child component to the content slotted from a parent component
-in a declarative fashion.
+Scoped slot allows slotted content to accesss to data of a child component, in a parent component's HTML template in a declarative fashion.
 
-One of the most common use-cases for this is to use a generic component to render an array of items and
-let the parent component customize how each item is rendered. For example a generic infinite list
-component, a virtualized list component or, a data table.
+*This proposal is for adding Scoped Slots capability in Light DOM components only.*
 
-*This proposal is for adding Scoped Slots only to Light DOM.*
+## Motivation
+As of today, a parent component can have slot content referencing its own data. This works great when the parent has the data required to render the content and let the child component take care of slotting the content. However, there are use cases where the parent wants to reference the child's data in the slotted content.
+
+One of the most common use-cases for this is to use a generic container component that provides a specilized capability, such as rendering an array of items, and let the parent component customize how each item is rendered. For example a generic infinite list component, a virtualized list component or, a data table.
+
+To allow the parent to customize the slotted content, it requires access to the child component's data. 
+
+A specific usecase for scoped slots is point and click app builders. The builder can provide container components like lists, grid etc. Users can drag and drop components into the grid, customize the component's rendering.
+
+## Prior Art
+
+### Vue.js
+[Scoped slots](https://v3.vuejs.org/guide/component-slots.html#scoped-slots) was a concept first introduced in Vue.js [v2.1.0](https://github.com/vuejs/vue/releases/tag/v2.1.0). Vue.js allows passing individual properties and objects, default slots and named slots. 
+Example: 
+1. Passing properties to default slot
+```html
+<!-- Parent -->
+<template>
+    <Child v-slot="item">
+        <span>{{ item.id }} {{ item.name }}</span>
+    </Child>
+</template>
+```
+```html
+<!-- Child -->
+<template>
+    <slot :id="123" :name="Vue"></slot>
+</template>
+```
+2. Passing object
+```html
+<!-- Parent -->
+<template>
+    <Child v-slot="item">
+        <span>{{ item.id }} {{ item.name }}</span>
+    </Child>
+</template>
+```
+```html
+<!-- Child -->
+<template>
+    <slot v-bind="item"></slot>
+</template>
+```
+
+3. Named slot
+```html
+<!-- Parent -->
+<template>
+    <Child>
+        <template v-slot:body="item">
+            <span>{{ item.id }} {{ item.name }}</span>
+        </template>
+    </Child>
+</template>
+```
+```html
+<!-- Child -->
+<template>
+    <slot name="body" v-bind="item"></slot>
+</template>
+```
+Note: LWC has a slightly different syntax for specifying the slot name for the slotted content in a parent component's markup. It does not require/allow the usage of a `<template>` to demark the slotted content. Instead, the name directly goes on the content. For example: 
+```html
+<x-child>
+    <span slot="body">{ item.id } { item.name }</span>
+</x-child>
+```
+To implement this proposal, LWC will add support for using `<template>` to demark a named slot content.
+
+### Svelte
+In [Svelte](https://svelte.dev/docs#template-syntax-slot-slot-key-value), a child component can values back to its parent using props(short for properties).
+Example:
+```html
+<!-- Parent.svelte -->
+<Child>
+    <span slot="body" let:prop={item}>{ item.id } { item.name }</span>
+</Child>
+```
+```html
+<!-- Child.svelte -->
+<div>
+    <slot name="body" prop={item}></slot>
+</div>
+```
+The svelte approach requires a lot less boiler plate and does not introduce any new directive to support this capability.
+
+### Reactjs
+Reactjs took a imperative approach to supporting sharing values between components. It does so by using [`render props`](https://reactjs.org/docs/render-props.html). Essentially the child component exposes a property called "render" which will accept a function as value. During its rendering, the child will then invoke the provided function by passing its own values. The parent customizes the output using a function set as the value of the `render` property.
+Example:
+```jsx
+class Child extends React.Component {
+  constructor(props) {
+    super(props);
+    this.item = { id: 123, name: 'react' };
+  }
+
+  render() {
+    return (
+      <div >
+        {this.props.render(this.state)}
+      </div>
+    );
+  }
+}
+
+class Parent extends React.Component {
+  render() {
+    return (
+      <div>
+        <Child render={item => (
+          <span>{ item.id } { item.name }</span>
+        )}/>
+      </div>
+    );
+  }
+}
+```
+
+### Lit
+[Lit has a proposal](https://github.com/lit/lit/issues/1478) to expose similar capabilities in very similar to React. The issue was first filed in Dec 2020 and is still open.
+
+### Web Components Community Group
+Supporting scoped slots using standard web components technology is challenging. There is [an open issue](https://github.com/webcomponents-cg/community-protocols/issues/8) in the wcgg to support. Here are some quotes from that issue which talk about the challenge.
+> I'm hesitant about implementing this as a protocol. Vue.js scoped slots are a framework-specific concept (please don't be confused by its usage of <slot> in the template syntax) that mixes two things: DOM composition and data flow.<br/>
+> Standard based <slot> elements are only about DOM composition. Passing data to slotted components could be done using slotchange event. But in general it's up to library authors to decide how to handle the data flow on their side.
+
+In summary, Vue and Svelte both use a declarative approach to support scoped slot. React, Lit and WCGG have taken/propose to take the imperative approach. Vue.js and Svelte are able to achieve DOM Composition and data access using `<slot>` elements easily because they rely on virtual DOM. Reach, List and WCGG's approach of using public props is more compatible with the Web Components model. It is standards based and less proprieraty.
+
+### Lightning Web Components
+Developers are able to mimic scoped slots using template passing. To achieve this, a parent component is able to pass a compiled template to a child component. The child component will use the compiled template in its own `render` method or a stub component. All the data required for rendering the template will be setup as the stub component's props. `lightning-datatable` uses this approach to allow customization of cells. [Here](https://developer.salesforce.com/docs/component-library/documentation/en/lwc/lwc.data_table_custom_types) is more information about customizing lightning-datatable.
+Key differences between this proposal and template passing:
+1. This technique does not use `slot` elements to render the passed template.
+2. The templates are stored as separate `.html` files in the parent component. They are not part of the parent's own template. Thus, the nodes of the passed template are not queriable from the parent's template using `this.template.querySelector`. Rather, the parent has to query the child and then find the elements in the child's tree dependening on the render mode of the child.
+    - An implied restriction is that the passed template only has access to bindings of the stub component and not of the parent component.
+    - The parent cannot attach its own event handles in the passed template.
+3. Customizing the template is achieved by parent and child exchanging metadata to interpret the data.
 
 ## Basic example
 
@@ -26,7 +159,7 @@ component, a virtualized list component or, a data table.
 // x/parent.html
 <template> <!-- parent need not be light DOM -->
     <x-list items={items} lwc:slot-data="item">
-        <span>{item.name}</span>
+        <span>{item.id} - {item.name}</span>
     </x-list>
 </template>
 
@@ -41,20 +174,35 @@ component, a virtualized list component or, a data table.
     </ul>
 </template>
 ```
-The `<x-parent>` component is slotting `<span>{item.name}</span>` into `<x-list>` but the `item` is supplied
-by `<x-list>`, the child component. It's essentially like `<x-parent>` is slotting a function that actually
-returns the slotted content.
+The `<x-parent>` component is slotting `<span>{item.name}</span>` into `<x-list>` but the `item` is supplied by `<x-list>`, the child component. It's essentially like `<x-parent>` is slotting a function that actually returns the slotted content.
 
-This allows `<x-parent>` to control how each item renders while leaving the looping/repeating logic to `<x-list>`.
-`<x-list>` is now free to create as many slots as it wants while using the same "slotting function" passed from the parent.
+This allows `<x-parent>` to control how each item renders while leaving the looping/repeating logic to `<x-list>`. `<x-list>` is now free to create as many slots as it wants while using the same "slotting function" passed from the parent.
 This allows `<x-list>` to be a virtual list or an infinite list.
 
+The final HTML will look like this:
+```html
+<x-parent>
+    #shadow-root
+    |    <x-list>
+    |        <ul>
+    |            <li>
+    |                <span>1 - One</span>
+    |            </li>
+    |        </ul>
+    |        <ul>
+    |            <li>
+    |                <span>2 - Two</span>
+    |            </li>
+    |        </ul>
+    |    </x-list>
+</x-parent>
+```
 It's important to note that for this to happen, slots need to be lazily rendered.
 
+Scoped Slots are allowed only in Light DOM components for the following reasons:
 * Native shadow DOM slots: the slotted content is eagerly rendered regardless of there being a slot to “accept” the content. The component slotting the content is in charge of appending and removing the content from the DOM.
 * Scoped slots: the slotted content is lazily rendered; the slotted content will only be rendered if there is a slot to “accept” the content. The component with the <slot> elements is the one in charge of rendering the slotted content passed by the parent component.
-
-It is for this reason that Scoped Slots are allowed only in Light DOM components.
+However, some preliminary work has been done for adding support for scoped slots in Shadow DOM component. For more details refer to the [appendix](#appendix-1-scoped-slots-in-shadow-dom).
 
 ## Detailed design
 
@@ -113,7 +261,20 @@ When using named slots, the child custom element does not accept `lwc:slot-data`
 `<template>` as direct children of the custom element. The check for these conditions will happen at compile time.
 The template author can either use the named slot syntax or regular default slot syntax, but cannot combine both.
 
-### Nested Scoped Slots
+### Access to bindings
+Scoped slots have access to component bindings and scope bindings
+#### Component Bindings
+```html
+<template>
+    {title}
+    <x-list items={items} lwc:slot-data="item">
+        <div>{label}</div> <!-- label is a component binding and will be repeated in every row of the list-->
+        <span>{item.id} - {item.name}</span>
+    </x-list>
+</template>
+```
+
+#### Nested Scoped Slots
 Scoped slots that are nested within other scoped slots bring in new levels of flexibility for component authors.
 ```html
 <template>
@@ -127,6 +288,27 @@ Scoped slots that are nested within other scoped slots bring in new levels of fl
 </template>
 ```
 
+### Ownership and styling implication
+Standard slots and scoped slots are identical with respect to ownership. The slotted content is owned by the parent component. This had direct implications in terms of styling. If the parent component has a scoped stylesheet associated with it, the styles also apply to the scoped slot content.
+
+### Validations
+Validation of scoped slot usage between parent and component is handled at runtime.
+* **Missing default slot**: If a parent component slots content in to the child component's default slot and the child does not have a default slot, the content will be ignored.(TODO: Why don't we log an error in this case today for standard slots?)
+* **Missing named slot**: If a parent component tries to set an unknown named slot of child component, the content will be ignored and an error will be logged in dev mode.
+
+_The above behaviors are consistent with how the engine handles regular slot content._
+
+* **Parent uses scoped slot but child has regular slot**: In this case the content will be ignored and an error will be logged in dev mode.
+* **Parent uses regular slot but child has scoped slot**: This is valid usage. The content provided by the parent will be slotted into the child's scoped slots.
+
+## New capabilities required in LWC
+This section new capabilities that will need to be supported in LWC to support this proposal.
+
+### Allowing `slot` attribute on `<template>` tag
+To set a named slot in an LWC, a parent component specifies the `slot` attribute on the slotted content. This proposal will require setting named slots on a `<template>` tag. 
+This capability adds a new concern of deviating from standards and will be challenging to implement in shadow DOM. As per Web Components  standards, `slot` attribute on the slotted content is used to set a named slot. However, `template` does not support `slot` attribute as [per standard](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template#attributes). So to support this syntax in shadow DOM, a container element will have to demark the slot content and the `slot` attribute will be set on it.
+
+Further, the same support of using `<template slot="someslotname">` must also be extended to standard slots.
 
 ## Drawbacks
 
@@ -151,7 +333,7 @@ Scoped Slots.
 - Should Shadow DOM be supported?
 
 ## Appendix 1: Scoped Slots in Shadow DOM
-Scoped Slots in Shadow DOM aren't supported by any other web component framework. The reasons boil down to slots in native
+Scoped Slots in Shadow DOM aren't supported by any other web component framework. The reason boils down to slots in native
 shadow DOM being eager, and it being the browser that does the slotting leaving us with little maneuverability.
 
 That said, there are a few ways we can implement scoped slots in Shadow DOM. Let’s take the infinite list example to
@@ -169,7 +351,7 @@ illustrate this.
 
 * *Approach #1: Render the scoped content in the <x-list> shadow tree.*
 
-Passing the scoped content fragment is transferred to the <x-list> component and the <x-list> component renders the items in its shadow tree. Example (https://gist.github.com/pmdartus/cd490a82617e025a2e73f79f7f9888b3#file-shadow-html)
+The scoped content fragment is transferred to the <x-list> component and the <x-list> component renders the items in its shadow tree. Example (https://gist.github.com/pmdartus/cd490a82617e025a2e73f79f7f9888b3#file-shadow-html)
 
 ```html
 <x-list>
@@ -180,13 +362,13 @@ Passing the scoped content fragment is transferred to the <x-list> component and
 </x-list>
 ```
 
-This approach is quite similar to the one explained above with the main advantage the template contains the scoped slot definition. This approach allows the scoped slot to reference properties on its original component.
+This approach is quite similar to the one explained above with the main advantage that the template contains the scoped slot definition. This approach allows the scoped slot to reference properties on its original component.
 
 However, this approach introduces new issues. Since the scoped slot is rendered in the <x-list> shadow tree, the <x-list> shadow tree styles are applied to the rendered content. This approach also breaks shadow DOM encapsulation because event handlers attached to the scoped slot will be invoked on elements that are rendered in another shadow tree.
 
 * *Approach #2: One named slot for each scoped slot item.*
 
-Instead of rendering the scoped slot content in the <x-list> shadow tree, the scope slot is rendered in its light DOM
+Instead of rendering the scoped slot content in the <x-list> shadow tree, the scoped slot is rendered in its light DOM
 and named slots are generated in the shadow tree. The named slots are then matched with the scoped slot content by
 applying the slot attribute. [Example](https://gist.github.com/pmdartus/cd490a82617e025a2e73f79f7f9888b3#file-declarative-html)
 
@@ -203,7 +385,8 @@ applying the slot attribute. [Example](https://gist.github.com/pmdartus/cd490a82
 </x-list>
 ```
 
-This approach solves the 2 main drawback from approach #1 as the scoped slot content is rendered in the parent component shadow tree. The main drawback of this approach is that it will make the diffing algo more complex because it require coordination between the parent and the child component.
+This approach solves the 2 main drawbacks of approach #1 as the scoped slot content is rendered in the parent component shadow tree. The main drawback of this approach is that it will make the diffing algo more complex because it requires coordination between the parent and the child component.
+A drawback of this approach is that it is not interoperable with other UI frameworks. The parent/child component protocol is proprietary to LWC.
 
 * *Approach #3: Manual slot allocation.*
 
@@ -224,4 +407,4 @@ leverage the new [Imperative shadow slot distribution API](https://github.com/WI
 ```
 
 Same advantages and drawback as approach #2. The main show-stopper with this approach is that it requires JavaScript
-to do the content allocation which make it unusable for SSR.
+to do the content allocation which makes it unusable for SSR.

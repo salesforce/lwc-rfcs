@@ -174,9 +174,9 @@ Key differences between this proposal and template passing:
     </ul>
 </template>
 ```
-The `<x-parent>` component is slotting `<span>{item.name}</span>` into `<x-list>` but the `item` is supplied by `<x-list>`, the child component. It's essentially like `<x-parent>` is slotting a function that actually returns the slotted content.
+The `<x-parent>` component is slotting `<span>{item.name}</span>` into `<x-list>` but the `item` is supplied by `<x-list>`, the child component. It's essentially like `<x-parent>` is slotting a template fragment parameterized by the <x-list> component.
 
-This allows `<x-parent>` to control how each item renders while leaving the looping/repeating logic to `<x-list>`. `<x-list>` is now free to create as many slots as it wants while using the same "slotting function" passed from the parent.
+This allows `<x-parent>` to control how each item renders while leaving the looping/repeating logic to `<x-list>`. `<x-list>` is now free to create as many slots as it wants while using the same template fragment passed from the parent.
 This allows `<x-list>` to be a virtual list or an infinite list.
 
 The final HTML will look like this:

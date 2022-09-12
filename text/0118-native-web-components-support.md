@@ -73,6 +73,40 @@ export default registerTemplate(tmpl);
 tmpl.stylesheets = [];
 ```
 
+If the `lwc:external` directive is used on a registered component, the engine will simply render the
+associated custom element and defer the upgrading to the browser.
+
+```html
+<template>
+  <lwc-foo foo={bar}></lwc-foo>
+  <lwc-foo lwc:external foo={bar}></lwc-foo>
+</template>
+```
+
+```js
+import _lwcFoo from "lwc/foo";
+import { registerTemplate } from "lwc";
+function tmpl($api, $cmp, $slotset, $ctx) {
+  const { c: api_custom_element, h: api_element } = $api;
+  return [
+    api_custom_element("lwc-foo", _lwcFoo, {
+      props: {
+        foo: $cmp.bar,
+      },
+      key: 0,
+    }),
+    api_element("lwc-foo", {
+      attrs: {
+        foo: $cmp.bar,
+      },
+      key: 1,
+    }),
+  ];
+}
+export default registerTemplate(tmpl);
+tmpl.stylesheets = [];
+```
+
 ### Passing data
 
 By convention, custom elements are assumed to be backed by LWC components and values are set through

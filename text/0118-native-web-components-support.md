@@ -2,7 +2,7 @@
 title: Native Web Components Support
 status: DRAFTED
 created_at: 2022-07-05
-updated_at: 2022-07-06
+updated_at: 2022-09-08
 pr: https://github.com/salesforce/lwc-rfcs/pull/66
 ---
 
@@ -16,12 +16,13 @@ LWC support for native web components.
 ## Motivation
 
 It is common for developers to want to integrate third party web components in an LWC application.
-While there are several ways to do this today (e.g., through the use of iframes or the
-`lwc:dom="manual"` directive), the preferred way would be to enable this use case through the
-rendering of native web components. Browser support for native web components was still in the early
-stages when LWC was first implemented, but it is quite good today. In addition, many frameworks now
-support native web components as a compilation target so it makes sense to add first class support
-for native web components.
+While there are several ways to do this today (e.g., through the use of iframes, or imperatively
+using the `lwc:dom="manual"` directive), the preferred way would be to enable this use case through
+first class support of native web components. Specifically speaking, this means enabling the
+rendering of native web components in LWC templates. Browser support for native web components was
+still in the early stages when LWC was first implemented, but it is quite good today. It makes sense
+to do this work now since many frameworks, including LWC, now support native web components as a
+compilation target.
 
 ## Detailed design
 
@@ -42,8 +43,8 @@ simply render as an HTMLUnknownElement, which is the default browser behavior.
 For example, given the following template:
 ```html
 <template>
-  <lwc-foo bar={bar}></lwc-foo>
-  <native-foo lwc:external bar={bar}></native-foo>
+  <lwc-foo foo={bar}></lwc-foo>
+  <native-foo lwc:external foo={bar}></native-foo>
 </template>
 ```
 

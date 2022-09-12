@@ -1,6 +1,6 @@
 ---
 title: Native Web Components Support
-status: DRAFTED
+status: ACTIVE
 created_at: 2022-07-05
 updated_at: 2022-09-08
 pr: https://github.com/salesforce/lwc-rfcs/pull/66

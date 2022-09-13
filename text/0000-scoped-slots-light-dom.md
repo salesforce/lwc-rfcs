@@ -2,7 +2,7 @@
 title: Scoped Slots in Light DOM
 status: DRAFTED
 created_at: 2022-06-10
-updated_at: 2022-08-31
+updated_at: 2022-09-13
 champion: Mohammed Abdul Sattar
 pr: 
 ---
@@ -11,7 +11,7 @@ pr:
 
 ## Summary
 
-Scoped slot allows slotted content to accesss to data of a child component, in a parent component's HTML template in a declarative fashion.
+Scoped slot allows slotted content to accesss data of a child component, in a parent component's HTML template in a declarative fashion.
 
 *This proposal is for adding Scoped Slots capability in Light DOM components only.*
 
@@ -158,7 +158,7 @@ Key differences between this proposal and template passing:
 ```html
 // x/parent.html
 <template> <!-- parent need not be light DOM -->
-    <x-list items={items} lwc:slot-data="item">
+    <x-list prop={listData} lwc:slot-data="item">
         <span>{item.id} - {item.name}</span>
     </x-list>
 </template>
@@ -188,8 +188,6 @@ The final HTML will look like this:
     |            <li>
     |                <span>1 - One</span>
     |            </li>
-    |        </ul>
-    |        <ul>
     |            <li>
     |                <span>2 - Two</span>
     |            </li>
@@ -210,12 +208,16 @@ Two new directives, `lwc:slot-bind` and `lwc:slot-data` are introduced that are 
 and to specify, in the parent, a placeholder to accept the bound data respectively.
 
 * ### `lwc:slot-bind`
-It has to be on a `<slot>` tag and should be an expression that is bound to a value within the child's scope. It can only
-be present on a Light DOM template. The compiler will throw an error if `lwc:slot-bind` is used in a shadow DOM template.
+    - Directive used by the child
+    - It has to be on a `<slot>` tag and should be an expression that is bound to a value within the child's scope.
+    - It can only be present on a Light DOM template. The compiler will throw an error if `lwc:slot-bind` is used in a shadow DOM template.
+    - A `<slot>` can have the `lwc:slot-bind` directive only once. In other words, the child allow one binding per scoped slot.
+
 * ### `lwc:slot-data`
-It has to be present on a custom element and should be a string literal that represents the variable name that will be
-used in the slotted content to reference the passed data. The custom element has to be a Light DOM LWC element. This check,
-though, will be performed at runtime because the LWC compiler lacks the necessary information to throw at compile-time.
+    - Directive used by the parent
+    - It can only be used on a custom element child and should be a string literal that represents the variable name that will be used in the slotted content to reference the passed data. The variable name used in `lwc:slot-bind` and the respective `lwc:slot-data` are not required to be the same.
+    - A child has to be a Light DOM LWC element to use this directive. This check, though, will be performed at runtime because the LWC compiler lacks the necessary information to throw at compile-time.
+    - The `lwc:slot-data` directive can be used only once on a child element.
 
 ### Named Slots
 Accepting scoped slots for named slots presents a few logistical challenges illustrated below.
@@ -267,7 +269,7 @@ Scoped slots have access to component bindings and scope bindings
 ```html
 <template>
     {title}
-    <x-list items={items} lwc:slot-data="item">
+    <x-list prop={listData} lwc:slot-data="item">
         <div>{label}</div> <!-- label is a component binding and will be repeated in every row of the list-->
         <span>{item.id} - {item.name}</span>
     </x-list>
@@ -289,7 +291,7 @@ Scoped slots that are nested within other scoped slots bring in new levels of fl
 ```
 
 ### Ownership and styling implication
-Standard slots and scoped slots are identical with respect to ownership. The slotted content is owned by the parent component. This had direct implications in terms of styling. If the parent component has a scoped stylesheet associated with it, the styles also apply to the scoped slot content.
+Standard slots and scoped slots are identical with respect to ownership. The slotted content is owned by the parent component. This has direct implications in terms of styling. If the parent component has a scoped stylesheet associated with it, the styles also apply to the scoped slot content.
 
 ### Validations
 Validation of scoped slot usage between parent and component is handled at runtime.

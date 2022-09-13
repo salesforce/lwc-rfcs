@@ -69,23 +69,41 @@ to children elements.
 ### Structure
 It accepts an object with keys as the attribute/property/listener names and values as the corresponding attribute/property/listener values.
 
-However, we need to split the object into three sub-objects: one with attributes, one with properties, and one with event listeners.
-The following algorithm will be used:
+This object is merged with props/attrs/listeners passed in the template (essentially `Object.assign`). However, since template
+compiler splits all the props passed in the template into attributes, properties and event listeners, we do the same thing at runtime. We use the same algorithm that the template compiler uses and whatever the [engine does for native custom elements](https://rfcs.lwc.dev/rfcs/lwc/0000-third-party-web-components-support#proposed-solution-2).
 
-**Property**
-If the object key is present on the element (e.g. `key in element`), we assume it's a property.
+There is one difference however: the set of properties passed in the template doesn't change but it changes in `lwc:spread` i.e.
+an attribute can't be present in one render and absent in the next render if it is defined in the template. With
+`lwc:spread` though, it can be present in one render and not be present in the next.
 
-We do whatever the engine currently does with properties: we assign them to the element.
-Note that even if `undefined` or `null` as passed as value, we assign them to the property. We do not `delete elm[propKey]`.
+- attrs/listeners are added/removed based on their presence/absence in `lwc:spread`.
+- properties can't be "removed" if they are not present in subsequent renders. So, we set them to `undefined`. New properties are
+set as usual.
 
-**Event Listener**
-If the object key starts with `'on'`, we assume it's an event listener.
+An interesting side effect of the above behavior can be observed when properties have default values:
 
-The listener will be bound to the element and added using `addEventListener`. When the value is `undefined` or `null`, the previously added listener is removed.
+```html
+// x/app.html
+<template>
+    <x-child lwc:spread={props}></x-child>
+</template>
+```
+```js
+export default class Child extends LightningElement {
+    @api name = "lwc";
+}
 
-**Attributes**
-If the object key is neither a property nor an event listener, we assume it's an attribute. We do the same thing that engine does
-as of this writing: we `setAttribute` if is truthy and `removeAttribute` if it is `undefined | null`.
+export default class App extends LightningElement {
+    props = {};
+    renderedCallback() {
+        // in initial render props is {} and `name` in child is 'lwc'
+        this.props = {name: "aura"}; // `name` in child is "aura";
+        this.props = {}; // `name` in child is `undefined`;
+    }
+}
+
+```
+Customers should be educated on the above behavior.
 
 ### Reactivity
 There's no precendent in LWC for change in the set of attributes/properties/listeners. An element can't have a property in one
@@ -156,6 +174,10 @@ childArgs = { name: "World" };
 ```
 `lwc:spread` will take precedence to whatever props/attrs are declared in the template directly. In the above example,
 `c-child` is always passed `World` as `name`. Additionally, there can be only one `lwc:spread` on a directive.
+
+### Locker Integration
+
+The usage of `lwc:spread` will be considered risky and the element will be injected with a `renderer` property that will be overridden by locker.
 
 ## Drawbacks
 

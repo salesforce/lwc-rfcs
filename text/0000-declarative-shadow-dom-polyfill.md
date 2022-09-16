@@ -62,7 +62,7 @@ This section describes different terms and solutions to polyfill the Declarative
 1. We would only support native shadow DOM when rendering declarative shadow DOM, synthetic shadow DOM will be out of the picture.
 2. The `getInnerHTML` method from the spec will not be polyfilled.
 3. The new `ElementInternals.shadowRoot` will not be polyfilled.
-4. For completeness, each polyfill removes the `<template>` element (and the inline `<script>` node when needed), so that the resulting tree is identical to the declarative output.
+4. The declarative shadow DOM polyfill should produce the same final DOM tree as its native counterpart.
 
 ### Implementations
 

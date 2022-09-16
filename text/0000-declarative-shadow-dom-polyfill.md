@@ -88,9 +88,6 @@ Compare the single loop example to the inline script in the [supplementary repos
 <body>
     <div>
         <template shadowroot="open"></template>
-        <script type="text/javascript">
-            replaceTemplateWithShadowRoot(document.currentScript);
-        </script>
     </div>
     <script type="text/javascript">
         function supportsDeclarativeShadowDOM() {

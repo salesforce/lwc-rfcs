@@ -28,7 +28,7 @@ export default class MyComponent extends LightningElement {
 ```html
 // x/myComponent.html
 <template>
-  <x-child lwc:spread="{childProps}"></x-child>
+  <x-child lwc:spread={childProps}></x-child>
 </template>
 ```
 
@@ -68,13 +68,13 @@ A new LWC directive, `lwc:spread` will be introduced that can be used to spread 
 It accepts an object with keys as the property names and values. This object is merged with props passed in the template (essentially `Object.assign`). There is no special handling/transformation
 of props whatsoever.
 
-For example, event handlers like `onclick` aren't specially handled as `addEventListener` like LWC does if it sees an `onclick` in the template. They'll be assigned just like any other poperty. Also, LWC binds the component to the event handlers defined in teh template. `lwc:spread` won't do any of that.
+For example, event handlers like `onclick` aren't specially handled as `addEventListener` like LWC does if it sees an `onclick` in the template. They'll be assigned just like any other poperty. Also, LWC binds the component to the event handlers defined in the template. `lwc:spread` won't do any of that.
 
 ### Overriding props
 
 ```html
 <template>
-  <c-child name="Hello" lwc:spread="{childProps}"></c-child>
+  <c-child name="Hello" lwc:spread={childProps}></c-child>
 </template>
 ```
 

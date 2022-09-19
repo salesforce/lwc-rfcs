@@ -10,26 +10,29 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/52
 # `lwc:spread` Directive
 
 ## Summary
+
 This proposal adds a mechanism to pass a dynamic properties to elements in
 an LWC template using a new directive `lwc:spread`.
 
 ## Example
+
 ```js
 // x/myComponent.js
 export default class MyComponent extends LightningElement {
-    childProps = { 
-        name: 'My Child',
-    };
+  childProps = {
+    name: "My Child",
+  };
 }
 ```
+
 ```html
 // x/myComponent.html
 <template>
-    <x-child lwc:spread={childProps}></x-child>
+  <x-child lwc:spread="{childProps}"></x-child>
 </template>
 ```
 
-The new `lwc:spread` directive passes `childProps` as properties to `x-child`.
+The new `lwc:spread` directive applies `childProps` as properties to `x-child`.
 
 ## Motivation
 
@@ -50,6 +53,7 @@ This proposal allows not just `lwc:dynamic` but all other elements to accept an 
 at runtime.
 
 ### Prior Art
+
 - React ([JSX Spread Operator](https://reactjs.org/docs/jsx-in-depth.html#spread-attributes))
 - Vue ([`v-bind`](https://v3.vuejs.org/api/directives.html#v-bind))
 - Svelte ([Spread Props](https://svelte.dev/tutorial/spread-props))
@@ -60,85 +64,31 @@ at runtime.
 A new LWC directive, `lwc:spread` will be introduced that can be used to spread the props to children elements.
 
 ### Structure
-It accepts an object with keys as the property names and values.
 
-This object is merged with props passed in the template (essentially `Object.assign`).
+It accepts an object with keys as the property names and values. This object is merged with props passed in the template (essentially `Object.assign`). There is no special handling/transformation
+of props whatsoever.
 
-There is one difference however: the set of properties passed in the template doesn't change but it changes in `lwc:spread` i.e.
-a property can't be present in one render and absent in the next render if it is defined in the template. With
-`lwc:spread` though, it can be present in one render and not be present in the next. See example below.
-
-**Example**
-
-```html
-<template>
-    <x-child name={name}></x-child> <!-- in first render -->
-    <x-child></x-child> <!-- in second render, name is missing. This is not possible with template compiler -->
-</template>
-```
-
-```html
-<template>
-    <x-child lwc:spread={props}>
-</template>
-```
-
-```js
-export default class App extends LightningElement {
-    handleClick() {
-        this.props = showName ? {name: 'lwc'} : {}; // in one render we're passing `name` prop, but in another one there's no `name` property.
-    }
-
-}
-```
-
-In cases where a property from earlier render is missing, we have two options:
-1. Explicity set it to `undefined` or `null`.
-2. Leave it untouched. Meaning we just assign the properties we get in the current render without touching any of the earlier set properties.
-
-We'll go ahead with Option 1. We'll explicity set them to `undefined`. The advantage of this is that it guarantees that at any point
-the properties on an element are the ones that are present in the template and the ones present in `lwc:spread` in that render.
-
-An interesting side effect of the above behavior can be observed when properties have default values:
-
-```html
-// x/app.html
-<template>
-    <x-child lwc:spread={props}></x-child>
-</template>
-```
-```js
-export default class Child extends LightningElement {
-    @api name = "lwc";
-}
-
-export default class App extends LightningElement {
-    props = {};
-    renderedCallback() {
-        // in initial render props is {} and `name` in child is 'lwc'
-        this.props = {name: "aura"}; // `name` in child is "aura";
-        this.props = {}; // `name` in child is `undefined`;
-    }
-}
-
-```
-Customers should be educated on the above behavior.
-
-### Casing
-LWC Template Compiler converts kebab-case attrs/props to camelCase to match the Javascript counterparts. Since props `lwc:spread`
-are bound in Javascript, they need to be defined in camelCase. This means that `lwc:spread` won't do any case transformation.
+For example, event handlers like `onclick` aren't specially handled as `addEventListener` like LWC does if it sees an `onclick` in the template. They'll be assigned just like any other poperty. Also, LWC binds the component to the event handlers defined in teh template. `lwc:spread` won't do any of that.
 
 ### Overriding props
+
 ```html
 <template>
-  <c-child name="Hello" lwc:spread={childProps}></c-child>
+  <c-child name="Hello" lwc:spread="{childProps}"></c-child>
 </template>
 ```
+
 ```js
 childProps = { name: "World" };
 ```
-`lwc:spread` will take precedence to whatever props are declared in the template directly. In the above example,
-`c-child` is always passed `World` as `name`. Additionally, there can be only one `lwc:spread` on a directive.
+
+`lwc:spread` will always be applied last. That means it will take precedence to whatever props are declared in the
+template directly. In the above example, `c-child` is always passed `World` as `name`. Additionally, there can be only one `lwc:spread` on a directive.
+
+## Locker Integration
+
+`lwc:spread` will only support LWS. Usage of `lwc:spread` will mark the element as risky and add the `renderer` key to the element
+in the template.
 
 ## Drawbacks
 
@@ -147,4 +97,5 @@ programmatic way of assigning properties, then those were not statically analyza
 
 ## Adoption strategy
 
-This feature will be behind a perm. It will be allowed on a case-by-case basis by URB.
+This feature will be behind a perm. It'll be allowed to customers on a case-by-case basis and when the team is fully confident
+of the design, it'll be open to all.

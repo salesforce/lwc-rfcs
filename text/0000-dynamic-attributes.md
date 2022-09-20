@@ -87,8 +87,9 @@ template directly. In the above example, `c-child` is always passed `World` as `
 
 ## Locker Integration
 
-`lwc:spread` will only support LWS. Usage of `lwc:spread` will mark the element as risky and add the `renderer` key to the element
-in the template.
+Since `lwc:spread` allows setting any property, there is a risk of component authors trying to assign properties like `innerHTML`.
+To prevent this, usage of `lwc:spread` will mark the element as risky and add the `renderer` key to the element
+in the template so that locker can sanitize those properties.
 
 ## Drawbacks
 

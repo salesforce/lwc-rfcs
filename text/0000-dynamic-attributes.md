@@ -1,13 +1,13 @@
 ---
-title: `lwc:spread` Directive
-status: DRAFTED
+title: Spreading Properties to Child Elements
+status: APPROVED
 created_at: 2021-07-05
-updated_at: YYYY-MM-DD
+updated_at: 2022-09-21
 champion: Mohammed Abdul Sattar (abdulsattar)
 pr: https://github.com/salesforce/lwc-rfcs/pull/52
 ---
 
-# `lwc:spread` Directive
+# Spreading Properties to Child Elements
 
 ## Summary
 

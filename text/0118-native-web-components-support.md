@@ -142,13 +142,13 @@ behavior.
 
 #### Proposed solution
 
-When passing data to a native web component, we can take a heuristical approach where attributes are
-set by default, but properties are set when they exist. While it may be advantageous in terms of
-static analysis and performance to require an explicit signal in the form of a directive, the
-proposed solution strikes a good balance between developer experience and API semantics. This
-heuristical approach will require a runtime check on the element's prototype to see whether a
-property is defined. This preliminary check will incur a runtime performance cost, but this cost can
-be amortized over the lifetime of the component by caching the result of the check.
+When passing data to a native web component, we can take a properties-if-available approach where
+attributes are set by default, but properties are set when they exist. While it may be advantageous
+in terms of static analysis and performance to require an explicit signal in the form of a
+directive, the proposed solution strikes a good balance between developer experience and API
+semantics. This heuristical approach will require a runtime check on the element's prototype to see
+whether a property is defined. This preliminary check will incur a runtime performance cost, but
+this cost can be amortized over the lifetime of the component by caching the result of the check.
 
 The current LWC implementation of normalizing attribute names to property names will be used as-is
 without modification.
@@ -166,9 +166,12 @@ The current LWC implementation of declarative event binding will be used as-is w
 
 ### Serverside rendering (SSR)
 
-If an external element is marked with a directive that identifies it as such, its custom element
-should be rendered and its attributes should be set. Properties will not be set and no attempt will
-be made to render the subtree.
+When rendering an LWC component on the server, we are able to drill down into the component subtree
+because we have recursive access to component definitions. When rendering an external element marked
+as such on the server, we will simply render the top-level custom element without the rest of the
+component subtree because we don't know what that looks like. In other words, regardless of the size
+of the component subtree, we will only be rendering the root component on the server. As for data,
+we will only be setting attributes.
 
 ## Drawbacks
 

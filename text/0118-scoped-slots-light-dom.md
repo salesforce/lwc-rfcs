@@ -9,6 +9,33 @@ pr:
 
 # Scoped Slots in Light DOM
 
+Table of Content:
+* [Summary](#summary)
+* [Motivation](#motivation)
+* [Prior Art](#prior-art)
+    * [Vue.js](#vue.js)
+    * [Svelte](#svelte)
+    * [Reactjs](#reactjs)
+    * [Lit](#lit)
+    * [Web Components Community Group](#web-components-community-group)
+    * [Lightning Web Components](#lightning-web-components)
+* [Syntax of Scoped Slots in LWC](#syntax-of-scoped-slots-in-lwc)
+* [Detailed Design](#detailed-design)
+    * [Default Slots](#default-slots)
+    * [Named Slots](#named-slots)
+    * [Restricting Ambigious Bindings](#restricting-ambigious-bindings)
+    * [Mixing Standard Slots and Scoped Slots](#mixing-standard-slots-and-scoped-slots)
+    * [Access to bindings](#access-to-bindings)
+    * [Ownership and styling implication](#ownership-and-styling-implication)
+    * [Validations](#validations)
+    * [Why Light DOM only?](#why-light-dom-only)
+* [New capabilities required in LWC](#new-capabilities-required-in-lwc)
+* [Drawbacks](#drawbacks)
+* [Adoption strategy](#adoption-strategy)
+* [Unresolved questions](#unresolved-questions)
+* [Appendix 1: Scoped Slots in Shadow DOM](#appendix-1-scoped-slots-in-shadow-dom)
+
+
 ## Summary
 
 Scoped slot allows slotted content to accesss data of a child component, in a parent component's HTML template in a declarative fashion.

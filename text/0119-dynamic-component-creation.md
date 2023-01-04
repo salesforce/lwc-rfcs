@@ -136,7 +136,7 @@ namespace/
     ├── *.html
 ```
 
-Leveraging this, the namespace and name can be accessed at compile time and ultimately stored on the constructor.  A new property on `LightningElementConstructor` called `lightningElementName` will store the custom element name which will be of the form `namespace-name`.
+Leveraging this, the namespace and name can be accessed at compile time and ultimately stored on the constructor.  A new read-only property on `LightningElementConstructor` called `lightningElementName` will store the custom element name which will be of the form `namespace-name`.
 
 ```javascript
 const { default: ctor } = await import("c/customConstructor");

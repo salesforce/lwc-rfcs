@@ -175,7 +175,7 @@ The directive has the following properties:
 
 #### Instantiation of the custom element
 
-Dynamic component instantiation follows the same creation path as any other LWC custom element. When the dynamic component is ready to be rendered, the element will be created and mounted to the DOM.  If there is an existing element supplied to `lwc:is`, it will be unmounted as well.
+Dynamic component instantiation follows the same creation path as any other LWC custom element. When the dynamic component is ready to be rendered, the element will be created and mounted to the DOM.  If the component constructor supplied to `lwc:is` changes, the existing element will be unmounted.
 
 This means that when the value provided to `lwc:is` changes the component and all of its children will be destroyed and recreated using the new constructor.  In addition, when the value provided to `lwc:is` is evaluated, the LWC engine will render depending on the following scenarios:
 

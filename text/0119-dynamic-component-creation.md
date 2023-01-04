@@ -190,7 +190,7 @@ _Note in the case of lazy loading, the component author is responsible for resol
 
 #### Selecting the dynamic component
 
-It is important to note that `<lwc.dynamic>` will not be rendered to the DOM.  As such, it is not available to be selected using `this.template.querySelector`.  The actual custom element must be selected once it has been rendered to the DOM.  The dynamic component can be selected either through the `lightningElementName` property on the constructor or through another attribute assigned to the component.
+It is important to note that the `<lwc.dynamic>` element itself will not be rendered to the DOM.  As such, it is not available to be selected using `this.template.querySelector`.  The actual custom element must be selected once it has been rendered to the DOM.  The dynamic component can be selected either through the `lightningElementName` property on the constructor or through another attribute assigned to the component.
 
 Component authors can use the `connectedCallback` of the dynamic component to signal when the component has been rendered to the DOM.
 

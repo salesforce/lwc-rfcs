@@ -171,7 +171,7 @@ The directive has the following properties:
     - An error will be issued when `lwc:is` is used on any other element.
 2. At compile time the value supplied to `lwc:is` can only be an expression.
 3. At runtime the expression supplied to `lwc:is` must be a `LightningElementConstructor`.
-    - An error will be thrown if anything other than a `LightningElementConstructor` is passed to `lwc:is`.
+    - An error will be thrown at runtime if anything other than a `LightningElementConstructor` is passed to `lwc:is`.
 
 #### Instantiation of the custom element
 

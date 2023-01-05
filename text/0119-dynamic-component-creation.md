@@ -2,7 +2,7 @@
 title: Dynamic Component Creation
 status: DRAFTED
 created_at: 2022-12-21
-updated_at: 2022-12-21
+updated_at: 2023-01-04
 pr: (leave this empty until the PR is created)
 ---
 
@@ -21,7 +21,7 @@ Dynamic components refer to custom elements where the constructor is not known a
 ```html
 <template>
     <div class="container">
-        <lwc.dynamic lwc:is={lazyConstructor}></lwc.dynamic>
+        <lwc:dynamic lwc:is={lazyConstructor}></lwc:dynamic>
     </div>
 </template>
 ```
@@ -114,7 +114,7 @@ The goal of managing dynamic components in LWC is to follow the same component l
 
 A new property, `lightningElementName` on `LightningElementConstructor` is introduced to store the name of the custom element.
 
-A special tag, `<lwc.dynamic>` along with a new template directive `lwc:is` are also introduced and serves as the anchor in the DOM where the dynamic component will be rendered.
+A special tag, `<lwc:dynamic>` along with a new template directive `lwc:is` are also introduced and serves as the anchor in the DOM where the dynamic component will be rendered.
 
 Broken down, there are three main parts to this design:
 
@@ -143,31 +143,27 @@ const { default: ctor } = await import("c/customConstructor");
 // The tag name can be directly accessed on the constructor
 ctor.lightningElementName
 ```
-
-The value of `lightningElementName` should only be set by the LWC engine to prevent component authors from modifying it and producing unintended side effects.
+At compile time LWC will inject a call to `registerComponent` providing the custom element name.  At runtime `registerComponent` will associate the custom element name to `lightningElementName` in a similar way to how templates are associated to `LightningElementConstructor`.  The value of `lightningElementName` should only be set by LWC to prevent component authors from modifying it and producing unintended side effects.
 
 Alternatively, the custom element name can be stored in a `weakMap` and a public API can be exposed to retrieve the constructor's custom element name. However, because the custom element name can be used as a selector with `this.template.querySelector` placing it on the constructor seems more ergonomic.
 
 #### Defining an anchor in the DOM
 
-##### `<lwc.dynamic>` tag
+##### `<lwc:dynamic>`
 
-`<lwc.dynamic>` is a placeholder tag for the dynamic component and will not be rendered to the DOM.  It serves as a special signal to the compiler that the dynamic component will be rendered at the specific location in the DOM. (Similar to how `template` is not rendered)
+`<lwc:dynamic>` is a placeholder tag for the dynamic component and will not be rendered to the DOM.  It serves as a special signal to the compiler that the dynamic component will be rendered at the specific location in the DOM. (Similar to how `template` is not rendered)
 
-Note the separation of the namespace and name using a '.' is intentional because of the following reasons:
+Note the separation of the namespace and name using a ':' is intentional. It is neither a valid [tag name](https://html.spec.whatwg.org/multipage/syntax.html#syntax-tag-name) nor a valid [custom element name](https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name) which should clearly signal that it is a special element (which will not be rendered to the DOM).
 
-1. It is neither a valid [tag name](https://html.spec.whatwg.org/multipage/syntax.html#syntax-tag-name) nor a valid [custom element name](https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name) which should clearly signal that this is a special element (which will not be rendered to the DOM).
-2. Initially considered using a ':' instead of a '.' but ':' is the delimiter Aura uses to separate namespace and name.  To prevent confusion on whether this is an Aura tag, decided to use '.' instead.
+Additionally, `<lwc:dynamic>` is intended to be used in tandem with `lwc:is`, otherwise `<lwc:dynamic>` serves no purpose. The compiler will report an error when `<lwc:dynamic>` is used without the `lwc:is` template directive.
 
-Additionally, `<lwc.dynamic>` is intended to be used in tandem with `lwc:is`, otherwise `<lwc:dynamic>` serves no purpose. A warning should be issued when `<lwc.dynamic>` is used without the `lwc:is` template directive.
+##### `lwc:is`
 
-##### `lwc:is` directive
-
-A new template directive called `lwc:is` will be used to signal to compiler that the constructor is unknown at compile time. 
+A new template directive called `lwc:is` will be used as a signal to the compiler that the constructor is unknown at compile time. 
 
 The directive has the following properties:
 
-1. It can only be used with `<lwc.dynamic>` tag.
+1. It can only be used with `<lwc:dynamic>` tag.
     - An error will be issued when `lwc:is` is used on any other element.
 2. At compile time the value supplied to `lwc:is` can only be an expression.
 3. At runtime the expression supplied to `lwc:is` must be a `LightningElementConstructor`.
@@ -179,24 +175,27 @@ Dynamic component instantiation follows the same creation path as any other LWC 
 
 This means that when the value provided to `lwc:is` changes the component and all of its children will be destroyed and recreated using the new constructor.  In addition, when the value provided to `lwc:is` is evaluated, the LWC engine will render depending on the following scenarios:
 
-- **The constructor is `undefined` or `null`**
-    - When the constructor is undefined the `<lwc.dynamic>` tag along with all of its children are not rendered to the DOM.
+- **The constructor is falsy**
+    - When the constructor is undefined the `<lwc:dynamic>` tag along with all of its children are not rendered to the DOM.
 - **The constructor is defined and is not a `LightningElementConstructor`**
     - When the value provided to `lwc:is` is not a `LightningElementConstructor` then an error is thrown indicating the constructor value must be `LightningElementConstructor`.
 - **The constructor is defined and is a `LightningElementConstructor`**
-    - When the constructor is a `LightningElementConstructor`, the component will be rendered in place of `<lwc.dynamic>`. The tag name used for the dynamic component is the value of `lightningElementName` on `LightningElementConstructor`.
+    - When the constructor is a `LightningElementConstructor`, the component will be rendered in place of `<lwc:dynamic>`. The tag name used for the dynamic component is the value of `lightningElementName` on `LightningElementConstructor`.
 
 _Note in the case of lazy loading, the component author is responsible for resolving the promise.  The only value that can be given to `lwc:is` is a `LightningElementConstructor`._
 
 #### Selecting the dynamic component
 
-It is important to note that the `<lwc.dynamic>` element itself will not be rendered to the DOM.  As such, it is not available to be selected using `this.template.querySelector`.  The actual custom element must be selected once it has been rendered to the DOM.  The dynamic component can be selected either through the `lightningElementName` property on the constructor or through another attribute assigned to the component.
+It is important to note that the `<lwc:dynamic>` element itself will not be rendered to the DOM.  As such, it is not available to be selected using `this.template.querySelector`.  The actual custom element must be selected once it has been rendered to the DOM.  The dynamic component can be selected either through the `lightningElementName` property on the constructor or through another attribute assigned to the component.
 
-Component authors can use the `connectedCallback` of the dynamic component to signal when the component has been rendered to the DOM.
+Here are some ways component authors can detect when a dynamic component has mounted:
+1. Use `connectedCallback` on the dynamic component to signal when it has mounted.
+2. A dynamic component constructor is guaranteed to be mounted in the next rendering cycle once it has been set.  When it is set, the parent component can wait until the `renderedCallback` lifecycle method is invoked to detect when the dynamic component is mounted.
+3. Use a [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to detect when the dynamic component has mounted.
 
 #### Assigning attributes and event listeners
 
-Attributes and event listeners can be passed to the `<lwc.dynamic>` tag declaratively or can be assigned directly to the custom element imperatively.
+Attributes and event listeners can be passed to the `<lwc:dynamic>` tag declaratively or can be assigned directly to the custom element imperatively.
 
 Attributes and event listeners assigned declaratively will be assigned to the dynamic component once it has been created.
 
@@ -204,7 +203,7 @@ Declaratively:
 
 ```html
 <template>
-    <lwc.dynamic lwc:is={ctor} class="container" onclick={handleClick}></lwc.dynamic>
+    <lwc:dynamic lwc:is={ctor} class="container" onclick={handleClick}></lwc:dynamic>
 </template>
 ```
 
@@ -230,19 +229,19 @@ export default class DynamicCtor extends LightningElement {
 ```
 #### Usage with other LWC directives
 
-All [LWC custom element directives](https://lwc.dev/guide/reference#directives-for-nested-templates) with the exception of `lwc:external` are available to use on `<lwc.dynamic>` and their functionality will be passed through to the custom element once it has been created.
+All [LWC custom element directives](https://lwc.dev/guide/reference#directives-for-nested-templates) with the exception of `lwc:external` are available to use on `<lwc:dynamic>` and their functionality will be passed through to the custom element once it has been created.
 
 `lwc:external` will not be available because the constructor provided to the `lwc:is` directive must be a `LightningElementConstructor`.
 
 #### Children of the dynamically created element
 
-The `<lwc.dynamic>` tag accepts child elements, first creating the dynamic component and subsequently the children afterwards.  Each time the dynamic component changes, the existing dynamic component will be unmounted along with all of its children.  The new dynamic component will be created along with the children.
+The `<lwc:dynamic>` tag accepts child elements, first creating the dynamic component and subsequently the children afterwards.  Each time the dynamic component changes, the existing dynamic component will be unmounted along with all of its children.  The new dynamic component will be created along with the children.
 
 ```html
 <template>
-    <lwc.dynamic lwc:is={ctor}>
+    <lwc:dynamic lwc:is={ctor}>
         <span>child</span>
-    </lwc.dynamic>
+    </lwc:dynamic>
 </template>
 ```
 
@@ -267,7 +266,7 @@ Is semantically the same as
 ```html
 <template>
     <!-- The ctor swaps between light and shadow DOM components -->
-    <lwc.dynamic lwc:is={ctor}></lwc.dynamic>
+    <lwc:dynamic lwc:is={ctor}></lwc:dynamic>
 </template>
 ```
 
@@ -283,7 +282,7 @@ The main drawback of this design is that when the constructor changes, the entir
 
 ## Alternatives
 
-### Use a `<template>` tag instead of `lwc.dynamic`.
+### Use a `<template>` tag instead of `lwc:dynamic`.
 
 Reference to [POC](https://github.com/salesforce/lwc/pull/3218)
 
@@ -309,23 +308,25 @@ Full details can be found [here](https://github.com/salesforce/lwc/pull/3204)
 
 `LightningDynamicElement` is a special custom element provided by LWC that serves as a wrapper component around dynamic LWC custom elements. `LightningDynamicElement` tackles the issue of reusing the same custom element with multiple definitions by serving as a wrapper around dynamic components that renders their content to the DOM.
 
-`LightningDynamicElement` works by synthetically handling the lifecycle of the dynamic component, which means the dynamic component does not go through the same mounting and unmounting process as other custom elements.  Additionally, `LightningDyanmicElement` does not unmount when the dynamic constructor changes.
+`LightningDynamicElement` works by synthetically handling the lifecycle of the dynamic component, which means the dynamic component does not go through the same mounting and unmounting process as other custom elements.  Additionally, `LightningDynamicElement` does not unmount when the dynamic constructor changes.
 
 _This is similar to the [Angular approach to dynamic components](https://angular.io/guide/dynamic-component-loader)._
 
-#### Comparison with `<lwc.dynamic lwc:is={expression}>`
+#### Comparison with `<lwc:dynamic lwc:is={expression}>`
 
-With `LightningDynamicElement` the framework keeps track of references to the dynamic components and also manages its lifecycle.  In contrast with `<lwc.dynamic>` the component author is responsible for keeping track of the custom element.  This means that any dynamic component must be retrieved each time the component changes.  Additionally, any imperatively assigned attributes or event listeners will need to be reapplied once the component changes as well.
+With `LightningDynamicElement` the framework keeps track of references to the dynamic components and also manages its lifecycle.  In contrast with `<lwc:dynamic>` the component author is responsible for keeping track of the custom element.  This means that any dynamic component must be retrieved each time the component changes.  Additionally, any imperatively assigned attributes or event listeners will need to be reapplied once the component changes as well.
 
 ## Adoption strategy
 
-This is a breaking change for existing user of `lwc:dynamic` as it supersedes the directive.  However, `lwc:dynamic` directive has not reached GA and all consumers of the directive are internal.  They will need to switch their components to change the tag names to `lwc.dynamic` and the directives from `lwc:dynamic` to `lwc:is`.
+This is a breaking change for existing user of `lwc:dynamic` as it supersedes the directive.  However, `lwc:dynamic` directive has not reached GA and all consumers of the directive are internal.  They will need to switch their components to change the tag names to `lwc:dynamic` and the directives from `lwc:dynamic` to `lwc:is`.
 
 The behavior of `lwc:is` is the same as `lwc:dynamic` when the constructor is not provided, both will not render the dynamic component of its children. The behavior is different when the components are rendered though, as `lwc:is` will render the custom element name rather than the custom element name used with `lwc:dynamic`.  Component authors may need to adjust any testing that relies on this.
 
+To help with the transition, the LWC team will support both `lwc:dynamic` and `lwc:is` directives for existing consumers.  Going forward, the compiler will report a warning when usage of the `lwc:dynamic` directive is detected until it is fully deprecated.
+
 # How we teach this
 
-This concept is fairly intuitive and is similar to the same concepts in other frameworks (Svelte, Vue, Angular).  Providing documentation around how the to use `<lwc.dynamic>` and `lwc:is` with a small playground example should be sufficient.
+This concept is fairly intuitive and is similar to the same concepts in other frameworks (Svelte, Vue, Angular).  Providing documentation around how the to use `<lwc:dynamic>` and `lwc:is` with a small playground example should be sufficient.
 
 Examples of [documentation](https://svelte.dev/docs#template-syntax-svelte-component) and [playground](https://svelte.dev/tutorial/svelte-component) from Svelte.
 
@@ -333,3 +334,5 @@ Examples of [documentation](https://svelte.dev/docs#template-syntax-svelte-compo
 
 Will there be issues with collisions?  For example if a dynamic constructor is imported but has the same custom element name as a custom element that's already on the page?
     - Does the `upgradeableCallback` take care of this?
+
+Should we log errors when component authors try to use `<lwc:*>` incorrectly?  For example should we prevent component authors from doing something like `document.createElement('lwc:other');`?

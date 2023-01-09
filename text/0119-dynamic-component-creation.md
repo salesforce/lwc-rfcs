@@ -28,13 +28,13 @@ Dynamic components refer to custom elements where the constructor is not known a
 
 ```javascript
 import { LightningElement } from 'lwc';
+import ConcreteComponent from 'lightning/concreteComponent';
 
 export default class extends LightningElement {
     lazyConstructor;
 
-    async connectedCallback() {
-        const { default: ctor } = await import('lightning/concreteComponent');
-        this.lazyConstructor = ctor;
+    connectedCallback() {
+        this.lazyConstructor = ConcreteComponent;
     }
 }
 ```
@@ -65,33 +65,37 @@ For example:
 
 ```html
 <template>
-  <x-lazy lwc:dynamic={customCtor}></x-lazy>
+    <button onclick={loadCtor}>Click to change constructor</button>
+    <x-lazy lwc:dynamic={customCtor}></x-lazy>
 </template>
 ```
 
 ```javascript
 import { LightningElement } from "lwc";
+import About from 'c/about';
+import Home from 'c/home';
 
-export default class DynamicCtor extends LightningElement {
-  customCtor;
+export default class extends LightningElement {
+    customCtor;
+    ctors = [About, Home]
 
-  connectedCallback() {
-    this.loadCtor();
-  }
+    loadCtor() {
+        if (this.customCtor) {
+            this.ctors.push(this.customCtor);
+        }
 
-  async loadCtor() {
-    const { default: ctor } = await import("c/customConstructor");
-    this.customCtor = ctor;
-  }
+        this.customCtor = this.ctors.shift();
+    }
 }
 ```
 
 Will always render the same tag regardless of the constructor.
 
 ```html
-  <x-lazy>
+<button onclick={loadCtor}>Click to change constructor</button>
+<x-lazy>
     <!-- c-custom-constructor content -->
-  </x-lazy>
+</x-lazy>
 ```
 
 This proposal aims to overcome the issues with the current design by exposing the custom element name at compile time and using it as the name of the dynamic component that is created at runtime.

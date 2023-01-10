@@ -219,14 +219,16 @@ _Note in the case of lazy loading, the component author is responsible for resol
 
 #### Selecting the dynamic component
 
-Dynamic components have certain properties that will not work with `this.template.querySelector`.  First, the `<lwc:component>` tag will not be rendered to the DOM which means it is not available to be selected using `this.template.querySelector`.  Second, the LWC engine does not provide a way to retrieve the dynamic component's custom element name for use as a selector with `this.template.querySelector` (we recommend using `lwc:ref` instead).
+Dynamic components have certain properties that will not work with `this.template.querySelector`:
+1. The `<lwc:component>` tag will not be rendered to the DOM which means it is not available to be selected using `this.template.querySelector`. 
+2. The LWC engine does not provide a way to retrieve the dynamic component's custom element name for use as a selector with `this.template.querySelector` (we recommend using `lwc:ref` instead).
 
 To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://rfcs.lwc.dev/rfcs/lwc/0000-refs) directive or through another attribute assigned to the component.
 
 Here are some ways component authors can detect when a dynamic component has mounted:
-1. Use `connectedCallback` on the dynamic component to signal when it has mounted.
-2. A dynamic component constructor is guaranteed to be mounted in the next rendering cycle once it has been set.  When it is set, the parent component can wait until the `renderedCallback` lifecycle method is invoked to detect when the dynamic component is mounted.
-3. Use a [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to detect when the dynamic component has mounted.
+- Use `connectedCallback` on the dynamic component to signal when it has mounted.
+- A dynamic component constructor is guaranteed to be mounted in the next rendering cycle once it has been set.  When it is set, the parent component can wait until the `renderedCallback` lifecycle method is invoked to detect when the dynamic component is mounted.
+- Use a [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to detect when the dynamic component has mounted.
 
 ```html
 <template>

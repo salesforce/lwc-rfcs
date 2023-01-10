@@ -28,13 +28,14 @@ Dynamic components refer to custom elements where the constructor is not known a
 
 ```javascript
 import { LightningElement } from 'lwc';
-import ConcreteComponent from 'lightning/concreteComponent';
 
 export default class extends LightningElement {
     lazyConstructor;
 
     connectedCallback() {
-        this.lazyConstructor = ConcreteComponent;
+        import('lightning/concreteComponent')
+            .then(({ default: ctor }) => this.lazyConstructor = ctor)
+            .catch(err => console.log('Error importing component'));
     }
 }
 ```
@@ -77,13 +78,15 @@ import Home from 'c/home';
 
 export default class extends LightningElement {
     customCtor;
-    ctors = [About, Home]
+    ctors = [About, Home];
 
     loadCtor() {
         if (this.customCtor) {
+            // Append to the end of the array
             this.ctors.push(this.customCtor);
         }
 
+        // Remove the first element in the array
         this.customCtor = this.ctors.shift();
     }
 }
@@ -98,7 +101,7 @@ Will always render the same tag regardless of the constructor.
 </x-lazy>
 ```
 
-This proposal aims to overcome the issues with the current design by exposing the custom element name at compile time and using it as the name of the dynamic component that is created at runtime.
+This proposal aims to overcome the issues with the current design by resolving the custom element name at compile time and using it as the name of the dynamic component that is created at runtime.
 
 ## Prior art
 
@@ -116,7 +119,7 @@ The goal of managing dynamic components in LWC is to follow the same component l
 
 ## Detailed design
 
-A new property, `lightningElementName` on `LightningElementConstructor` is introduced to store the name of the custom element.
+A new internal `Map` called `componentRegisteredNameMap` is introduced to store the custom element name and an internal API `getComponentRegisteredName` is introduced to retrieve the custom element name.
 
 A special tag, `<lwc:component>` along with a new template directive `lwc:is` are also introduced and serves as the anchor in the DOM where the dynamic component will be rendered.
 
@@ -140,16 +143,42 @@ namespace/
     ├── *.html
 ```
 
-Leveraging this, the namespace and name can be accessed at compile time and ultimately stored on the constructor.  A new read-only property on `LightningElementConstructor` called `lightningElementName` will store the custom element name which will be of the form `namespace-name`.
+The LWC module resolver also allows for namespace and name mappings that do not adhere to the default folder structure, such as the case with [alias module records](https://rfcs.lwc.dev/rfcs/lwc/0020-module-resolution#aliasmodulerecord).
+
+Leveraging this, the namespace and name can be resolved at compile time and used to create the custom element name, which will be in the form `namespace-name`.  The custom element name will be stored on an internal `Map` called `componentRegisteredNameMap` where the key is the `LightningElementConstructor` and the value is the custom element name.
+
+At compile time, LWC will inject a call to `registerComponent` providing the custom element name.  At runtime `registerComponent` will associate the custom element name to `componentRegisteredNameMap` in a similar way to how templates are associated to `LightningElementConstructor`.
+
+If the custom element name is unable to be resolved at compile time and no value is provided to `registerComponent` the compiler will report an error.
+
+In contrast, the custom element name can be retrieved through an internal API called `getComponentRegisteredName`.  The LWC engine will use this API to retrieve the name when the dynamic component is ready to be instantiated.
+
+_Note `getComponentRegisteredName` should be the only way to retrieve the custom element name._
+
+The `componentRegisteredNameMap`, `getComponentRegisteredName`, and custom element name are internal APIs that should only be used by the LWC engine and will not be observable to component authors.  This is to prevent any unintended side effects.
+
+_See the [Selecting the dynamic component](#Selecting-the-dynamic-component) for details on how to access the component once it has been instantiated._
+
+##### Considerations
+
+There is a possibility that a constructor is mapped to more than one alias, such as:
 
 ```javascript
-const { default: ctor } = await import("c/customConstructor");
-// The tag name can be directly accessed on the constructor
-ctor.lightningElementName
+{
+    "modules": [
+       {
+            "name": "ui/button",
+            "path": "src/modules/ui/button/button.js"
+        },
+        {
+            "name": "ui/button2",
+            "path": "src/modules/ui/button/button.js"
+        }
+    ]
+}
 ```
-At compile time LWC will inject a call to `registerComponent` providing the custom element name.  At runtime `registerComponent` will associate the custom element name to `lightningElementName` in a similar way to how templates are associated to `LightningElementConstructor`.  The value of `lightningElementName` should only be set by LWC to prevent component authors from modifying it and producing unintended side effects.
 
-Alternatively, the custom element name can be stored in a `weakMap` and a public API can be exposed to retrieve the constructor's custom element name. However, because the custom element name can be used as a selector with `this.template.querySelector` placing it on the constructor seems more ergonomic.
+Since there is no way to know which alias to use in this case, the custom element name will be the first alias that is resolved.  This should be an edge case that does not appear often.
 
 #### Defining an anchor in the DOM
 
@@ -180,22 +209,52 @@ Dynamic component instantiation follows the same creation path as any other LWC 
 This means that when the value provided to `lwc:is` changes the component and all of its children will be destroyed and recreated using the new constructor.  In addition, when the value provided to `lwc:is` is evaluated, the LWC engine will render depending on the following scenarios:
 
 - **The constructor is falsy**
-    - When the constructor is undefined the `<lwc:component>` tag along with all of its children are not rendered to the DOM.
+    - When the constructor is falsy the `<lwc:component>` tag along with all of its children are not rendered to the DOM.
 - **The constructor is defined and is not a `LightningElementConstructor`**
     - When the value provided to `lwc:is` is not a `LightningElementConstructor` then an error is thrown indicating the constructor value must be `LightningElementConstructor`.
 - **The constructor is defined and is a `LightningElementConstructor`**
-    - When the constructor is a `LightningElementConstructor`, the component will be rendered in place of `<lwc:component>`. The tag name used for the dynamic component is the value of `lightningElementName` on `LightningElementConstructor`.
+    - When the constructor is a `LightningElementConstructor`, the component will be rendered in place of `<lwc:component>`. The tag name used for the dynamic component is the value returned from `getComponentRegisteredName`.
 
 _Note in the case of lazy loading, the component author is responsible for resolving the promise.  The only value that can be given to `lwc:is` is a `LightningElementConstructor`._
 
 #### Selecting the dynamic component
 
-It is important to note that the `<lwc:component>` element itself will not be rendered to the DOM.  As such, it is not available to be selected using `this.template.querySelector`.  The actual custom element must be selected once it has been rendered to the DOM.  The dynamic component can be selected either through the `lightningElementName` property on the constructor or through another attribute assigned to the component.
+Dynamic components have certain properties that will not work with `this.template.querySelector`.  First, the `<lwc:component>` tag will not be rendered to the DOM which means it is not available to be selected using `this.template.querySelector`.  Second, the LWC engine does not provide a way to retrieve the dynamic component's custom element name for use as a selector with `this.template.querySelector` (we recommend using `lwc:ref` instead).
+
+To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://rfcs.lwc.dev/rfcs/lwc/0000-refs) directive or through another attribute assigned to the component.
 
 Here are some ways component authors can detect when a dynamic component has mounted:
 1. Use `connectedCallback` on the dynamic component to signal when it has mounted.
 2. A dynamic component constructor is guaranteed to be mounted in the next rendering cycle once it has been set.  When it is set, the parent component can wait until the `renderedCallback` lifecycle method is invoked to detect when the dynamic component is mounted.
 3. Use a [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to detect when the dynamic component has mounted.
+
+```html
+<template>
+    <lwc:component lwc:is={lazyConstructor} lwc:ref="foo"></lwc:component>
+</template>
+```
+
+```javascript
+import { LightningElement } from 'lwc';
+
+export default class extends LightningElement {
+    lazyConstructor;
+
+    connectedCallback() {
+        import('lightning/concreteComponent')
+            .then(({ default: ctor }) => this.lazyConstructor = ctor)
+            .catch(err => console.log('Error importing component'));
+    }
+
+    renderedCallback() {
+        // this.refs.foo will be available on the next rendering cycle after the constructor has been set.
+        if (this.refs.foo) {
+            // this.refs.foo will contain a reference to the DOM node
+            console.log(this.refs.foo);
+        }
+    }
+}
+```
 
 #### Assigning attributes and event listeners
 
@@ -213,22 +272,30 @@ Declaratively:
 
 Imperatively:
 
+```html
+<template>
+    <lwc:component lwc:is={lazyConstructor} lwc:ref="foo"></lwc:component>
+</template>
+```
+
 ```javascript
 import { LightningElement } from "lwc";
 
-export default class DynamicCtor extends LightningElement {
-  customCtor;
+export default class extends LightningElement {
+    lazyConstructor;
 
-  connectedCallback() {
-    this.loadCtor();
-  }
+    connectedCallback() {
+        import('lightning/concreteComponent')
+            .then(({ default: ctor }) => this.lazyConstructor = ctor)
+            .catch(err => console.log('Error importing component'));
+    }
 
-  async loadCtor() {
-    const { default: ctor } = await import("c/customConstructor");
-    this.customCtor = ctor;
-    this.template.querySelector(ctor.lightningElementName).setAttribute('title', 'hawaii');
-    this.template.querySelector(ctor.lightningElementName).addEventListener('click', () => console.log('hello world'));
-  }
+    renderedCallback() {
+        if (this.refs.foo) {
+            this.refs.foo.setAttribute('title', 'hawaii');
+            this.refs.foo.addEventListener('click', () => console.log('hello world!'));
+        }
+    }
 }
 ```
 #### Usage with other LWC directives
@@ -337,6 +404,7 @@ Examples of [documentation](https://svelte.dev/docs#template-syntax-svelte-compo
 # Unresolved questions
 
 Will there be issues with collisions?  For example if a dynamic constructor is imported but has the same custom element name as a custom element that's already on the page?
-    - Does the `upgradeableCallback` take care of this?
+- Pivots in Locker and the `UpgradeableConstructor` should take care of this.
 
 Should we log errors when component authors try to use `<lwc:*>` incorrectly?  For example should we prevent component authors from doing something like `document.createElement('lwc:other');`?
+- In order to do this we would need to globally patch certain APIs which is something that we want to avoid to prevent bugs that are hard to maintain in the long run.  To handle this case, explicitly mention in the documentation that `<lwc:dynamic>` is an LWC compiler signal, and doesn't have any bearing at runtime.

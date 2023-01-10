@@ -145,11 +145,17 @@ namespace/
 
 The LWC module resolver also allows for namespace and name mappings that do not adhere to the default folder structure, such as the case with [alias module records](https://rfcs.lwc.dev/rfcs/lwc/0020-module-resolution#aliasmodulerecord).
 
-Leveraging this, the namespace and name can be resolved at compile time and used to create the custom element name, which will be in the form `namespace-name`.  The custom element name will be stored on an internal `Map` called `componentRegisteredNameMap` where the key is the `LightningElementConstructor` and the value is the custom element name.
+Leveraging this, the namespace and name can be resolved at compile time and used to create the custom element name, which will be in the form `namespace-name`.  
+
+##### `componentRegisteredNameMap`
+
+The custom element name will be stored on an internal `Map` called `componentRegisteredNameMap` where the key is the `LightningElementConstructor` and the value is the custom element name.
 
 At compile time, LWC will inject a call to `registerComponent` providing the custom element name.  At runtime `registerComponent` will associate the custom element name to `componentRegisteredNameMap` in a similar way to how templates are associated to `LightningElementConstructor`.
 
 If the custom element name is unable to be resolved at compile time and no value is provided to `registerComponent` the compiler will report an error.
+
+##### `getComponentRegisteredName`
 
 In contrast, the custom element name can be retrieved through an internal API called `getComponentRegisteredName`.  The LWC engine will use this API to retrieve the name when the dynamic component is ready to be instantiated.
 

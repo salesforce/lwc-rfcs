@@ -190,7 +190,7 @@ Since there is no way to know which alias to use in this case, the custom elemen
 
 ##### `<lwc:component>`
 
-`<lwc:component>` is a placeholder tag for the dynamic component and will not be rendered to the DOM.  It serves as a special signal to the compiler that the dynamic component will be rendered at the specific location in the DOM. (Similar to how `template` is not rendered)
+`<lwc:component>` is a placeholder tag for the dynamic component and will not be rendered to the DOM.  It serves as a special signal to the compiler that the dynamic component will be rendered at the specific location in the DOM. (Similar to how `<template>` is not rendered)
 
 Note the separation of the namespace and name using a ':' is intentional. It is neither a valid [tag name](https://html.spec.whatwg.org/multipage/syntax.html#syntax-tag-name) nor a valid [custom element name](https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name) which should clearly signal that it is a special element (which will not be rendered to the DOM).
 

@@ -76,18 +76,15 @@ import { LightningElement } from "lwc";
 import About from 'c/about';
 import Home from 'c/home';
 
+const ctors = [About, Home]; 
+
 export default class extends LightningElement {
     customCtor;
-    ctors = [About, Home];
+    index = 0;
 
     loadCtor() {
-        if (this.customCtor) {
-            // Append to the end of the array
-            this.ctors.push(this.customCtor);
-        }
-
-        // Remove the first element in the array
-        this.customCtor = this.ctors.shift();
+        const nextCtor = ctors[this.index++ % ctors.length];
+        this.customCtor = nextCtor;
     }
 }
 ```

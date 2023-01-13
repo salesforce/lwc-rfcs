@@ -214,7 +214,7 @@ This means that when the value provided to `lwc:is` changes the component and al
 - **The constructor is falsy**
     - When the constructor is falsy the `<lwc:component>` tag along with all of its children are not rendered to the DOM.
 - **The constructor is defined and is not a `LightningElementConstructor`**
-    - When the value provided to `lwc:is` is not a `LightningElementConstructor` then an error is thrown indicating the constructor value must be `LightningElementConstructor`.
+    - When the value provided to `lwc:is` is not a valid `LightningElement` constructor then an error is thrown.
 - **The constructor is defined and is a `LightningElementConstructor`**
     - When the constructor is a valid `LightningElement` constructor, the component will be rendered in place of `<lwc:component>`. The tag name used for the dynamic component is the value returned from `getComponentRegisteredName` for the given constructor.
 

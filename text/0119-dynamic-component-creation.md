@@ -216,7 +216,7 @@ This means that when the value provided to `lwc:is` changes the component and al
 - **The constructor is defined and is not a `LightningElementConstructor`**
     - When the value provided to `lwc:is` is not a `LightningElementConstructor` then an error is thrown indicating the constructor value must be `LightningElementConstructor`.
 - **The constructor is defined and is a `LightningElementConstructor`**
-    - When the constructor is a `LightningElementConstructor`, the component will be rendered in place of `<lwc:component>`. The tag name used for the dynamic component is the value returned from `getComponentRegisteredName`.
+    - When the constructor is a valid `LightningElement` constructor, the component will be rendered in place of `<lwc:component>`. The tag name used for the dynamic component is the value returned from `getComponentRegisteredName` for the given constructor.
 
 _Note in the case of lazy loading, the component author is responsible for resolving the promise.  The only value that can be given to `lwc:is` is a `LightningElementConstructor`._
 

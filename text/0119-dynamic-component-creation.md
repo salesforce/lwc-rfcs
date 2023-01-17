@@ -142,7 +142,7 @@ namespace/
 
 The LWC module resolver also allows for namespace and name mappings that do not adhere to the default folder structure, such as the case with [alias module records](https://rfcs.lwc.dev/rfcs/lwc/0020-module-resolution#aliasmodulerecord).
 
-Leveraging this, the namespace and name can be resolved at compile time and used to create the custom element name, which will be in the form `namespace-name`.  
+Leveraging this, the namespace and name can be resolved at compile time and used to construct the custom element name, which will be in the form `namespace-name`.  
 
 ##### `componentRegisteredNameMap`
 
@@ -213,25 +213,21 @@ This means that when the value provided to `lwc:is` changes the component and al
 
 - **The constructor is falsy**
     - When the constructor is falsy the `<lwc:component>` tag along with all of its children are not rendered to the DOM.
-- **The constructor is defined and is not a `LightningElementConstructor`**
+- **The constructor is defined and is not a `LightningElement` constructor**
     - When the value provided to `lwc:is` is not a valid `LightningElement` constructor then an error is thrown.
-- **The constructor is defined and is a `LightningElementConstructor`**
+- **The constructor is defined and is a `LightningElement` constructor**
     - When the constructor is a valid `LightningElement` constructor, the component will be rendered in place of `<lwc:component>`. The tag name used for the dynamic component is the value returned from `getComponentRegisteredName` for the given constructor.
 
-_Note in the case of lazy loading, the component author is responsible for resolving the promise.  The only value that can be given to `lwc:is` is a `LightningElementConstructor`._
+_Note in the case of lazy loading, the component author is responsible for resolving the promise.  The only value that can be given to `lwc:is` is a `LightningElement` constructor._
 
 #### Selecting the dynamic component
 
-Dynamic components have certain properties that will not work with `this.template.querySelector`:
-1. The `<lwc:component>` tag will not be rendered to the DOM which means it is not available to be selected using `this.template.querySelector`. 
-2. The LWC engine does not provide a way to retrieve the dynamic component's custom element name for use as a selector with `this.template.querySelector` (we recommend using `lwc:ref` instead).
-
-To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://rfcs.lwc.dev/rfcs/lwc/0000-refs) directive or through another attribute assigned to the component.
+To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://rfcs.lwc.dev/rfcs/lwc/0000-refs) directive or through another attribute assigned to the component such as a class name.
 
 Here are some ways component authors can detect when a dynamic component has mounted:
 - Use `connectedCallback` on the dynamic component to signal when it has mounted.
 - A dynamic component constructor is guaranteed to be mounted in the next rendering cycle once it has been set.  When it is set, the parent component can wait until the `renderedCallback` lifecycle method is invoked to detect when the dynamic component is mounted.
-- Use a [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to detect when the dynamic component has mounted.
+
 
 ```html
 <template>
@@ -305,9 +301,13 @@ export default class extends LightningElement {
 ```
 #### Usage with other LWC directives
 
-All [LWC custom element directives](https://lwc.dev/guide/reference#directives-for-nested-templates) with the exception of `lwc:external` are available to use on `<lwc:component>` and their functionality will be passed through to the custom element once it has been created.
+All directives for [nested templates](https://lwc.dev/guide/reference#directives-for-nested-templates) are available to use on `<lwc:component>` and their functionality will be passed through to the custom element once it has been created.
 
-`lwc:external` will not be available because the constructor provided to the `lwc:is` directive must be a `LightningElementConstructor`.
+Additionally, the following directives will also be supported:
+- [`lwc:spread`](https://lwc.dev/guide/reference#lwc%3Aspread%3D%7Bchildprops%7D)
+- [`lwc:ref`](https://rfcs.lwc.dev/rfcs/lwc/0000-refs)
+
+_Note `lwc:external` will not be available because the constructor provided to the `lwc:is` directive must be a `LightningElement` constructor._
 
 #### Children of the dynamically created element
 
@@ -350,7 +350,7 @@ In both cases the dynamic component will be fully mounted and unmounted.
 
 #### Styles
 
-Something to keep in mind is that [light DOM styles are injected to the closest root node](https://rfcs.lwc.dev/rfcs/lwc/0115-light-dom#styles) and are not removed once the components are unmounted. This means that repeated mounting and mounting of a dynamic component could cause styles to be overwritten.  This can be avoided by using either scoped styles or shadow dom, as the styles will be scoped.
+Something to keep in mind is that [light DOM styles are injected to the closest root node](https://rfcs.lwc.dev/rfcs/lwc/0115-light-dom#styles) and are not removed once the components are unmounted. This means that repeated mounting and unmounting of dynamic component could cause styles to be overwritten.  This can be avoided by using either scoped styles or shadow dom, as the styles will be scoped.
 
 ## Drawbacks
 

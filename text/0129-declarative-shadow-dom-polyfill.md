@@ -1,6 +1,6 @@
 ---
 title: Declarative ShadowDOM polyfill
-status: DRAFTED
+status: APPROVED
 created_at: 2022-08-25
 updated_at: 2022-08-25
 pr: 

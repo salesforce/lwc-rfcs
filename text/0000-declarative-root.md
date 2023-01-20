@@ -79,7 +79,9 @@ The `<lwc:root>` element is a synthetic element defined in a component's templat
 </template>
 ```
 
-However, many attributes and directives that can be applied to a normal `HTMLElement` can be applied to `<lwc:root>`. These include:
+Instead, `<lwc:root>` refers to either the shadow host element (in the case of shadow DOM components) or the root element (in the case of light DOM components). (In other words, if you are writing a component whose JavaScript file is `x/foo.js`, it refers to `<x-foo>`.)
+
+Many attributes and directives that can be applied to a normal `HTMLElement` can also be applied to `<lwc:root>`. These include:
 
 - Standard [global HTML attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes), such as `class` and `tabindex`
 - Custom HTML attributes, such as `data-*`

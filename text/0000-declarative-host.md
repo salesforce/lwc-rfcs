@@ -234,6 +234,8 @@ In cases of conflict, the following rules apply:
 
 The reason for this is to allow a component to set defaults for its root's behavior, while still allowing consumers to override those defaults.
 
+Note that, in case of conflict with programmatically-modified attributes or event listeners (e.g. `this.className = 'foo'` in a `renderedCallback`), the framework makes no attempt to merge the programmatically-added values with the framework-added values (similar to how classes in [light DOM scoped styles](https://rfcs.lwc.dev/rfcs/lwc/0116-light-dom-scoped-styles) work today). Developers should be encouraged to rely on the framework rather than doing their own manual manipulations.
+
 ## Drawbacks
 
 Implementing this feature does require additional complexity, and moves us further away from standard custom element syntax.

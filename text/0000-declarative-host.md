@@ -269,7 +269,7 @@ This proposal can be adopted as a net-new feature and does not have backwards-co
 not a pre-existing built-in HTML element, and it's extremely unlikely that anyone is creating runtime elements with this name.
 
 It may be possible to write codemods that look for simple usages of e.g. `this.template.host.classList.add('foo')`
-and replace it with `<lwc:host>`. This may be too complex to be worthwhile, though.
+and replace it with `<lwc:host>`. A linting rule could also be valuable here.
 
 # How we teach this
 

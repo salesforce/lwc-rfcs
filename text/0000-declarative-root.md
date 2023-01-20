@@ -193,7 +193,9 @@ in the same tick as when the `<div>`'s `class` changes.
 
 The above also applies to the timing of when event listeners are attached using `on*`.
 
-No guarantees are made about the ordering of changes made to `<lwc:root>` versus elements inside of the template.
+No guarantees are made about the ordering of changes made to `<lwc:root>` compared to the ordering of changes made to elements inside of the template. I.e. there is no guarantee that changes to the root occur before changes to an in-template element, or vice-versa.
+
+The ordering of changes made to the element itself (i.e. between the categories of `class`, other attributes, and event listeners) is also not guaranteed. (Nor is it guaranteed for in-template elements in any other RFC.)
 
 ### Precedence
 

@@ -1,6 +1,6 @@
 ---
 title: InnerHTML Bindings template binding
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2019-10-03
 updated_at: 2021-03-08
 pr: https://github.com/salesforce/lwc/pull/2256

@@ -1,5 +1,5 @@
 ---
-title: Declarative root element
+title: Declarative host element
 status: DRAFTED
 created_at: 2022-01-19
 updated_at: 2022-01-19
@@ -7,11 +7,11 @@ champion: Nolan Lawson (nolanlawson)
 pr: https://github.com/salesforce/lwc-rfcs/pull/72
 ---
 
-# Declarative root element
+# Declarative host element
 
 ## Summary
 
-Provides a declarative way to apply reactive attributes, classes, and event listeners to the root (host) element.
+Provides a declarative way to apply reactive attributes, classes, and event listeners to the host (root) element.
 
 ## Basic example
 
@@ -19,12 +19,12 @@ In a component's template HTML file:
 
 ```html
 <template>
-    <lwc:root
+    <lwc:host
       class="static-class"
       data-foo={dynamicAttribute}
       onclick={onRootClick}
       lwc:spread={otherAttributes}
-    ></lwc:root>
+    ></lwc:host>
     <h1>Hello world</h1>
 </template>
 ```
@@ -38,7 +38,7 @@ Result:
 </x-component>
 ```
 
-Classes, attributes, and event listeners are applied from the `<lwc:root>` element to the
+Classes, attributes, and event listeners are applied from the `<lwc:host>` element to the
 root `<x-component>` element. (The event listener is not shown above.)
 
 ## Motivation
@@ -71,17 +71,17 @@ Prior art in other frameworks:
 
 ## Detailed design
 
-The `<lwc:root>` element is a synthetic element defined in a component's template HTML file. Similar to [dynamic components](https://github.com/salesforce/lwc-rfcs/pull/71), it does not actually render in the DOM.
+The `<lwc:host>` element is a synthetic element defined in a component's template HTML file. Similar to [dynamic components](https://github.com/salesforce/lwc-rfcs/pull/71), it does not actually render in the DOM.
 
 ```html
 <template>
-    <lwc:root class="foo"></lwc:root> <!-- Doesn't actually render -->
+    <lwc:host class="foo"></lwc:host> <!-- Doesn't actually render -->
 </template>
 ```
 
-Instead, `<lwc:root>` refers to either the shadow host element (in the case of shadow DOM components) or the root element (in the case of light DOM components). (In other words, if you are writing a component whose JavaScript file is `x/foo.js`, it refers to `<x-foo>`.)
+Instead, `<lwc:host>` refers to either the shadow host element (in the case of shadow DOM components) or the root element (in the case of light DOM components). (In other words, if you are writing a component whose JavaScript file is `x/foo.js`, it refers to `<x-foo>`.)
 
-Many attributes and directives that can be applied to a normal `HTMLElement` can also be applied to `<lwc:root>`. These include:
+Many attributes and directives that can be applied to a normal `HTMLElement` can also be applied to `<lwc:host>`. These include:
 
 - Standard [global HTML attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes), such as `class` and `tabindex`
 - Custom HTML attributes, such as `data-*`
@@ -90,18 +90,18 @@ Many attributes and directives that can be applied to a normal `HTMLElement` can
 
 Other directives that apply to normal `HTMLElement`s, such as `lwc:inner-html`, `lwc:ref`, and `key`, are not supported.
 
-A bare `<lwc:root></lwc:root>` with no attributes/listeners/directives is allowed, but effectively does nothing.
+A bare `<lwc:host></lwc:host>` with no attributes/listeners/directives is allowed, but effectively does nothing.
 
 ### Restrictions
 
 #### Placement
 
-A `<lwc:root>` element must be placed at the top level (root) of a `<template>`, and may not be preceded by other elements:
+A `<lwc:host>` element must be placed at the top level (root) of a `<template>`, and may not be preceded by other elements:
 
 ```html
 <!-- Valid -->
 <template>
-    <lwc:root></lwc:root>
+    <lwc:host></lwc:host>
     <div></div>
 </template>
 ```
@@ -110,7 +110,7 @@ A `<lwc:root>` element must be placed at the top level (root) of a `<template>`,
 <!-- Invalid -->
 <template>
     <div>
-        <lwc:root></lwc:root>
+        <lwc:host></lwc:host>
     </div>
 </template>
 ```
@@ -119,64 +119,64 @@ A `<lwc:root>` element must be placed at the top level (root) of a `<template>`,
 <!-- Invalid -->
 <template>
     <div></div>
-    <lwc:root></lwc:root>
+    <lwc:host></lwc:host>
 </template>
 ```
 
-Comments are allowed to precede `<lwc:root>`:
+Comments are allowed to precede `<lwc:host>`:
 
 ```html
 <!-- Valid -->
 <template>
     <!-- Comment -->
-    <lwc:root></lwc:root>
+    <lwc:host></lwc:host>
 </template>
 ```
 
-However, in the case of `lwc:preserve-comments`, comments may not precede `<lwc:root>`:
+However, in the case of `lwc:preserve-comments`, comments may not precede `<lwc:host>`:
 
 ```html
 <!-- Invalid -->
 <template lwc:preserve-comments>
     <!-- Comment -->
-    <lwc:root></lwc:root>
+    <lwc:host></lwc:host>
 </template>
 ```
 
 #### Contents
 
-The `<lwc:root>` element may not have any contents other than whitespace and comments:
+The `<lwc:host>` element may not have any contents other than whitespace and comments:
 
 ```html
 <!-- Valid -->
 <template>
-    <lwc:root>
+    <lwc:host>
         
-    </lwc:root>
+    </lwc:host>
 </template>
 ```
 
 ```html
 <!-- Valid -->
 <template>
-    <lwc:root>
+    <lwc:host>
         <!-- Comment -->
-    </lwc:root>
+    </lwc:host>
 </template>
 ```
 
-However, in the case of `lwc:preserve-comments`, comments inside of `<lwc:root>` are not allowed:
+However, in the case of `lwc:preserve-comments`, comments inside of `<lwc:host>` are not allowed:
 
 ```html
 <!-- Invalid -->
 <template lwc:preserve-comments>
-    <lwc:root>
+    <lwc:host>
         <!-- Comment -->
-    </lwc:root>
+    </lwc:host>
 </template>
 ```
 
-This restriction is why `lwc:inner-html` is not supported on `<lwc:root>`.
+This restriction is why `lwc:inner-html` is not supported on `<lwc:host>`.
 
 ### Timing
 
@@ -185,7 +185,7 @@ to elements inside of the template:
 
 ```html
 <template>
-    <lwc:root class={clazz}></lwc:root>
+    <lwc:host class={clazz}></lwc:host>
     <div class={clazz}></div>
 </template>
 ```
@@ -195,13 +195,13 @@ in the same tick as when the `<div>`'s `class` changes.
 
 The above also applies to the timing of when event listeners are attached using `on*`.
 
-No guarantees are made about the ordering of changes made to `<lwc:root>` compared to the ordering of changes made to elements inside of the template. I.e. there is no guarantee that changes to the root occur before changes to an in-template element, or vice-versa.
+No guarantees are made about the ordering of changes made to `<lwc:host>` compared to the ordering of changes made to elements inside of the template. I.e. there is no guarantee that changes to the root occur before changes to an in-template element, or vice-versa.
 
 The ordering of changes made to the element itself (i.e. between the categories of `class`, other attributes, and event listeners) is also not guaranteed. (Nor is it guaranteed for in-template elements in any other RFC.)
 
 ### Precedence
 
-Attributes and event listeners added using `<lwc:root>` may conflict with those added by the parent component:
+Attributes and event listeners added using `<lwc:host>` may conflict with those added by the parent component:
 
 ```html
 <!-- parent.html -->
@@ -217,17 +217,17 @@ Attributes and event listeners added using `<lwc:root>` may conflict with those 
 ```html
 <!-- child.html -->
 <template>
-    <lwc:root class="quux" 
+    <lwc:host class="quux" 
               data-foo="toto" 
               onclick={onClick} 
               lwc:spread={others}>
-    </lwc:root>
+    </lwc:host>
 </template>
 ```
 
 In cases of conflict, the following rules apply:
 
-- `lwc:spread` precedence applies [as normal](https://github.com/salesforce/lwc-rfcs/pull/52) within the `<lwc:root>` element itself.
+- `lwc:spread` precedence applies [as normal](https://github.com/salesforce/lwc-rfcs/pull/52) within the `<lwc:host>` element itself.
 - For event listeners such as `onclick`, both event listeners are attached.
 - For the `class` attribute, strings are concatenated with a single whitespace (`" "`) character (e.g. `"foo quux"` in the above example). No attempt is made to deduplicate duplicate strings.
 - For all other attributes, the parent overrides the child's attribute (e.g. `data-foo` would be `"bar"` in the above example).
@@ -240,18 +240,19 @@ Implementing this feature does require additional complexity, and moves us furth
 
 ## Alternatives
 
-### Calling it "host" instead of "root"
+### Calling it "host" instead of something else ("root," "toplevel," etc.)
 
-Other frameworks call this feature "host." And there is some precedent in LWC, in that [light DOM scoped styles](https://github.com/salesforce/lwc-rfcs/pull/50) allow for styling the root of a light DOM component using `:host` in `*.scoped.css`.
+Other frameworks call this feature "host." And there is some precedent in LWC, since even [light DOM scoped styles](https://github.com/salesforce/lwc-rfcs/pull/50) allow for styling the root tag of a light DOM component using `:host` in `*.scoped.css`.
 
-However, this proposal prefers "root" to "host," because "root" is a more generic term that does not imply shadow DOM. This
-makes it clear that, for example, a child light DOM component cannot set attributes on a parent shadow DOM component by using this technique. (Whereas a child light DOM component can indeed style its parent's root node using `:host` in unscoped CSS.)
+"Root" may also sound like it refers to the [shadow root](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot), so it could be even more confusing.
+
+For non-shadow components, it is a bit odd to call it "host," but this seems to be the least confusing name overall.
 
 ### Placing attributes on the root `<template>` tag.
 
 Historically in LWC, `<template>` is used to designate a reusable tree of HTML, e.g. in `for:each` and [scoped slots](https://github.com/salesforce/lwc-rfcs/pull/63). The root `<template>` does not actually refer to the root/host element.
 
-Also, because `<lwc:root>` supports attributes and directives that generally would apply to normal `HTMLElement`s, it makes
+Also, because `<lwc:host>` supports attributes and directives that generally would apply to normal `HTMLElement`s, it makes
 sense to represent it as a pseudo-normal HTML element.
 
 ### Supporting `lwc:ref`
@@ -262,18 +263,18 @@ Also, the whole point of this feature is to avoid needing programmatic access to
 
 ## Adoption strategy
 
-This proposal can be adopted as a net-new feature and does not have backwards-compatibility implications. `lwc:root` is
+This proposal can be adopted as a net-new feature and does not have backwards-compatibility implications. `lwc:host` is
 not a pre-existing built-in HTML element, and it's extremely unlikely that anyone is creating runtime elements with this name.
 
 It may be possible to write codemods that look for simple usages of e.g. `this.template.host.classList.add('foo')`
-and replace it with `<lwc:root>`. This may be too complex to be worthwhile, though.
+and replace it with `<lwc:host>`. This may be too complex to be worthwhile, though.
 
 # How we teach this
 
 This feature is LWC-specific (not based on an existing web standard) and will have to be taught as such. The existence of
 similar mechanisms in other frameworks (e.g. Stencil and Angular) does provide some reference points that help with teaching.
 
-However, the fact that, for the most part, we can just say "`<lwc:root>` behaves like a normal element" makes it easier to teach this. Developers can reuse their existing knowledge to understand how it works.
+However, the fact that, for the most part, we can just say "`<lwc:host>` behaves like a normal element" makes it easier to teach this. Developers can reuse their existing knowledge to understand how it works.
 
 # Unresolved questions
 

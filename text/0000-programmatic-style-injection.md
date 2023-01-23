@@ -98,7 +98,7 @@ Programmatically importing a stylesheet module from JavaScript using an import d
 
 However, until now, the compile-time behavior and runtime behavior for stylesheet modules have never been fully specified. This section fills this specification gap.
 
-Stylesheets modules are identifiable by their `.css` extension. This kind of module only exposes a single default export. The exported value is an opaque object, in other words, the internal implementation of the stylesheet is not exposed to developers. Developers shouldn't rely on the shape of those objects as it may change.
+Stylesheets modules are identifiable by their `.css` extension. This kind of module only exposes a single default export. The exported value is an object. Preferably, this object can be opaque so the internal implementation of the stylesheet is not exposed to developers. Developers shouldn't rely on the shape of those objects as it may change.
 
 ```js
 import stylesheetA from './styles-a.css';
@@ -115,7 +115,7 @@ import scopedStylesheet from './styles.scoped.css';
 
 LWC stylesheet modules work similarly to native [CSS module script](https://github.com/WICG/webcomponents/blob/gh-pages/proposals/css-modules-v1-explainer.md). This feature isn't fully standardized yet and is today only implemented in Chromium-based browsers. There are few differences between the two proposals worth calling out:
 - LWC stylesheet modules can be imported using a standard import statement. The LWC compiler infers from the `.css` file extension that the file has to be treated as a CSS module. On the other hand, CSS module scripts require the use of [import assertions](https://github.com/tc39/proposal-import-assertions).
-- LWC stylesheet modules default export is an opaque object. CSS module scripts default export is an instance of [`CSSStyleSheet`](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet).
+- LWC stylesheet modules default export is an object (preferably opaque). CSS module scripts default export is an instance of [`CSSStyleSheet`](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet).
 
 ```js
 // LWC stylesheet modules
@@ -127,7 +127,7 @@ import styles from "./styles.css" assert { type: "css" };
 console.log(styles + '') // [object CSSStyleSheet]
 ```
 
-An alternative to exporting LWC stylesheet module as an opaque object is to have a utility function `registerStylesheet` that registers compiled stylesheets so that component authors cannot modify or replace stylesheet functions. This would be a similar approach on component templates ([`isTemplateRegistered`](https://github.com/salesforce/lwc/blob/1b85b4606f8cc8a18c368d9ce3b9c3616043f10c/packages/@lwc/engine-core/src/framework/secure-template.ts#L17)).
+An alternative to exporting LWC stylesheet module as an object is to have a utility function `registerStylesheet` that registers compiled stylesheets so that component authors cannot modify or replace stylesheet functions. This would be a similar approach on component templates ([`isTemplateRegistered`](https://github.com/salesforce/lwc/blob/1b85b4606f8cc8a18c368d9ce3b9c3616043f10c/packages/@lwc/engine-core/src/framework/secure-template.ts#L17)).
 
 #### LWC stylesheet import enforcement
 

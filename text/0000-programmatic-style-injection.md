@@ -133,9 +133,11 @@ An alternative to exporting LWC stylesheet module as an opaque object is to have
 
 As mentioned above, the LWC compiler implicitly loads the stylesheet associated with each template. Internally, the template compiler generates an import statement with the template file name and the `.css` extension. Since stylesheets are optional, the LWC module resolver currently ignores non-existent stylesheet imports.
 
-This behavior is problematic for explicit stylesheet imports as the compilation doesn't fail if the imported stylesheet can't be resolved. To solve this issue, the LWC compiler should treat component's implict stylesheet import as optional and other explicit stylesheet imports as required. For DX improvement, LWC compiler should fail compilation or at least warn developers if an explicit stylesheet import cannot be resolved before treating non-existent stylesheet imports as empty imports. 
+This behavior is problematic for explicit stylesheet imports as the compilation doesn't fail if the imported stylesheet can't be resolved. To solve this issue, the LWC compiler should treat component's implicit stylesheet import as optional and other explicit stylesheet imports as required. For DX improvement, LWC compiler should fail compilation or at least warn developers if an explicit stylesheet import cannot be resolved before treating non-existent stylesheet imports as empty imports. 
 
-An alternative solution is that a new `optional` query string can be added to the import identifier to indicate whether or not the LWC compiler should report an error when the file is missing.
+A straightforward implementation is to check whether a stylesheet import is implicit by checking if the importee's path is the same as importer's path. 
+
+Another possible implementation is that a new `optional` query string can be added to the import identifier to indicate whether or not the LWC compiler should report an error when the file is missing.
 
 ```js
 // Required LWC stylesheet import. Fails during compilation when missing.

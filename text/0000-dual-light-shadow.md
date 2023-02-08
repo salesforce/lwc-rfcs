@@ -86,6 +86,8 @@ This RFC has none of these downsides.
 
 ## Detailed design
 
+### Declaring a dual-mode component
+
 Currently the `lwc:render-mode` directive / `static renderMode` property only allows two values: `"light"` and `"shadow"`.
 
 This proposal adds a third value: `"dual"`.
@@ -103,6 +105,8 @@ export default class extends LightningElement {
   static renderMode = 'dual';
 }
 ```
+
+### Switching between light and shadow mode
 
 Currently, `lwc:render-mode` can only be applied to the top-level `<template>` in a component. In this proposal,
 it can also be applied to LWC components referenced inside a template:
@@ -125,6 +129,14 @@ If `"dual"` is used in this context, a compile-time error is thrown:
 </template>
 ```
 
+If a template is declared to be `lwc:render-mode="dual"`, then the corresponding component must also have
+`static renderMode = 'dual'`, and vice versa.
+
+If not, an error will be thrown at runtime. (This is the same as what currently happens if `"shadow"` and `"light"`
+are mixed between the two.)
+
+### Non-LWC components
+
 `lwc:render-mode` can only be applied to LWC components. If it's applied to any other element, including an 
 `lwc:external` component, then a compile-time error is thrown:
 
@@ -135,7 +147,9 @@ If `"dual"` is used in this context, a compile-time error is thrown:
 </template>
 ```
 
-If a dual-mode component is referenced _without_ an explicit `lwc:render-mode`, then it is considered a shadow component:
+### No explicit `lwc:render-mode`
+
+If a dual-mode component is referenced _without_ an explicit `lwc:render-mode`, then it is considered to be a shadow component:
 
 ```html
 <template>
@@ -143,6 +157,41 @@ If a dual-mode component is referenced _without_ an explicit `lwc:render-mode`, 
     <x-component></x-component>
 </template>
 ```
+
+### Non-dual-mode components
+
+If `lwc:render-mode` is applied to a component that is _not_ a dual-mode component, then a runtime error is thrown:
+
+```html
+<template>
+    <!-- Invalid -->
+    <x-not-dual lwc:render-mode="shadow"></x-not-dual>
+</template>
+```
+
+```js
+// notDual.js
+export default class extends LightningElement {
+}
+```
+
+(This error is thrown regardless of whether the component would have rendered in shadow DOM or light mode.)
+
+### Dynamic components
+
+`lwc:render-mode` is also supported on [dynamic components](https://github.com/salesforce/lwc-rfcs/pull/71), since it
+is already known in advance that the dynamic component is an LWC component.
+
+```html
+<template>
+    <!-- Valid if the component is always dual-mode -->
+    <lwc:component lwc:is={ctor} lwc:render-mode="light"></lwc:component>
+</template>
+```
+
+However, if a non-dual-mode component is rendered, then a runtime error is thrown.
+
+### Shadow DOM mixed mode
 
 A dual-mode component can also use the `static shadowSupportMode` property to control whether it renders in native or
 synthetic shadow. This only applies when it is running in shadow mode.
@@ -161,7 +210,7 @@ In short:
 1. Any restrictions that apply to either light DOM components or shadow DOM components also apply to dual components.
 2. Component authors are responsible for handling runtime differences, e.g. `this.querySelector` vs `this.template.querySelector`.
 
-### Light DOM restrictions that apply
+#### Light DOM restrictions that apply
 
 Following [light DOM restrictions](https://rfcs.lwc.dev/rfcs/lwc/0115-light-dom), a dual-mode component cannot have
 a `slotchange` event listener on a `<slot>`. This throws a compile-time error:
@@ -175,7 +224,7 @@ a `slotchange` event listener on a `<slot>`. This throws a compile-time error:
 
 However, unlike light DOM components, a dual-mode component can use `lwc:dom="manual"` (see next section).
 
-### Shadow DOM restrictions that apply
+#### Shadow DOM restrictions that apply
 
 `lwc:dom="manual"` must be used for manual DOM operations if a dual-mode component is running in synthetic shadow mode. If not,
 an error will be logged (as is currently the case with normal shadow components).
@@ -184,7 +233,7 @@ an error will be logged (as is currently the case with normal shadow components)
 shadow DOM components. If a component author uses `lwc:slot-bind` in a dual-mode template, then a compile-time error is thrown
 (the same as with normal shadow components).
 
-### Behavior that differs at runtime between light and shadow
+#### Behavior that differs at runtime between light and shadow
 
 Some behavior will differ at runtime between light DOM mode and shadow DOM mode. Dual-mode components are responsible
 for handling these differences themselves.
@@ -196,15 +245,7 @@ A non-exhaustive list:
 - Slots are lazy in light DOM and eager in native shadow DOM.
 - Scoped and non-scoped stylesheets will both behave differently in light versus shadow mode.
 
-### Coherence
-
-If a template is declared to be `lwc:render-mode="dual"`, then the corresponding component must also have
-`static renderMode = 'dual'`, and vice versa.
-
-If not, an error will be thrown at runtime. (This is the same as what currently happens if `"shadow"` and `"light"`
-are mixed between the two.)
-
-### Runtime modifications
+#### Runtime modifications
 
 A component cannot dynamically modify its `static renderMode`; changing it after instantiation has no effect.
 

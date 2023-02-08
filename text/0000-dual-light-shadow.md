@@ -108,7 +108,7 @@ export default class extends LightningElement {
 
 ### Switching between light and shadow mode
 
-Currently, `lwc:render-mode` can only be applied to the top-level `<template>` in a component. In this proposal,
+Currently, `lwc:render-mode` can only be applied to the top-level `<template>`. In this proposal,
 it can also be applied to LWC components referenced inside a template:
 
 ```html

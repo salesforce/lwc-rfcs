@@ -118,7 +118,8 @@ it can also be applied to LWC components referenced inside a template:
 </template>
 ```
 
-When used in this way, the value of `lwc:render-mode` can only be a static string, and it can only be `"light"` or `"shadow"`.
+When used in this way, the value of `lwc:render-mode` can only be a static string. It can be set to `"light"` or `"shadow"`,
+which controls the mode that the child component renders in.
 
 If `"dual"` is used in this context, a compile-time error is thrown:
 
@@ -128,6 +129,54 @@ If `"dual"` is used in this context, a compile-time error is thrown:
     <x-component lwc:render-mode="dual"></x-component>
 </template>
 ```
+
+Only three values are accepted in this context: `"light"`, `"shadow"`, or `"inherit"`. Any other value will throw a compile-time error.
+
+### Inheritance
+
+`"inherit"` is a special value of `lwc:render-mode` that can only be used in the context of a child LWC component:
+
+```html
+<template lwc:render-mode="dual">
+    <x-component lwc:render-mode="inherit"></x-component>
+</template>
+```
+
+This instructs the `<x-component>` to render using whatever mode the parent component is using – either shadow or light. If `<x-component>` is not a dual-mode component, then a runtime error will be thrown.
+
+For the parent component, however, `"inherit"` can be used in non-dual-mode components as well as dual-mode components:
+
+```html
+<template lwc:render-mode="light">
+    <!-- x-component will render as light -->
+    <x-component lwc:render-mode="inherit"></x-component>
+</template>
+```
+
+In this case, the same rules apply – the child component uses the mode inherited from its parent.
+
+The above example is equivalent to:
+
+```html
+<template lwc:render-mode="light">
+    <!-- x-component will render as light -->
+    <x-component lwc:render-mode="light"></x-component>
+</template>
+```
+
+For the purposes of inheritance, `<slot>` contents are considered to be children of the slotting component, not the
+slottable component.
+
+```html
+<template>
+    <x-slottable>
+        <!-- Mode is inherited from this template, not from x-slottable's template -->
+        <x-component lwc:render-mode="inherit"></x-component>
+    </x-slottable>
+</template>
+```
+
+### Coherence
 
 If a template is declared to be `lwc:render-mode="dual"`, then the corresponding component must also have
 `static renderMode = 'dual'`, and vice versa.

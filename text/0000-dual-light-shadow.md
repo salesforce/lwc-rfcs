@@ -143,7 +143,7 @@ are mixed between the two.)
 ```html
 <template>
     <!-- Invalid -->
-    <third-party lwc:render-mode="light"></third-party>
+    <third-party lwc:render-mode="light" lwc:external></third-party>
 </template>
 ```
 

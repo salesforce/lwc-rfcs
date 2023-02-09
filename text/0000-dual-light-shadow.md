@@ -247,7 +247,7 @@ A non-exhaustive list:
 
 #### Runtime modifications
 
-A component cannot dynamically modify its `static renderMode`; changing it after instantiation has no effect.
+A component cannot dynamically modify its `static renderMode`; changing it at runtime has no effect.
 
 Due to the design of the `lwc:render-mode` property in this RFC, it will also be impossible for the LWC engine to render
 a component in one mode, and then switch to another mode later for the same instance.

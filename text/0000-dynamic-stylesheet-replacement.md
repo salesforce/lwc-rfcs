@@ -187,14 +187,27 @@ LWC still makes no attempt to remove stylesheets, or to ensure a particular orde
 
 ### Restrictions
 
-The returned object _must_ contain a `template` property pointing to a valid HTML template function.
+The returned object _may_ contain a `template` property pointing to a valid HTML template function.
 
 The returned object _may_ contain a `stylesheets` property pointing to a valid stylesheet function or recursively deep array of stylesheet functions.
 
-For compatibility with the `static stylesheets` property, the validation is exactly the same. The validation is skipped only if the `stylesheets` property does not exist on the object.
+The returned object _must_ contain either the `template` or `stylesheets` key. Any other object is invalid and throws a runtime error:
 
 ```js
-return { template };              // No validation required
+return {}; // Invalid
+return { foo }; // Invalid
+```
+
+However, extraneous keys on an otherwise valid object are permitted:
+
+```js
+return { template, stylesheets, foo }; // Valid - `foo` is ignored
+```
+
+For compatibility with the `static stylesheets` property, stylesheet validation is exactly the same. The validation is skipped only if the `stylesheets` property does not exist on the object.
+
+```js
+return { template };              // No stylesheet validation required
 return { template, stylesheets }; // Stylesheets must be validated
 ```
 
@@ -203,6 +216,26 @@ In short (and recapitulating the validation of `static stylesheets`): if `styles
 > **Note:** At some point in the future, we may also validate that the stylesheet was registered with the LWC engine, or that it is an "opaque" object. But this is not a hard requirement for this feature.
 
 Similarly, the value of `template` must be a registered template function. If not, a runtime error will be thrown. (This is [the same](https://stackblitz.com/edit/salesforce-lwc-dppg2e?file=src/modules/x/app/app.js) as if the `render()` function had directly returned an invalid object.)
+
+### Omitting the template
+
+A component can omit the `template` property:
+
+```js
+return { stylesheets };
+```
+
+In this case, the `template` is the implicitly-associated template with the same name as the component. (For instance, `foo.js` has the implicitly-associated template `foo.html`.)
+
+If there is no implicitly-associated template file, then the default (empty) HTML template is used. (This can still be styled using `:host` styles.)
+
+A shorthand of directly returning the `stylesheets` is also supported:
+
+```js
+return stylesheets; // equivalent
+```
+
+If the returned object is an array, then it is assumed to be a (deep) `stylesheets` array and goes through the normal stylesheet validation. 
 
 ## Drawbacks
 

@@ -1,9 +1,10 @@
 ---
 title: Programmatic style injection
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2021-09-16
-updated_at: 2021-09-30
-pr: (leave this empty until the PR is created)
+updated_at: 2022-02-20
+champion: Pierre-Marie Dartus (@pmdartus)
+pr: https://github.com/salesforce/lwc-rfcs/pull/56
 ---
 
 # Programmatic style injection

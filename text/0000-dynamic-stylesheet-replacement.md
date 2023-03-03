@@ -183,7 +183,7 @@ The stylesheets are injected in the following order:
 
 This allows component authors to override the stylesheets that are implicitly associated with the `template`. For instance, they could have some shared default styles defined in `template.css`, whereas `a.css` and `b.css` would selectively override those defaults.
 
-LWC still makes no attempt to remove stylesheets, or to ensure a particular ordering _between_ `render()` calls. (This is in line with existing behavior.)
+LWC still makes no attempt to remove stylesheets, or to ensure a particular ordering of injected stylesheets in the DOM when `render()` is called multiple times with multiple return values. (This is in line with existing behavior.)
 
 ### Restrictions
 

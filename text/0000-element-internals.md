@@ -109,6 +109,17 @@ console.log(component.attachInternals); // undefined
 
 In Server-Side Rendering (SSR), `this.attachInternals` will be undefined.
 
+### Deviations from the standard `ElementInternals` object
+
+The `ElementInternals` instance returned by `attachInternals` is exactly the same as the one provided by the browser in a native custom element, with one exception: `internals.shadowRoot` does not actually return an instance of the `ShadowRoot`, but rather the same proxy object returned by `this.template`:
+
+```js
+const internals = this.attachInternals();
+console.log(this.template === internals.shadowRoot); // true
+```
+
+The reason for this exception is that we do not want to provide a loophole for accessing the native `shadowRoot` object via `ElementInternals`. LWC will still mediate access to APIs like `this.template.querySelector`, `this.template.children`, etc.
+
 ### Form association
 
 To associate an LWC component with a form, the standard APIs are exposed from within the component:

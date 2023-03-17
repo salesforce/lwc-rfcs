@@ -1,9 +1,10 @@
 ---
 title: Dynamic Component Creation
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2022-12-21
-updated_at: 2023-01-04
-pr: (leave this empty until the PR is created)
+updated_at: 2023-03-17
+champion: James Tu (@jmsjtu)
+pr: https://github.com/salesforce/lwc/pull/3381
 ---
 
 # Dynamic Component Creation

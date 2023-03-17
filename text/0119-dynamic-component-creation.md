@@ -296,7 +296,7 @@ In both cases the dynamic component will be fully mounted and unmounted.
 
 #### Styles
 
-Something to keep in mind is that [light DOM styles are injected to the closest root node](https://rfcs.lwc.dev/rfcs/lwc/0115-light-dom#styles) and are not removed once the components are unmounted. This means that repeated mounting and unmounting of dynamic component could cause styles to be overwritten.  This can be avoided by using either scoped styles or shadow dom, as the styles will be scoped.
+Something to keep in mind is that [light DOM styles are injected to the closest root node](https://rfcs.lwc.dev/rfcs/lwc/0115-light-dom#styles) and are not removed once the components are unmounted. This means that stylesheets may linger on the shadow root even after the dynamic component has been removed.
 
 ## Drawbacks
 

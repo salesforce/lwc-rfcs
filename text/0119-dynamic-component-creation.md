@@ -116,7 +116,7 @@ The goal of managing dynamic components in LWC is to follow the same component l
 
 ## Detailed design
 
-A new internal `Map` called `componentRegisteredNameMap` is introduced to store the custom element name and an internal API `getComponentRegisteredName` is introduced to retrieve the custom element name.
+A new internal `Map` called `registeredComponentMap` is introduced to store the custom element name and an internal API `getComponentRegisteredName` is introduced to retrieve the custom element name.
 
 A special tag, `<lwc:component>` along with a new template directive `lwc:is` are also introduced and serves as the anchor in the DOM where the dynamic component will be rendered.
 
@@ -144,13 +144,13 @@ The LWC module resolver also allows for namespace and name mappings that do not 
 
 Leveraging this, the namespace and name can be resolved at compile time and used to construct the custom element name, which will be in the form `namespace-name`.  
 
-##### `componentRegisteredNameMap`
+##### `registeredComponentMap`
 
-The custom element name will be stored on an internal `Map` called `componentRegisteredNameMap` where the key is the `LightningElementConstructor` and the value is the custom element name.
+The custom element name will be stored on an internal `Map` called `registeredComponentMap` where the key is the `LightningElementConstructor` and the value is an object containing the custom element name.
 
-At compile time, LWC will inject a call to `registerComponent` providing the custom element name.  At runtime `registerComponent` will associate the custom element name to `componentRegisteredNameMap` in a similar way to how templates are associated to `LightningElementConstructor`.
+At compile time, LWC will inject a call to `registerComponent` providing the custom element name.  At runtime `registerComponent` will associate the custom element name to `registeredComponentMap` in a similar way to how templates are associated to `LightningElementConstructor`.
 
-If the custom element name is unable to be resolved at compile time and no value is provided to `registerComponent` the compiler will report an error.
+If the custom element name is unable to be resolved at compile time and no value is provided to `registerComponent` the engine will report an error.
 
 ##### `getComponentRegisteredName`
 
@@ -158,30 +158,9 @@ In contrast, the custom element name can be retrieved through an internal API ca
 
 _Note `getComponentRegisteredName` should be the only way to retrieve the custom element name._
 
-The `componentRegisteredNameMap`, `getComponentRegisteredName`, and custom element name are internal APIs that should only be used by the LWC engine and will not be observable to component authors.  This is to prevent any unintended side effects.
+The `registeredComponentMap`, `getComponentRegisteredName`, and custom element name are internal APIs that should only be used by the LWC engine and will not be observable to component authors.  This is to prevent any unintended side effects.
 
 _See the [Selecting the dynamic component](#Selecting-the-dynamic-component) for details on how to access the component once it has been instantiated._
-
-##### Considerations
-
-There is a possibility that a constructor is mapped to more than one alias, such as:
-
-```javascript
-{
-    "modules": [
-       {
-            "name": "ui/button",
-            "path": "src/modules/ui/button/button.js"
-        },
-        {
-            "name": "ui/button2",
-            "path": "src/modules/ui/button/button.js"
-        }
-    ]
-}
-```
-
-Since there is no way to know which alias to use in this case, the custom element name will be the first alias that is resolved.  This should be an edge case that does not appear often.
 
 #### Defining an anchor in the DOM
 
@@ -257,48 +236,15 @@ export default class extends LightningElement {
 }
 ```
 
-#### Assigning attributes and event listeners
+#### Assigning attributes
 
-Attributes and event listeners can be passed to the `<lwc:component>` tag declaratively or can be assigned directly to the custom element imperatively.
+All supported HTML attributes that can be applied to an `HTMLElement` can also be applied to `<lwc:component>`.  
 
-Attributes and event listeners assigned declaratively will be assigned to the dynamic component once it has been created.
+Some examples include:
+- Standard [global HTML attributes](https://html.spec.whatwg.org/multipage/dom.html#global-attributes)
+- Custom HTML attributes, such as `data-*`
+- Event listeners
 
-Declaratively:
-
-```html
-<template>
-    <lwc:component lwc:is={ctor} class="container" onclick={handleClick}></lwc:component>
-</template>
-```
-
-Imperatively:
-
-```html
-<template>
-    <lwc:component lwc:is={lazyConstructor} lwc:ref="foo"></lwc:component>
-</template>
-```
-
-```javascript
-import { LightningElement } from "lwc";
-
-export default class extends LightningElement {
-    lazyConstructor;
-
-    connectedCallback() {
-        import('lightning/concreteComponent')
-            .then(({ default: ctor }) => this.lazyConstructor = ctor)
-            .catch(err => console.log('Error importing component'));
-    }
-
-    renderedCallback() {
-        if (this.refs.foo) {
-            this.refs.foo.setAttribute('title', 'hawaii');
-            this.refs.foo.addEventListener('click', () => console.log('hello world!'));
-        }
-    }
-}
-```
 #### Usage with other LWC directives
 
 All directives for [nested templates](https://lwc.dev/guide/reference#directives-for-nested-templates) are available to use on `<lwc:component>` and their functionality will be passed through to the custom element once it has been created.

@@ -1,6 +1,6 @@
 ---
 title: Spreading Properties to Child Elements
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2021-07-05
 updated_at: 2022-09-21
 champion: Mohammed Abdul Sattar (abdulsattar)

@@ -1,6 +1,6 @@
 ---
 title: HTML comments for LWC templates
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2021-03-31
 updated_at: 2021-03-31
 pr: https://github.com/salesforce/lwc/pull/2263

@@ -1,6 +1,6 @@
 ---
 title: Mixed Shadow Mode
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2021-05-07
 updated_at: 2021-09-14
 pr: https://github.com/salesforce/lwc-rfcs/pull/49

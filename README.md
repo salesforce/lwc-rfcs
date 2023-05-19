@@ -62,7 +62,7 @@ Some changes do not require an RFC:
 
 In short, to get a major feature added to Lightning Web Components, one usually first gets
 the RFC merged into the RFC repo as a markdown file. At that point the RFC
-is 'active' and may be implemented with the goal of eventual inclusion
+is 'approved' and may be implemented with the goal of eventual inclusion
 into Lightning Web Components.
 
 * Fork the RFC repo http://github.com/salesforce/lwc-rfcs
@@ -90,21 +90,21 @@ and comments have been made summarizing the rationale for rejection. A member of
 the team should then close the RFCs associated pull request.
 * An RFC may be accepted at the close of its final comment period. A team
 member will merge the RFCs associated pull request, at which point the RFC will
-become 'active'.
+become 'approved'.
 
 ## The RFC life-cycle
 
-Once an RFC becomes active, then authors may implement it and submit the
-feature as a pull request to the Lightning Web Components repo. Becoming 'active' is not a rubber
+Once an RFC is approved, then authors may implement it and submit the
+feature as a pull request to the Lightning Web Components repo. Becoming 'approved' is not a rubber
 stamp, and in particular still does not mean the feature will ultimately
 be merged; it does mean that the core team has agreed to it in principle
 and are amenable to merging it.
 
 Furthermore, the fact that a given RFC has been accepted and is
-'active' implies nothing about what priority is assigned to its
+'approved' implies nothing about what priority is assigned to its
 implementation, nor whether anybody is currently working on it.
 
-Modifications to active RFCs can be done in followup PRs. We strive
+Modifications to approved RFCs can be done in followup PRs. We strive
 to write each RFC in a manner that it will reflect the final design of
 the feature; but the nature of the process means that we cannot expect
 every merged RFC to actually reflect what the end result will be at
@@ -114,10 +114,12 @@ tracking such changes via followup pull requests to the document.
 
 ### RFC Statuses
 
-1. DRAFTED - RFC is actively in development and seeking feedback.
-2. ACTIVE - RFC is ready for implementation.
-3. APPROVED - RFC is being implemented.
-4. IMPLEMENTED - Implementation has been completed.
+| Status| Description|
+| -----| -----------|
+| DRAFTED | The RFC is actively in development and seeking feedback. |
+| APPROVED | The RFC is either waiting for or in the process of implementation. |
+| IMPLEMENTED | The implementation of the RFC is complete. |
+| REJECTED | The RFC will not be moved forward. |
 
 ## Implementing an RFC
 
@@ -125,7 +127,7 @@ The author of an RFC is not obligated to implement it. Of course, the
 RFC author (like any other developer) is welcome to post an
 implementation for review after the RFC has been accepted.
 
-If you are interested in working on the implementation for an 'active'
+If you are interested in working on the implementation for an 'approved'
 RFC, but cannot determine if someone else is already working on it,
 feel free to ask (e.g. by leaving a comment on the associated issue).
 

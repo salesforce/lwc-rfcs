@@ -1,6 +1,6 @@
 ---
 title: Focus Behavior
-status: ACTIVE
+status: APPROVED
 
 created_at: 2020-01-15
 updated_at: 2020-01-15

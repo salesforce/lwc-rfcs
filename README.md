@@ -112,6 +112,13 @@ the time of the next major release; therefore we try to keep each RFC
 document somewhat in sync with the language feature as planned,
 tracking such changes via followup pull requests to the document.
 
+### RFC Statuses
+
+1. DRAFTED - RFC is actively in development and seeking feedback.
+2. ACTIVE - RFC is ready for implementation.
+3. APPROVED - RFC is being implemented.
+4. IMPLEMENTED - Implementation has been completed.
+
 ## Implementing an RFC
 
 The author of an RFC is not obligated to implement it. Of course, the

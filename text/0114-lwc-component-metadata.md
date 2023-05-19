@@ -1,6 +1,6 @@
 ---
 title: LWC Component Metadata
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2020-05-07
 updated_at: 2021-05-03
 rfc: https://github.com/salesforce/lwc-rfcs/pull/33

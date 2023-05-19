@@ -1,6 +1,6 @@
 ---
 title: Light DOM Scoped Styles
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2021-05-14
 updated_at: 2022-06-21
 champion: Nolan Lawson (nolanlawson), Abdulsattar Mohammed (abdulsattar)

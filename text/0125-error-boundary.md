@@ -1,6 +1,6 @@
 ---
 title: Error Boundary
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2018
 ---
 

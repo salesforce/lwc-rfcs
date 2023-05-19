@@ -1,6 +1,6 @@
 ---
 title: Locker Integration
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2018
 ---
 

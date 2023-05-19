@@ -1,6 +1,6 @@
 ---
 title: Feature Flags
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2019-03-01
 updated_at: 2019-07-25
 pr: https://github.com/salesforce/lwc-rfcs/pull/3

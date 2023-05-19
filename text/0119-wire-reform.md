@@ -1,6 +1,6 @@
 ---
 title: Wire Reform
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2019-08-01
 updated_at: 2019-09-10
 pr: https://github.com/salesforce/lwc-rfcs/pull/14

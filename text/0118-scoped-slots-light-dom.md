@@ -1,6 +1,6 @@
 ---
 title: Scoped Slots in Light DOM
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2022-06-10
 updated_at: 2022-09-15
 champion: Mohammed Abdul Sattar

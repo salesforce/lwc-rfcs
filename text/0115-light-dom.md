@@ -1,6 +1,6 @@
 ---
 title: Light DOM Component
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2020-09-10
 updated_at: 2021-09-09
 champion: Nolan Lawson (nlowason) | Mohammed Abdul Sattar (abdulsattar)

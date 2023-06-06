@@ -127,8 +127,8 @@ export default class extends LightningElement {
   
   render() {
     // DEPRECATED - DO NOT DO THIS!
-    template.stylesheets = darkMode ? darkStylesheets : lightStylesheets;
-    template.stylesheetToken = darkMode ? 'dark' : 'light';
+    template.stylesheets = this.darkMode ? darkStylesheets : lightStylesheets;
+    template.stylesheetToken = this.darkMode ? 'dark' : 'light';
     return template;
   }
 }

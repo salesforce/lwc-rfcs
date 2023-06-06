@@ -120,7 +120,7 @@ Another goal of this RFC is to fully remove the [hacks that component authors ar
 ```js
 import template from './template.html';
 import darkStylesheets from './dark.css';
-import lightStylesheets from './dark.css';
+import lightStylesheets from './light.css';
 
 export default class extends LightningElement {
   @api darkMode;

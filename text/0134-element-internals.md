@@ -1,8 +1,8 @@
 ---
 title: Element Internals and Form Association
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2022-03-02
-updated_at: 2022-03-02
+updated_at: 2023-10-30
 champion: Nolan Lawson (nolanlawson)
 pr: https://github.com/salesforce/lwc-rfcs/pull/78
 ---

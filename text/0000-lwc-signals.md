@@ -11,7 +11,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/
 
 ## Summary
 
-This RFC proposes an enhancement to the reactivity model in Lightning Web Components (LWC) by introducing a Signals-based approach, inspired by similar mechanisms in libraries such as Preact. The goal is to provide a more flexible and optimized method for managing and tracking component state changes, facilitating better interaction with external data stores. The introduction of Signals aims to deprecate the current `@wire` and `@track` decorators, allowing developers to bring their own data stores and adhere to a simple protocol involving `.value`, `.subscribe`, and `.unsubscribe` properties. This change is designed to not only open up LWC to a broader development ecosystem but also to enable significant performance optimizations, especially when rehydrating UI components, potentially reducing the need for full component re-rendering through a more efficient subscription mechanism.
+This RFC proposes an enhancement to the reactivity model in Lightning Web Components (LWC) by introducing a Signals-based approach, inspired by similar mechanisms in libraries such as Preact. The goal is to provide a more flexible and optimized method for managing and tracking component state changes, facilitating better interaction with external data stores. The introduction of Signals aims to deprecate the current `@wire` and `@track` decorators, allowing developers to bring their own data stores and adhere to a simple protocol involving `.value`, and `.subscribe` properties. This change is designed to not only open up LWC to a broader development ecosystem but also to enable significant performance optimizations, especially when rehydrating UI components, potentially reducing the need for full component re-rendering through a more efficient subscription mechanism.
 
 ## Motivation
 
@@ -35,7 +35,7 @@ The detailed design of the new reactivity model revolves around the concept of S
 
 ### Reactivity with Signals
 
-A Signal is an object that holds a value and allows components to react to changes to that value. It exposes a `.value` property for accessing the current value, and `.subscribe` and `.unsubscribe` methods for responding to changes.
+A Signal is an object that holds a value and allows components to react to changes to that value. It exposes a `.value` property for accessing the current value, and `.subscribe` methods for responding to changes.
 
 ```javascript
 import { signal } from 'signals';
@@ -66,11 +66,10 @@ The LWC compiler will be updated to recognize when a Signal's `.value` is used w
 
 A store must implement the following protocol to be compatible with the new reactivity model:
 
-```javascript
+```ts
 class Store {
-    get value() { /* return current value */ }
-    subscribe(callback) { /* subscribe to changes */ }
-    unsubscribe(callback) { /* unsubscribe from changes */ }
+    get value(): any { /* return current value */ }
+    subscribe((newValue: any) => void): () => void { /* subscribe to changes */ }
 }
 ```
 
@@ -265,11 +264,11 @@ export default class ExampleComponent extends LightningElement {
     }
 
     connectedCallback() {
-        this.record.subscribe(record => this.updateRecord(record));
+        this.recordUnsubscript = this.record.subscribe(record => this.updateRecord(record));
     }
 
     disconnectedCallback() {
-        this.record.unsubscribe(); // TODO: this is wrong
+        this.recordUnsubscript();
     }
 }
 ```

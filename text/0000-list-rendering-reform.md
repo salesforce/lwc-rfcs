@@ -154,7 +154,16 @@ Similar to `key`, `lwc:key` is required on elements with `lwc:each`, and throws 
 
     Missing lwc:key for lwc:each. Iterators must have a unique, computed key value.
 
-Unlike `key`, it throws the error regardless of the content inside the iterator. (A missing `key` will not throw for text nodes, comment nodes, or empty markup – an apparent [inconsistency](https://github.com/salesforce/lwc/issues/3860) in that directive.)
+Unlike `key`, a missing `lwc:key` throws the error regardless of the content inside the iterator. (A missing `key` will not throw for text nodes, comment nodes, or empty markup – an apparent [inconsistency](https://github.com/salesforce/lwc/issues/3860) in that directive.)
+
+Similar to `key`, `lwc:key` must not reference the variable defined by `lwc:index`. It also must not reference the variable defined by `lwc:first`, `lwc:last`, `lwc:even`, or `lwc:odd`. For example, this will throw a compile-time error:
+
+```html
+<template lwc:each={items} lwc:item="item" lwc:index="idx" lwc:key={idx}>
+</template>
+```
+
+In short, `lwc:key` _must_ reference the `lwc:item` variable. Anything else throws a compile-time error.
 
 ### `lwc:index`
 

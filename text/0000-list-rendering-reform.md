@@ -3,7 +3,7 @@ title: List rendering reform
 status: DRAFTED
 created_at: 2023-11-14
 updated_at: 2023-11-14
-pr: (leave this empty until the PR is created)
+pr: https://github.com/salesforce/lwc-rfcs/pull/84
 ---
 
 # List rendering reform

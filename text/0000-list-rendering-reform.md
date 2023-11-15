@@ -188,6 +188,8 @@ The addition of `lwc:first` and `lwc:last` serve to unify the two existing direc
 
 ### Constraints
 
+#### Variable reuse
+
 All new directives that take a string as their value (`lwc:item`, `lwc:index`, `lwc:first`, `lwc:last`, `lwc:even`, and `lwc:odd`) must have unique values when used on the same element.
 
 For example, the following will throw a compile-time error, because `lwc:item` and `lwc:index` have the same values:
@@ -196,6 +198,27 @@ For example, the following will throw a compile-time error, because `lwc:item` a
 <template lwc:each={items} lwc:key={same.id} lwc:item="same" lwc:index="same">
 </template>
 ```
+
+Note that this restriction does not apply to loops within loops. [Just like `for:each`](https://stackblitz.com/edit/salesforce-lwc-6usqmw?file=src%2Fmodules%2Fx%2Fapp%2Fapp.html,src%2Fmodules%2Fx%2Fapp%2Fapp.js&title=LWC%20playground), variables in inner loops simply shadow the same variable in outer loops:
+
+```html
+<template lwc:each={outer} lwc:key={item} lwc:item="item" lwc:index="index">
+  <!-- These will be the outer loop variables -->
+  Outer item: {item}
+  Outer index: {index}
+  <template lwc:each={inner} lwc:key={item} lwc:item="item" lwc:index="index">
+    <!-- These will be the inner loop variables -->
+    Inner item: {item}
+    Inner index: {index}
+  </template>
+</template>
+```
+
+Note that the two loops have the same variable names for `lwc:item` and `lwc:index`, and this does not cause a compiler error.
+
+Also note that the value of the `lwc:key` in each case refers to the `item` on the same `<template>` element.
+
+#### Empty values
 
 Empty values (e.g. `lwc:index=""`) will also throw a compile-time error. For example:
 
@@ -210,6 +233,8 @@ Missing values (e.g. `lwc:index`) will also throw at compile-time:
 <template lwc:each={items} lwc:key={item.id} lwc:item="item" lwc:index>
 </template>
 ```
+
+#### Other constraints
 
 The directives may appear in any order on the element.
 

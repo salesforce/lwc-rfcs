@@ -234,6 +234,19 @@ Missing values (e.g. `lwc:index`) will also throw at compile-time:
 </template>
 ```
 
+#### Combining with `for:each` and `iterator:*`
+
+All new directives in this RFC must _not_ be combined in the same template file with any directive associated with the
+existing `for:each` or `iterator:*` directives. Doing so should throw a compile-time error.
+
+New directives: `lwc:each`, `lwc:key`, `lwc:item`, `lwc:index`, `lwc:first`, `lwc:last`, `lwc:even`, `lwc:odd`.
+
+Old directives: `for:each`, `for:item`, `for:index`, `key`, `iterator:*`.
+
+If any of the directives from the first group are in a template file with any directive from the second group, then a compile-time error is thrown.
+
+The reason for this is that mixing the new and old directives could easily lead to confusion, e.g. when `lwc:key` and `key` are mixed in the same file.
+
 #### Other constraints
 
 The directives may appear in any order on the element.

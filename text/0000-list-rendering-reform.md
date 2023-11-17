@@ -142,7 +142,8 @@ With the new directives, this becomes:
 </template>
 ```
 
-Also note that, in the shorthand `<template>`-less format, `lwc:ref` is defined not on a `<template>` but on the same element as the `lwc:each`:
+Also note that, in the shorthand `<template>`-less format, `lwc:key` is defined not on a `<template>` but on the same element as the `lwc:each`:
+
 
 ```html
 <li lwc:each={items} lwc:item="item" lwc:key={item.id}>

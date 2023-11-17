@@ -181,7 +181,7 @@ No attempt is made by LWC to polyfill either `ElementInternals` or FACE callback
 
 ## Drawbacks
 
-There is a risk of backwards incompatibility with this change. Notably, if a component author has already defined properties such as `attachInternals`, `formResetCallback`, or `static formAssociated`, then these may conflict with LWC's newly added APIs. Although the risk is low, we may need to use API versioning or backwards-compatibility techniques like those employed for [template refs](https://rfcs.lwc.dev/rfcs/lwc/0122-refs#this.refs).
+There is a risk of backwards incompatibility with this change. Notably, if a component author has already defined properties such as `attachInternals`, `formResetCallback`, or `static formAssociated`, then these may conflict with LWC's newly added APIs. Although the risk is low, we may need to use API versioning or backwards-compatibility techniques like those employed for [template refs](https://github.com/salesforce/lwc-rfcs/tree/master/text/0122-refs.md#this.refs).
 
 Also, opening up `ElementInternals` and FACE callbacks introduces additional API surface. In particular, directly exposing the `ElementInternals` object may open up new APIs in the future as browsers add them.
 

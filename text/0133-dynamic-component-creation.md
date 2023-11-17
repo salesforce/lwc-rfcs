@@ -15,7 +15,7 @@ This RFC supersedes the existing `lwc:dynamic` directive to introduce a new way 
 
 Dynamic components refer to custom elements where the constructor is not known at compile time.
 
-*This proposal only focuses on the dynamic component creation process, lazy loading which was included in the [original proposal for dynamic components](https://rfcs.lwc.dev/rfcs/lwc/0110-dynamic-components) is not included.*
+*This proposal only focuses on the dynamic component creation process, lazy loading which was included in the [original proposal for dynamic components](https://github.com/salesforce/lwc-rfcs/tree/master/text/0110-dynamic-components.md) is not included.*
 
 ## Basic example
 
@@ -129,7 +129,7 @@ Broken down, there are three main parts to this design:
 
 #### Storing and retrieving a custom element's name
 
-In today's world, an LWC module's namespace and name are known at compile time by [examining the directory structure](https://rfcs.lwc.dev/rfcs/lwc/0101-module-unification) and through [module resolution](https://rfcs.lwc.dev/rfcs/lwc/0020-module-resolution).
+In today's world, an LWC module's namespace and name are known at compile time by [examining the directory structure](https://github.com/salesforce/lwc-rfcs/tree/master/text/0101-module-unification.md) and through [module resolution](https://github.com/salesforce/lwc-rfcs/tree/master/text/0020-module-resolution.md).
 
 The default folder structure for an LWC module looks as follows:
 
@@ -141,7 +141,7 @@ namespace/
     ├── *.html
 ```
 
-The LWC module resolver also allows for namespace and name mappings that do not adhere to the default folder structure, such as the case with [alias module records](https://rfcs.lwc.dev/rfcs/lwc/0020-module-resolution#aliasmodulerecord).
+The LWC module resolver also allows for namespace and name mappings that do not adhere to the default folder structure, such as the case with [alias module records](https://github.com/salesforce/lwc-rfcs/tree/master/text/0020-module-resolution.md#aliasmodulerecord).
 
 Leveraging this, the namespace and name can be resolved at compile time and used to construct the custom element name, which will be in the form `namespace-name`.  
 
@@ -202,7 +202,7 @@ _Note in the case of lazy loading, the component author is responsible for resol
 
 #### Selecting the dynamic component
 
-To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://rfcs.lwc.dev/rfcs/lwc/0000-refs) directive or through another attribute assigned to the component such as a class name.
+To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://github.com/salesforce/lwc-rfcs/blob/master/text/0122-refs.md) directive or through another attribute assigned to the component such as a class name.
 
 Here are some ways component authors can detect when a dynamic component has mounted:
 - Use `connectedCallback` on the dynamic component to signal when it has mounted.
@@ -252,7 +252,7 @@ All directives for [nested templates](https://lwc.dev/guide/reference#directives
 
 Additionally, the following directives will also be supported:
 - [`lwc:spread`](https://lwc.dev/guide/reference#lwc%3Aspread%3D%7Bchildprops%7D)
-- [`lwc:ref`](https://rfcs.lwc.dev/rfcs/lwc/0000-refs)
+- [`lwc:ref`](https://github.com/salesforce/lwc-rfcs/blob/master/text/0122-refs.md)
 
 _Note `lwc:external` will not be available because the constructor provided to the `lwc:is` directive must be a `LightningElement` constructor._
 
@@ -297,7 +297,7 @@ In both cases the dynamic component will be fully mounted and unmounted.
 
 #### Styles
 
-Something to keep in mind is that [light DOM styles are injected to the closest root node](https://rfcs.lwc.dev/rfcs/lwc/0115-light-dom#styles) and are not removed once the components are unmounted. This means that stylesheets may linger on the shadow root even after the dynamic component has been removed.
+Something to keep in mind is that [light DOM styles are injected to the closest root node](https://github.com/salesforce/lwc-rfcs/tree/master/text/0115-light-dom.md#styles) and are not removed once the components are unmounted. This means that stylesheets may linger on the shadow root even after the dynamic component has been removed.
 
 ## Drawbacks
 

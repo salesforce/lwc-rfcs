@@ -100,6 +100,22 @@ Finally, `'migrate'` mode does not attempt to emulate non-stylesheet differences
 
 For a v1 of `'migrate'` mode, however, merely cloning stylesheets should provide the most bang for the buck. It is not a complicated feature to implement, and it is likely to cover the biggest hurdle that component authors would hit when migrating from synthetic to native shadow.
 
+### Server-side rendering
+
+In SSR mode, no attempt is made to inject particular stylesheets into the DOM at server-side render time.
+
+This means that there may be a [flash of unstyled content](https://en.wikipedia.org/wiki/Flash_of_unstyled_content) when the components
+hydrate on the client side. Also, LWC's hydration logic will have to explicitly ignore the missing `<link>`/`<style>` elements and not report
+them as hydration warnings.
+
+The downside is, of course, an ugly load experience and potential hit to [Cumulative Layout Shift](https://web.dev/articles/cls). The solution
+for component authors who are concerned about this is to move fully from `'migrate'` to `'native'` shadow mode.
+
+While it would be technically possible to have a handoff between the client and server where both are aware of which `<link>` and `<style>`
+elements need to be rendered on both the client and the server, this is probably too complex, at least for a v1 of migration mode. Also,
+the main goal of this proposal is to support pure-CSR environments such as Lightning Experience, so the additional complexity is probably
+not worth it.
+
 ## Drawbacks
 
 By offering a third mode, this proposal increases the complexity of explaining mixed shadow mode.

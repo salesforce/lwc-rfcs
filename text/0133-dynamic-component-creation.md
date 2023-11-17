@@ -202,7 +202,7 @@ _Note in the case of lazy loading, the component author is responsible for resol
 
 #### Selecting the dynamic component
 
-To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://github.com/salesforce/lwc-rfcs/blob/ccf0187bec2165d22c5212ac9839da457dbd5dde/text/0000-refs.md) directive or through another attribute assigned to the component such as a class name.
+To select the dynamic component, the actual custom element must be selected once it has been rendered to the DOM by using the [`lwc:ref`](https://github.com/salesforce/lwc-rfcs/blob/master/text/0122-refs.md) directive or through another attribute assigned to the component such as a class name.
 
 Here are some ways component authors can detect when a dynamic component has mounted:
 - Use `connectedCallback` on the dynamic component to signal when it has mounted.
@@ -252,7 +252,7 @@ All directives for [nested templates](https://lwc.dev/guide/reference#directives
 
 Additionally, the following directives will also be supported:
 - [`lwc:spread`](https://lwc.dev/guide/reference#lwc%3Aspread%3D%7Bchildprops%7D)
-- [`lwc:ref`](https://github.com/salesforce/lwc-rfcs/blob/ccf0187bec2165d22c5212ac9839da457dbd5dde/text/0000-refs.md)
+- [`lwc:ref`](https://github.com/salesforce/lwc-rfcs/blob/master/text/0122-refs.md)
 
 _Note `lwc:external` will not be available because the constructor provided to the `lwc:is` directive must be a `LightningElement` constructor._
 

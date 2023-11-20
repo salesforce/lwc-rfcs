@@ -49,6 +49,7 @@ This proposal supersedes the existing [`for:each`](https://lwc.dev/guide/html_te
 
 ### Prior art
 
+- [React lists](https://react.dev/learn/rendering-lists)
 - [Vue `v-for`](https://vuejs.org/guide/essentials/list.html)
 - [Svelte `{#each}`](https://svelte.dev/docs/logic-blocks#each)
 - [Angular `*ngFor`](https://angular.io/api/common/NgForOf#local-variables)

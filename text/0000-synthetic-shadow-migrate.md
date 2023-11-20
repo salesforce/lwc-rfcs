@@ -46,7 +46,7 @@ export default class extends LightningElement {
 
 Removing synthetic shadow DOM entirely would bring several benefits, including improved performance, debuggability, compatibility with other web component frameworks, fewer bugs, and less risk of breakage as browser standards evolve.
 
-However, there are several incompatibilities between native and synthetic shadow, due to limitations of the polyfill itself.  Authors of existing components may not see a compelling reason to switch from synthetic to native shadow, since switching has the major downside of potentially breaking their components, with no perceivable upside (except a small performance win).
+However, there are several incompatibilities between native and synthetic shadow, due to limitations of the polyfill itself.  Authors of existing components may not see a compelling reason to switch from synthetic to native shadow, since switching has the major downside of potentially breaking their components, with only a small marginal upside for the component author (mostly in terms of performance and features such as `::part`).
 
 The most serious incompatibility between native and synthetic shadow DOM is the lack of global styling for native shadow components. In synthetic shadow, any global stylesheets still affect elements inside the shadow root. As such, many component authors have taken dependencies on global stylesheets, notably on [SLDS](https://www.lightningdesignsystem.com/) in Lightning Experience. In fact, the Salesforce documentation explicitly [encourages this](https://developer.salesforce.com/docs/platform/lwc/guide/create-components-css-slds.html) in "getting started" guides, and community-authored content also frequently promotes `slds-*` classes as well.
 

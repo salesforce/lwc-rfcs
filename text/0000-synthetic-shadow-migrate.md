@@ -121,7 +121,7 @@ not worth it.
 
 By offering a third mode, this proposal increases the complexity of explaining mixed shadow mode.
 
-This proposal also makes it more likely that component authors will rely on global stylesheets forever, and never migrate their components off of `'migrate'` mode and onto `'native'` mode
+This proposal also makes it more likely that component authors will rely on global stylesheets forever, and never migrate their components off of `'migrate'` mode and onto `'native'` mode.
 
 ## Alternatives
 

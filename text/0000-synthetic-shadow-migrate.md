@@ -68,14 +68,13 @@ static shadowSupportMode = 'migrate'
 
 - Native shadow DOM is used (like `'native'`).
 - The mode cascades to all descendants (like `'native'`).
-- Unlike `'native'`, however, "migrate" mode copies global `<style>`s and `<link rel="stylesheet">`s from the `document`'s `<head>` into the shadow root of the component. It does so once, when the component is connected to the DOM.
+- Unlike `'native'`, however, "migrate" mode copies global `<style>`s and `<link rel="stylesheet">`s from the `document`'s `<head>` into the shadow root of the component.
 
 By copying the styles from the `<head>` into the shadow root, "migrate" mode sacrifices some performance in favor of backwards compatibility. In short, one of the major differences between synthetic and native shadow DOM is largely eliminated, because SLDS styles (or other global stylesheets added by the page author, e.g. [static resources](https://help.salesforce.com/s/articleView?language=en_US&id=sf.os_apply_custom_styling_to_omniscripts_with_static_resources_19016.htm&type=5)) can apply to elements within the shadow DOM.
 
 This "style copying" technique is based on the [open-stylable polyfill](https://github.com/nolanlawson/open-stylable), which itself is based on the ["open-stylable" proposal](https://github.com/WICG/webcomponents/issues/909).
 
-As a performance optimization, the `<style>`s/`<link>`s will be read _once_ from the `<head>` upon encountering the first
-component in "migrate" mode. Also, global styles added by the LWC engine itself (e.g. from synthetic or top-level light-DOM components) will be skipped.
+There are technical details of how this will work, which are beyond the scope of this document – e.g. whether we use constructable stylesheets, or whether we copy the styles once or repeatedly when the `<head>` is mutated. However, the core idea is simply this stylesheet-cloning approach.
 
 Note that "migrate" mode does not rely on the existence of synthetic shadow DOM at all, and is supported even in environments where synthetic shadow DOM is not loaded. (This allows for portability of components between environments with and without synthetic shadow, e.g. Lightning Experience versus Lightning Web Runtime.)
 
@@ -123,10 +122,6 @@ not worth it.
 By offering a third mode, this proposal increases the complexity of explaining mixed shadow mode.
 
 This proposal also makes it more likely that component authors will rely on global stylesheets forever, and never migrate their components off of `'migrate'` mode and onto `'native'` mode
-
-There is also the possibility that `<style>`s/`<link>`s in the shadow root will conflict with elements from the component author – e.g. when the component author calls `this.template.children`, they will receive extra DOM nodes than they may expect. This risk can be mitigated by the fact that `'migrate'` is opt-in.
-
-Note that the alternative of using [constructable stylesheets](https://web.dev/articles/constructable-stylesheets) is not possible, because constructable stylesheets cannot support cross-origin `<link rel="stylesheet">`s.
 
 ## Alternatives
 

@@ -27,7 +27,7 @@ By adopting a Signals-based reactivity in templates, LWC can overcome these chal
 1. __Simplified State Management__: Signals provide a straightforward way to manage reactive data. By using signals, developers can reduce complexity, making it easier to write and maintain component logic.
 1. __Performance Optimizations__: The proposed model opens up possibilities for performance optimizations by allowing selective rehydration of the UI. Components could update the DOM directly in response to state changes without a full re-render, leading to faster updates and reduced resource consumption. This has been a goal of the LWC team for a long time, small incremental improvements has been made, but this effort could accelerate the work in this area.
 
-The motivation for this RFC is to enable LWS, and developers in general, to bring stores and signal-like objects as first class citizens into the LWC ecosystem without introducing significant overhead. To improve the ergonomics of signals in LWC Template, to align LWC with more modern JavaScript practices, simplify component development, and improve performance, making LWC a developers friendly.
+The motivation for this RFC is to enable LDS, and developers in general, to bring stores and signal-like objects as first class citizens into the LWC ecosystem without introducing significant overhead. To improve the ergonomics of signals in LWC Template, to align LWC with more modern JavaScript practices, simplify component development, and improve performance, making LWC a developers friendly.
 
 ## Detailed Design
 
@@ -128,7 +128,7 @@ export default class ExampleComponent extends LightningElement {
 
 ### Connecting to External Data Stores
 
-Components can integrate with external stores by using a pattern similar to the current `@wire`` mechanism:
+Components can integrate with external stores by using a pattern similar to the current `@wire` mechanism:
 
 ```javascript
 import { record } from 'app/stores';
@@ -144,7 +144,7 @@ export default class ExampleComponent extends LightningElement {
 </template>
 ```
 
-__Note:__ if the currentRecord's value is not available yet, it might require some additional logic to handle that case. This is similar to what developers have to do today when using `@wire`._
+__Note:__ if the currentRecord's value is not available yet, it might require some additional logic to handle that case. This is similar to what developers have to do today when using `@wire`.
 
 ### LWC Internals
 

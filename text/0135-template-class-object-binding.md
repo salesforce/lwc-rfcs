@@ -39,7 +39,7 @@ export default class CustomButton extends LightningElement {
 
 ```html
 <template>
-  <button class="{className}">
+  <button class={className}>
     <slot></slot>
   </button>
 </template>

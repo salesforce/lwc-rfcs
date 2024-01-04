@@ -1,5 +1,5 @@
 ---
-title: Comprehensive Template Style
+title: Template class object binding
 status: DRAFTED
 created_at: 2024-01-04
 updated_at: 2024-01-04
@@ -7,7 +7,7 @@ champion: Pierre-Marie Dartus (pmdartus)
 pr: None
 ---
 
-# Comprehensive Template Style
+# Template class object binding
 
 ## Summary
 

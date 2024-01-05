@@ -76,6 +76,7 @@ The list of class names applied to a given element is defined as follows:
 | ------------------------------------------- | --------------- |
 | `'foo bar'`                                 | `'foo bar'`     |
 | `{foo: true, bar: false, 'fiz buz': true }` | `foo fiz buz`   |
+| `{truthy: 1, falsey: '', alsoTruthy': Symbol() }` | `truthy alsoTruthy`   |
 | `[false, 'bar', null]`                      | `'bar'`         |
 | `['foo', { bar: true }, ['baz']]`           | `'foo bar baz'` |
 

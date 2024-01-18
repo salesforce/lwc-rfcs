@@ -23,14 +23,14 @@ export default class CustomButton extends LightningElement {
   fullWidth = false;
   stretch = false;
 
-  get className() {
+  get computedClassNames() {
     return [
-      "slds-button__icon",
-      this.variant && `slds-button_${this.variant}`,
-      this.position && `slds-button_${this.position}`,
+      "button__icon",
+      this.variant && `button_${this.variant}`,
+      this.position && `button_${this.position}`,
       {
-        "slds-button_full-width": this.fullWidth,
-        "slds-button_stretch": this.stretch,
+        "button_full-width": this.fullWidth,
+        "button_stretch": this.stretch,
       },
     ];
   }
@@ -39,7 +39,7 @@ export default class CustomButton extends LightningElement {
 
 ```html
 <template>
-  <button class={className}>
+  <button class={computedClassNames}>
     <slot></slot>
   </button>
 </template>
@@ -68,8 +68,8 @@ This RFC proposes to change the semantics of the template `class` attribute. On 
 The list of class names applied to a given element is defined as follows:
 
 1. If the value is a `string`, apply all the classes in the value.
-2. If the value is an `object`, iterate over the enumerable string properties own by the object (excluding symbols and properties on the proto-chain) and apply the classes with the keys associated with a truthy value.
-3. If the value is an `array`, iterate over its entries and apply this algorithm recursively for each of its entries.
+2. If the value is an `array`, iterate over its entries and apply this algorithm recursively for each of its entries.
+3. If the value is an `object`, iterate over the enumerable string properties own by the object (excluding symbols and properties on the proto-chain) and apply the classes with the keys associated with a truthy value.
 4. Ignore all other values: `null`, `undefined`, other primitive values, and complex objects.
 
 | Input                                       | Output          |
@@ -87,7 +87,7 @@ In theory, this proposal doesn't introduce a breaking change. However, it introd
 | Input                       | Before               | After   |
 | --------------------------- | -------------------- | ------- |
 | `{ foo: true, bar: false }` | `'[object Object]'`  | `'foo'` |
-| `[false, 'foo', null]`      | `'false,'foo','` | `'foo'` |
+| `[false, 'foo', null]`      | `'false','foo',` | `'foo'` |
 
 > As a side note, it's possible to match against an element with its class attribute set to `[object Object]` using the `.\005Bobject` CSS selector. 🤯
 

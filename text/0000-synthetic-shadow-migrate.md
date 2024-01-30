@@ -151,3 +151,4 @@ We could also potentially leverage [lwc-codemod](https://github.com/salesforce/l
 
 - Do any non-stylesheet behaviors of synthetic shadow DOM need to be emulated?
 - How should component-level API versioning apply to this, if at all? E.g., should the "forced" opt-in be done gradually, only for newer API versions?
+- Should we have a separate rollout strategy for environments where we want to forcibly remove synthetic shadow DOM? For example, a global "forced" migrate mode could simply assume that any component without `static shadowSupportMode = 'native'` should run in migrate mode. This would allow for removing synthetic shadow from the page entirely.

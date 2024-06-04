@@ -94,7 +94,7 @@ The reason for rule #1 is that, exactly like slotted content, children can obser
 
 So rather than trying to emulate synthetic-lifecycle-within-native-lifecycle (which is [a fool's errand](https://github.com/salesforce/lwc/issues/4249)), we should force the entire tree into native lifecycle mode so that `connectedCallback` and `disconnectedCallback` at least consistently fire.
 
-For component authors, this means that they will have to be careful when enabling native lifecycle mode. Similar to native shadow mode, they will have to ensure that their children are all native-shadow ready. But in addition, they must communicate to their consumers that any _slotted_ content that consumers provide is also beholden to this rule.
+For component authors, this means that they will have to be careful when enabling native lifecycle mode. Similar to native shadow mode, they will have to ensure that their children are all native-lifecycle ready. But in addition, they must communicate to their consumers that any _slotted_ content that consumers provide is also beholden to this rule.
 
 For components with a longstanding history and wide variety of consumers, this might not be feasible. Component authors will have to decide for themselves whether they are ready to ship their components in native lifecycle or not.
 

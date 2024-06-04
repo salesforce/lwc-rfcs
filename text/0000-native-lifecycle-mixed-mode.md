@@ -86,7 +86,7 @@ This has a few advantages:
 Like shadow DOM mixed mode, lifecycle mixed mode will need some concept of transitivity. In particular, it will enforce the following rules:
 
 1. Any descendants of a native-lifecycle component are forced into native lifecycle mode. (Same as shadow DOM mixed mode.)
-2. Any _slotted content_ of a native-lifecycle component are also forced into native lifecycle mode. (Different from shadow DOM mixed mode.)
+2. Any _slotted content_ of a native-lifecycle component is also forced into native lifecycle mode. (Different from shadow DOM mixed mode.)
 
 The reason for rule #2 is that slots in particular proved to be a source of observable changes for native-lifecycle components. It is simply the case that a slotted component can observe whether the component it is being slotted into is native or synthetic.
 

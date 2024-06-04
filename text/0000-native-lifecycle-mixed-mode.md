@@ -88,7 +88,7 @@ Like shadow DOM mixed mode, lifecycle mixed mode will need some concept of trans
 1. Any descendants of a native-lifecycle component are forced into native lifecycle mode. (Same as shadow DOM mixed mode.)
 2. Any _slotted content_ of a native-lifecycle component is also forced into native lifecycle mode. (Different from shadow DOM mixed mode.)
 
-The reason for rule #2 is that slots in particular proved to be a source of observable changes for native-lifecycle components. It is simply the case that a slotted component can observe the timing behavior of the component it is being slotted into.
+The reason for rule #2 is that slots in particular proved to be a source of observable changes for native-lifecycle components. It is simply the case that a slotted component can observe the lifecycle mode of the component it is being slotted into, due to connected/disconnect events triggering downstream callbacks in the tree.
 
 The reason for rule #1 is that, exactly like slotted content, children can observe the mode of their parents.
 

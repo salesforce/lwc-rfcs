@@ -18,7 +18,7 @@ An attempt was made during the LWC v6 release (Salesforce Summer '24) to [upgrad
 
 The reason it was non-viable is that mixing components running in two modes (synthetic vs native lifecycle) causes observable changes even for components that were not expecting their lifecycle callback timings to change, due to changes in their slot container. (An example of this is spelled out in detail [here](https://github.com/salesforce/lwc/issues/4249).)
 
-To resolve this, this RFC proposes a new "native lifecycle mixed mode," inspired by [mixed shadow DOM mode](https://github.com/salesforce/lwc-rfcs/blob/master/text/0115-mixed-shadow-mode.md). It would work in much the same way, allowing components to gradually opt-in to native custom element lifecycle, while also maintaining consistency within the descendant DOM tree for that component.
+To resolve this, this RFC proposes a new "native lifecycle mixed mode," inspired by [mixed shadow DOM mode](https://github.com/salesforce/lwc-rfcs/blob/master/text/0115-mixed-shadow-mode.md). It would work in much the same way, allowing components to gradually opt-in to native custom element lifecycle, while also maintaining consistency within the DOM tree for that component.
 
 ## Basic example
 

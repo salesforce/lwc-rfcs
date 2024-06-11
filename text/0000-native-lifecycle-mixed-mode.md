@@ -149,4 +149,4 @@ The names "synthetic" and "native" here were deliberately chosen to resemble the
 
 # Unresolved questions
 
-None at this time.
+- Do we _need_ to have the additional transitivity for slotted content? It would be simpler to use the same model as shadow DOM mixed mode. Maybe we can just fix [the main bugs](https://github.com/salesforce/lwc/pull/4248) when slotting synthetic-lifecycle components into native-lifecycle components, and accept that there will be some minor differences ([as with shadow DOM mixed mode](https://github.com/salesforce/lwc/issues/4267))?

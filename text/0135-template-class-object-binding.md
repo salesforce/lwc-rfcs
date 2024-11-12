@@ -1,10 +1,10 @@
 ---
 title: Template class object binding
-status: DRAFTED
+status: IMPLEMENTED
 created_at: 2024-01-04
-updated_at: 2024-01-04
+updated_at: 2024-11-12
 champion: Pierre-Marie Dartus (pmdartus)
-pr: None
+pr: https://github.com/salesforce/lwc/pull/3950
 ---
 
 # Template class object binding

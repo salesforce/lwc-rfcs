@@ -80,13 +80,13 @@ There were a few options here:
 
 1. Provide a generic API that allows returning a string of HTML.
 2. Provide a specific API that allows constructing a `<link rel=stylesheet>`.
-3. Provide a generic API to generate LWC Virtual DOM nodes.
+3. Provide a generic API to generate LWC virtual DOM nodes.
 
 This RFC proposes option #2, for reasons described below.
 
-Option #1 is great for flexibility (e.g. rendering something other than a `<link>`), but it would run into [hydration issues](https://github.com/salesforce/lwc/pull/4648#issuecomment-2429864929) at runtime, as the LWC engine would need to keep track of which client-side `<style>`s correspond to which server-rendered `<link>`s, including after a dynamic client-side `render()` that renders new stylesheets. LWC must instead control how the HTML is constructed, in case it needs to add `data-*` attributes or HTML comments instructing hydration how to deal with mismatches.
+Option #1 is great for flexibility (e.g. rendering something other than a `<link>`, in case browsers deliver a new API), but it would run into [hydration issues](https://github.com/salesforce/lwc/pull/4648#issuecomment-2429864929) at runtime, as the LWC engine would need to keep track of which client-side `<style>`s correspond to which server-rendered `<link>`s, including after a dynamic client-side `render()` that renders new stylesheets. LWC must instead control how the HTML is constructed, in case it needs to add `data-*` attributes or HTML comments instructing hydration how to deal with mismatches.
 
-Option #3 offers the same flexibility, but also reveals too much of the internal details of the LWC engine. In the future, LWC may not even use a Virtual DOM.
+Option #3 offers the same flexibility, but also reveals too much of the internal details of the LWC engine. In the future, LWC may not even use a virtual DOM.
 
 This leaves option #2. The idea behind option #2 is to allow a basic API for constructing a `<link rel=stylesheet>`, including attributes that may or may not be used, such as `crossorigin` and `integrity`.
 

@@ -170,4 +170,4 @@ Since this should not affect the component authoring experience, there is no nee
 
 # Unresolved questions
 
-How can we future-proof this API against potential new browser APIs? We may need to have a [sophisticated fallback strategy](https://github.com/whatwg/html/issues/10673#issuecomment-2453512552) which may involve rendering not just a `<link>` but also a new attribute in the `<template shadowrootmode>`.
+How can we future-proof this API against potential new browser APIs? We may need to have a [sophisticated fallback strategy](https://github.com/whatwg/html/issues/10673#issuecomment-2453512552) which could involve rendering not just a `<link>` but also a new attribute in the `<template shadowrootmode>`.

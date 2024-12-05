@@ -44,7 +44,7 @@ The caller can also return a falsy value to indicate that the `<style>` should b
 
 ## Motivation
 
-In certain internal benchmarks, we have seen [significant](https://docs.google.com/spreadsheets/d/1Ksusv26dRKQj-2FF6KYEyA_VGgxd9mnAcooQQ0nLKIg/edit?gid=1104440079#gid=1104440079) (~200ms) costs in typical page load scenarios, which can at least partially be attributed to the presence of duplicate `<style>` elements rendered in HTML. This can take two forms:
+In benchmarks, we have seen [significant performance costs](https://github.com/nolanlawson/declarative-shadow-dom-style-vs-link-benchmark) in page load scenarios when using duplicate `<style>`s. This can take two forms:
 
 - Shadow DOM components containing `<style>`s in their `<template shadowrootmode="open">`s (i.e. Declarative Shadow DOM).
 - Light DOM components containing direct inline `<style>`s.

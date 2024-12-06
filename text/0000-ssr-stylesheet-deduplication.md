@@ -150,15 +150,17 @@ In terms of performance, we may be making a small performance gain at the cost o
 
 Most alternatives were already described above. The main alternative is to not do this entirely.
 
-We could also have a targeted strategy only for light DOM components (e.g. to dedupe them into `<style>`s and hoist a `<style>` to the document `<head>`). However, this doesn't address the large number of shadow DOM-using LWC components.
+We could also have a targeted strategy only for light DOM components (e.g. to dedupe their `<style>`s and hoist a single `<style>` or `<link>` to the document `<head>`). However, this doesn't address the large number of shadow DOM-using LWC components.
 
-Plus, it would add significant complexity to the API to allow for multiple strategies (`<link>`, remove, keep), which would likely necessitate communicating in the `renderStylesheet` parameters whether a component is shadow or light DOM and whether its styles are scoped. To keep things simple, we instead only allow for `<link>`s to be outputted (or returning a falsy value, which indicates to retain the `<style>`). 
+Plus, it would add significant complexity to the API to allow for multiple strategies (`<link>`, remove, keep), which would likely necessitate communicating in the `renderStylesheet` parameters whether a component is shadow or light DOM, whether its styles are scoped, and whether it's enclosed by a shadow DOM component somewhere in its ancestor tree. To keep things simple, we instead only allow for `<link>`s to be outputted (or returning a falsy value, which indicates to retain the `<style>`).
 
 Another option is to allow the `renderStyleesheet` function to return a `Promise` that resolves with the expected object. This would theoretically allow for an additional optimization: if a `<style>` is detected as not duplicated (or not duplicated a significant number of times), then the user may opt to keep it inlined.
 
 However, this wouldn't work with 1) the synchronous nature of the current `@lwc/ssr-runtime` implementation, or 2) with the fact that a `Promise` would need to be `await`ed, halting rendering and thus precluding the possibility of waiting for all `<style>`s to be accounted for before deciding what to do with them. In a future HTML streaming context, it would also be preferable to deal with `<style>`s on an ad-hoc individual basis rather than reading them all in at once.
 
 Yet another alternative considered was to add this functionality to `@lwc/engine-server` as well as `@lwc/ssr-runtime`. However, since `@lwc/engine-server` is intended to be deprecated in favor of the latter, it seems like a bad bet to implement the same functionality in both.
+
+Still another alternative considered was to use a style extraction system more in line with how Svelte/Vue components work – i.e. when the component is compiled, its styles can be extracted out (so that e.g. Rollup/Webpack/Vite can hoist them to the `<head>`). This doesn't work well for LWC, though, since 1) our components may be shadow DOM rather than light DOM, and 2) our components' CSS can only be determined at runtime rather than compile time. (E.g. a scoped stylesheet's `:host` selector behaves differently when used in light DOM components versus shadow DOM components.)
 
 ## Adoption strategy
 

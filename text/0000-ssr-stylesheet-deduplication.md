@@ -152,7 +152,7 @@ Most alternatives were already described above. The main alternative is to not d
 
 We could also have a targeted strategy only for light DOM components (e.g. to dedupe their `<style>`s and hoist a single `<style>` or `<link>` to the document `<head>`). However, this doesn't address the large number of shadow DOM-using LWC components.
 
-Plus, it would add significant complexity to the API to allow for multiple strategies (`<link>`, remove, keep), which would likely necessitate communicating in the `renderStylesheet` parameters whether a component is shadow or light DOM, whether its styles are scoped, and whether it's enclosed by a shadow DOM component somewhere in its ancestor tree. To keep things simple, we instead only allow for `<link>`s to be outputted (or returning a falsy value, which indicates to retain the `<style>`).
+Plus, it would add significant complexity to the API to allow for multiple strategies (`<link>`, remove, keep), which would likely necessitate communicating in the `renderStylesheet` parameters whether a component is shadow or light DOM, and whether it's enclosed by a shadow DOM component somewhere in its ancestor tree. (Since only document-level light DOM components can hoist their styles into the `<head>`.) To keep things simple, we instead only allow for `<link>`s to be outputted (or returning a falsy value, which indicates to retain the `<style>`).
 
 Another option is to allow the `renderStyleesheet` function to return a `Promise` that resolves with the expected object. This would theoretically allow for an additional optimization: if a `<style>` is detected as not duplicated (or not duplicated a significant number of times), then the user may opt to keep it inlined.
 
@@ -173,3 +173,5 @@ Since this should not affect the component authoring experience, there is no nee
 # Unresolved questions
 
 How can we future-proof this API against potential new browser APIs? We may need to have a [sophisticated fallback strategy](https://github.com/whatwg/html/issues/10673#issuecomment-2453512552) which could involve rendering not just a `<link>` but also a new attribute in the `<template shadowrootmode>`.
+
+Also: are we _sure_ we don't want to allow for removing the `<style>` tags? According to [the benchmark](https://github.com/nolanlawson/declarative-shadow-dom-style-vs-link-benchmark?tab=readme-ov-file#light-dom), for light DOM components at the top level (or not enclosed by a shadow root), the fastest method by far is to hoist a single `<link>` or `<style>` into the `<head>`. This can only be accomplished if we can somehow remove `<style>`s, but only for non-shadow-enclosed light DOM components.

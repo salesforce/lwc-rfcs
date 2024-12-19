@@ -106,7 +106,7 @@ function renderComponent(
 For the client side, consumers are expected to import the `registerLwcStyleComponent` function and call it once:
 
 ```js
-import { registerLwcStyleComponent } from '@lwc/style-component'
+import { registerLwcStyleComponent } from '@lwc/ssr-runtime'
 registerLwcStyleComponent()
 ```
 

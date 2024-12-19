@@ -103,6 +103,17 @@ function renderComponent(
 ): void;
 ```
 
+For the client side, consumers are expected to import the `registerLwcStyleComponent` function and call it once:
+
+```js
+import { registerLwcStyleComponent } from '@lwc/style-component'
+registerLwcStyleComponent()
+```
+
+Under the hood, this will call `customElements.define()` with a vanilla `<lwc-style>` component whose job is to identify nearby `<style>`s and push them into either `shadowRoot.adoptedStyleSheets` or `document.adoptedStyleSheets` (for top-level light DOM).
+
+Consumers should most likely put this `<script>` into the `<head>` so that it registers the web component as soon as possible.
+
 ### Prior art
 
 #### Web component frameworks

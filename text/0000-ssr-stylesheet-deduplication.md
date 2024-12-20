@@ -136,7 +136,7 @@ Needless to say, this is insufficient for our use case since LWC has first-class
 
 ## Drawbacks
 
-This solution will add significant complexity both to the LWC engine (which will have to deal with supporting the new API in SSR, as well as potentially deduplicating styles client-side w.r.t the current CSR implementation) and on the consumer side (which will have to do the bulk of the work of managing and hosting the stylesheets themselves).
+This solution will add significant complexity both to the LWC engine (which will have to deal with supporting the new API in SSR, as well as potentially deduplicating styles client-side w.r.t the current CSR implementation) and on the consumer side (which will have to ensure they register the `<lwc-style>` component).
 
 In terms of performance, we may be making a small performance gain at the cost of a large amount of complexity and tech debt. This tech debt could grow once browsers have implemented a blessed API, and if we decide to pivot to it.
 

@@ -21,7 +21,7 @@ vanilla web components that push deduplicated styles into `shadowRoot.adoptedSty
 import { renderComponent } from '@lwc/ssr-runtime'
 
 const html = await renderComponent('x-foo', Constructor, props, {
-    stylsheetCache: new Set()
+    stylesheetCache: new Set()
 });
 ```
 

@@ -109,7 +109,17 @@ To add : Static Analyzability.
 
 What other designs have been considered? What is the impact of not doing this?
 
-To add : lwc:spread and reflecting on* properties as event listeners
+To add : reflecting on* properties as event listeners
+
+### lwc:spread
+
+An alternative design would be for `lwc:spread` to behave as a directive that appears to just spread its properties on the template.
+
+It is possible to have a component that executes logic in its `connectedCallback` based on the the value of a attribute in its corresponding element. An owner component that consumes this component using `lwc:component` would run into issues similar to [# Motivation](#motivation). Though this is anti-pattern, the author of owner component may not have any control over this component, and hence the author of owner component would notice a feature gap. This design would also solve this issue.
+
+Currently `lwc:spread` can be used to listen for standard events like `click` or `focus` by assigning event handlers to the `onclick` and `onfocus` properties. This works because the element on which these properties are applied inherits from HTMLElement. This implies that the event handlers would be bound to these elements itself and not the owner component as `onevent` directly on template does. Without `lwc:spread`, there is not a completely equivalent way of doing this. So modifying this behaviour would break components with no straightforward workaround. However it must also be noted that this difference is also a frequent source of confusion.
+
+Implementing of this design would cause significant degradation of performance, since we would need to parse the object passed to `lwc:spread` in each render.
 
 ## Adoption strategy
 

@@ -10,7 +10,7 @@ pr: (leave this empty until the PR is created)
 
 ## Summary
 
-This proposal adds a declarative mechanism to add a collection of event listeners to elements in an LWC template using a new directive `lwc:on`.
+This proposal adds a mechanism to add a collection of event listeners to elements in an LWC template using a new directive `lwc:on`.
 
 ## Basic example
 
@@ -44,7 +44,7 @@ As an alternative, it is possible to add event listeners imperatively. However i
 
 ## Detailed design
 
-A new directive `lwc:on` will be introduced that can be used to declaratively add a collection of event listeners whose name or event handlers may not be known while authoring the component.
+A new directive `lwc:on` will be introduced that can be used to add a collection of event listeners whose name may not be known while authoring the component.
 
 ### Structure
 

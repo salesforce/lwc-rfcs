@@ -3,7 +3,8 @@ title: `lwc:on` directive
 status: DRAFTED
 created_at: 2025-01-13
 updated_at: 2025-01-13
-pr: (leave this empty until the PR is created)
+pr: https://github.com/salesforce/lwc-rfcs/pull/92
+
 ---
 
 # `lwc:on` Directive
@@ -53,7 +54,8 @@ The `lwc:on` directive would accept an object. For each property of the object, 
 ### Caching
 
 #### For static components, i.e. components declared in template directly using its selector
-Since it is uncommon for event listeners to change after the start of Owner component's intial render, We can cache them to improve performance. Note that this is same as how `onevent` on template works currently. For consumers, the implication of this would be that any changes made to the object passed to `lwc:on` after the first `connectedCallback` of owner component would cause no effect.
+Since it is uncommon for event listeners to change after the start of the owner component's intial render, We can cache them to improve performance. Note that this is same as how `onevent` in template HTML works currently. For consumers, the implication of this would be that any changes made to the object passed to `lwc:on` after the first `connectedCallback` of owner component would cause no effect.
+
 
 #### For dynamic components, i.e. components created using `lwc:component` directive
 Since it is uncommon for event listeners to change if the constructor passed to `lwc:is` doesn't change, We can skip patching of event listeners if the element doesn't change. For consumers, the implication of this would be that after the first `connectedCallback` of owner component, any changes made to the object passed to `lwc:on` would cause no effect until the constructor passed to `lwc:is` itself is changed.
@@ -84,7 +86,8 @@ export default class MyComponent extends LightningElement {
 ```
 
 `lwc:on` will always be applied last. That means it will take precedence over whatever event listeners are declared in the template directly. In the above example, `x-child`, only one listener for event `foo` would be added and `childEventHandlers.foo` would be used for event handler .
-Additionally, there can be only one `lwc:on` directive on a element 
+Additionally, there can be only one `lwc:on` directive on an element 
+
 
 ### Event names
 

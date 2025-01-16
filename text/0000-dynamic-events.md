@@ -2,7 +2,7 @@
 title: `lwc:on` directive 
 status: DRAFTED
 created_at: 2025-01-13
-updated_at: 2025-01-13
+updated_at: 2025-01-17
 pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ---
@@ -114,15 +114,17 @@ What other designs have been considered? What is the impact of not doing this?
 
 To add : reflecting on* properties as event listeners
 
-### lwc:spread
+### lwc:spread - Just spreading it in template
 
-An alternative design would be for `lwc:spread` to behave as a directive that appears to just spread its properties on the template.
+An alternative design would be for `lwc:spread` to behave as a directive that appears to just spread the object's properties on the template.
 
-It is possible to have a component that executes logic in its `connectedCallback` based on the the value of a attribute in its corresponding element. An owner component that consumes this component using `lwc:component` would run into issues similar to [# Motivation](#motivation). Though this is anti-pattern, the author of owner component may not have any control over this component, and hence the author of owner component would notice a feature gap. This design would also solve this issue.
+Currently, a component can execute logic in its `connectedCallback` based on the value of an attribute in its corresponding element. If an owner component uses lwc:component to consume this component, it may encounter issues similar to those described in the [# Motivation](#motivation). Although this is considered an anti-pattern, the author of the owner component might not have control over the consumed component, leading to a noticeable feature gap. The proposed design would address this issue
+ 
+At present, `lwc:spread` can be used to listen for standard events like `click` or `focus` by assigning event handlers to the `onclick` or `onfocus` properties. This works because these properties are applied to the rendered element, meaning the event handlers are bound to the elements themselves, not to the owner component as `onevent` on the template does. This behavior might be unexpected for consumers. The distinction between the rendered element and the `LightningElement` component is an implementation detail. For consumers, it is simply an Lwc, and this behavior cannot be explained as the application of properties to Lwc. The proposed design would be a breaking change. However, any component that relies on the current behavior can be rewritten to accommodate the new design.
 
-Currently `lwc:spread` can be used to listen for standard events like `click` or `focus` by assigning event handlers to the `onclick` and `onfocus` properties. This works because the element on which these properties are applied inherits from HTMLElement. This implies that the event handlers would be bound to these elements itself and not the owner component as `onevent` directly on template does. Without `lwc:spread`, there is not a completely equivalent way of doing this. So modifying this behaviour would break components with no straightforward workaround. However it must also be noted that this difference is also a frequent source of confusion.
+Although properties and event listeners use the same HTML attribute syntax, consumers understand their differences. They recognize whether a variable in an HTML template is a property, attribute, or event listener and reason about them separately. Combining them into a single directive does not enhance the developer experience. In fact, a combined directive might lead consumers to treat them as a unified concept, causing confusion. Additionally, the usage patterns of properties and event listeners are different, and a combined directive would complicate consumer code.
 
-Implementing of this design would cause significant degradation of performance, since we would need to parse the object passed to `lwc:spread` in each render.
+Currently, the segregation of properties, attributes, and event listeners is handled solely by the template compiler. This design would require implementing a runtime segregator, causing additional runtime overhead. Any changes in segregation rules would necessitate updates in both the compiler and the runtime engine, leading to increased maintenance effort. 
 
 ## Adoption strategy
 

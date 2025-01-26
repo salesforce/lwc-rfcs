@@ -91,7 +91,10 @@ Additionally, there can be only one `lwc:on` directive on an element
 
 ### Event names
 
-The keys of object passed to `lwc:on` should conform to the requirement set by DOM Event Specification. There would be no other constraint on the object's keys.
+The keys of object passed to `lwc:on` should conform to the requirement set by DOM Event Specification. There would be no other constraint on the object's keys. 
+
+
+to add: own enumerable properties whose keys are not symbols
 
 ## Drawbacks
 
@@ -105,26 +108,28 @@ Why should we *not* do this? Please consider:
 
 There are tradeoffs to choosing any path. Attempt to identify them here.
 
-
-To add : Static Analyzability.
+One downside of this proposal is that it would prevent us from being able to statically analyze the names of event listeners added by this directive.
 
 ## Alternatives
-
-What other designs have been considered? What is the impact of not doing this?
-
-To add : reflecting on* properties as event listeners
 
 ### lwc:spread - Just spreading it in template
 
 An alternative design would be for `lwc:spread` to behave as a directive that appears to just spread the object's properties on the template.
 
-Currently, a component can execute logic in its `connectedCallback` based on the value of an attribute in its corresponding element. If an owner component uses lwc:component to consume this component, it may encounter issues similar to those described in the [# Motivation](#motivation). Although this is considered an anti-pattern, the author of the owner component might not have control over the consumed component, leading to a noticeable feature gap. The proposed design would address this issue
+Currently, a component can execute logic in its `connectedCallback` based on the value of an attribute in its corresponding element. If an owner component uses `lwc:component` to consume this component, it may encounter issues similar to those described in the [# Motivation](#motivation). Although this is considered an anti-pattern, the author of the owner component might not have control over the consumed component, leading to a noticeable feature gap. The proposed design would address this issue
  
 At present, `lwc:spread` can be used to listen for standard events like `click` or `focus` by assigning event handlers to the `onclick` or `onfocus` properties. This works because these properties are applied to the rendered element, meaning the event handlers are bound to the elements themselves, not to the owner component as `onevent` on the template does. This behavior might be unexpected for consumers. The distinction between the rendered element and the `LightningElement` component is an implementation detail. For consumers, it is simply an Lwc, and this behavior cannot be explained as the application of properties to Lwc. The proposed design would be a breaking change. However, any component that relies on the current behavior can be rewritten to accommodate the new design.
 
 Although properties and event listeners use the same HTML attribute syntax, consumers understand their differences. They recognize whether a variable in an HTML template is a property, attribute, or event listener and reason about them separately. Combining them into a single directive does not enhance the developer experience. In fact, a combined directive might lead consumers to treat them as a unified concept, causing confusion. Additionally, the usage patterns of properties and event listeners are different, and a combined directive would complicate consumer code.
 
 Currently, the segregation of properties, attributes, and event listeners is handled solely by the template compiler. This design would require implementing a runtime segregator, causing additional runtime overhead. Any changes in segregation rules would necessitate updates in both the compiler and the runtime engine, leading to increased maintenance effort. 
+
+### Event Handler Properties
+
+An alternative design considered is for the framework to create new properties named `on{eventName}` on the components. The setter for these properties would add an event listener to the rendered element. This listener would listen for events with the name `eventName` and handle them using the input value bound to the component. In this design, the template-compiler output shall not distinguish between properties and event listeners, they shall all be treated as properties
+
+This approach presents significant implementation challenges. Since we can't know all the required event listeners during component construction, we would need to create properties dynamically when they are first encountered. The framework can handle `on*` properties defined in the HTML template easily because it manages the assignment. However it would require a proxy based mechanism for the framework to create these properties when first encountered elsewhere.
+
 
 ## Adoption strategy
 

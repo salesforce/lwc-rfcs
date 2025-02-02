@@ -2,7 +2,7 @@
 title: `lwc:on` directive 
 status: DRAFTED
 created_at: 2025-01-13
-updated_at: 2025-01-31
+updated_at: 2025-02-02 
 pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ---
@@ -61,7 +61,7 @@ As an alternative, it is possible to add event listeners imperatively. However, 
 The `lwc:on` directive will enable the addition of a collection of event listeners whose names may not be known at the time of HTML template authoring.
 
 In this document, `element` shall refer to the rendered `Element` and `component` shall refer to the instance of `LightningElememt`.
-In this document, the value of an object's property shall refer to the result of calling the object's `[[Get]]` internal method with the property's key as the argument.
+In this document, the value of an object's property shall refer to the result of calling the [Get](https://tc39.es/ecma262/multipage/abstract-operations.html#sec-get-o-p) operation with the object and the property's key as arguments.
 
 ### Directive behaviour 
 
@@ -82,8 +82,8 @@ Since it is uncommon for event listeners to change if the constructor passed to 
 
 
 ### Overriding
-
-`lwc:on` will always be applied last. That means it will take precedence over whatever event listeners are declared in the template directly. In the below example, `x-child`, only one listener for event type `foo` would be added and `childEventHandlers.foo` would be used for event handler.
+ 
+If `lwc:on` specifies a listener for the same event type as an event listener declared directly in the template, only the listener from `lwc:on` will be applied, and the other listener will be ignored. In the below example, for `x-child`, only one listener for event type `foo` would be added and `childEventHandlers.foo` would be used for event handler.
 Additionally, there can be only one `lwc:on` directive on an element
 
 ```js

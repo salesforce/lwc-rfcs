@@ -36,7 +36,7 @@ export default class MyComponent extends LightningElement {
 </template>
 ```
 
-The `lwc:on` directive uses the properties of the `childEventHandlers` object to set up event listeners on `<x-child>`. Each property key in the object specifies an event type to listen for, and when that event occurs, the corresponding property's value will be invoked with `this` set to the `MyComponent` instance.
+The `lwc:on` directive uses the properties of the `childEventHandlers` object to set up event listeners on `<x-child>`. Each property key in the object specifies an event type to listen for, and when that event occurs, the corresponding property's value will be invoked with `this` set to the `MyComponent` instance.  
 In this example, when `<x-child>` receives a 'foo' event, it logs 'foo' to the console. When it receives a 'bar' event, it logs 'some value' to the console because `this` is the `MyComponent` instance.
 
 
@@ -60,7 +60,7 @@ As an alternative, it is possible to add event listeners imperatively. However, 
 
 The `lwc:on` directive will enable the addition of a collection of event listeners whose event types may not be known at the time of HTML template authoring.
 
-In this document, `element` shall refer to the rendered `Element` and `component` shall refer to the instance of `LightningElememt`.
+In this document, `element` shall refer to the rendered `Element` and `component` shall refer to the instance of `LightningElememt`.  
 In this document, the value of an object's property shall refer to the result of calling the [Get](https://tc39.es/ecma262/multipage/abstract-operations.html#sec-get-o-p) operation with the object and the property's key as arguments.
 
 ### Directive behaviour 
@@ -81,7 +81,7 @@ Since it is uncommon for event listeners to change if the constructor passed to 
 
 ### Overriding
  
-If `lwc:on` specifies a listener for the same event type as an event listener declared directly in the template, only the listener from `lwc:on` will be applied, and the other listener will be ignored. In the below example, for `x-child`, only one listener for event type `foo` would be added and `childEventHandlers.foo` would be used for event handler.
+If `lwc:on` specifies a listener for the same event type as an event listener declared directly in the template, only the listener from `lwc:on` will be applied, and the other listener will be ignored. In the below example, for `x-child`, only one listener for event type `foo` would be added and `childEventHandlers.foo` would be used for event handler.  
 Additionally, there can be only one `lwc:on` directive on an element
 
 ```js

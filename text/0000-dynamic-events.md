@@ -1,8 +1,8 @@
 ---
-title: `lwc:on` directive 
+title: "`lwc:on` directive" 
 status: DRAFTED
 created_at: 2025-01-13
-updated_at: 2025-02-02 
+updated_at: 2025-02-10 
 pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ---
@@ -58,28 +58,26 @@ As an alternative, it is possible to add event listeners imperatively. However, 
 
 ## Detailed design
 
-The `lwc:on` directive will enable the addition of a collection of event listeners whose names may not be known at the time of HTML template authoring.
+The `lwc:on` directive will enable the addition of a collection of event listeners whose event types may not be known at the time of HTML template authoring.
 
 In this document, `element` shall refer to the rendered `Element` and `component` shall refer to the instance of `LightningElememt`.
 In this document, the value of an object's property shall refer to the result of calling the [Get](https://tc39.es/ecma262/multipage/abstract-operations.html#sec-get-o-p) operation with the object and the property's key as arguments.
 
 ### Directive behaviour 
 
-The `lwc:on` directive would accept an object. For each property of the object, it would add a event listener to the `element` that listens for the event type specified by property's key. The property's value with `this` set to the owner `component` would be used for handling the event.
+The `lwc:on` directive would accept an object. For each property of the object, it would add a event listener to the `element` that listens for the event type specified by property's key. The property's value with `this` set to the owner `component` would be used for handling the event.Consumer would not recieve any reference to the actual event handlers used and hence they can't remove the event listeners added by this directive.
 
 ### Considered Properties
 
-Only own enumerable string-keyed properties of object passed to `lwc:on` will be considered. Other properties, i.e. inherited properties, non-enumerable properties and symbol-keyed properties shall be ignored. 
+Only own enumerable string-keyed properties of object passed to `lwc:on` will be considered. Other properties, i.e. inherited properties, non-enumerable properties and symbol-keyed properties shall be ignored. The only restriction on property keys is that they must be strings — any string, such as 'fooBar', 'foo-bar', or even '', is valid.
 
 ### Caching
 
 #### For static components, i.e. components declared in template directly using its selector
-Since it is uncommon for event listeners to change after the start of the owner component's intial render, We can cache them to improve performance. Note that this is same as how `on{eventType}` in template HTML works currently. For consumers, the implication of this would be that any changes made to the object passed to `lwc:on` after the first `connectedCallback` of owner component would cause no effect.
-
+Since it is uncommon for event listeners to change after the start of the owner component's intial render, We can cache them when first encountered, to improve performance. Note that this is same as how `on{eventType}` in template HTML works currently. For consumers, the implication of this would be that any changes made to the object passed to `lwc:on` after the first `connectedCallback` of owner component would cause no effect.
 
 #### For dynamic components, i.e. components created using `lwc:component` directive
-Since it is uncommon for event listeners to change if the constructor passed to `lwc:is` doesn't change, We can skip patching of event listeners if the `element` doesn't change. For consumers, the implication of this would be that after the first `connectedCallback` of owner component, any changes made to the object passed to `lwc:on` would cause no effect until the constructor passed to `lwc:is` itself is changed.
-
+Since it is uncommon for event listeners to change if the constructor passed to `lwc:is` doesn't change, We can skip patching of event listeners if the `element` doesn't change. For consumers, the implication of this would be that after the first `connectedCallback` of owner component, any changes made to the object passed to `lwc:on` would cause no effect until the constructor passed to `lwc:is` itself is changed - at which point all existing listeners are removed and new ones are added based on the current value of object passed to `lwc:on`.
 
 ### Overriding
  

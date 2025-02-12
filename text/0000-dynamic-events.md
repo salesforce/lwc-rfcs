@@ -2,7 +2,7 @@
 title: "`lwc:on` directive" 
 status: DRAFTED
 created_at: 2025-01-13
-updated_at: 2025-02-10 
+updated_at: 2025-02-12 
 pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ---
@@ -134,24 +134,8 @@ Similar to previous alternative, this design would be a breaking change and it d
 
 ## Adoption strategy
 
-If we implement this proposal, how will existing Lightning Web Components developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
+This is a non breaking, observable change. Based on rollout statergy (TBD), customers may need to update some config to use this feature.
 
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing Lightning Web Components patterns?
-
-Would the acceptance of this proposal mean the Lightning Web Components documentation must be
-re-organized or altered? Does it change how Lightning Web Components is taught to new developers
-at any level?
-
-How should this feature be taught to existing Lightning Web Components developers?
-
-# Unresolved questions
-
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
-
-Need Input on all parts of design.
+The LWC documentation should be updated to include an explanation of this directive's behavior. Additionally, the documentation should encourage customers to use this directive instead of `lwc:spread` for dynamically adding event listeners.

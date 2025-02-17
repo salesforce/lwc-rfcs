@@ -2,7 +2,7 @@
 title: "`lwc:on` directive" 
 status: DRAFTED
 created_at: 2025-01-13
-updated_at: 2025-02-12 
+updated_at: 2025-02-17 
 pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ---
@@ -65,7 +65,7 @@ In this document, the value of an object's property shall refer to the result of
 
 ### Directive behaviour 
 
-The `lwc:on` directive would accept an object. For each property of the object, it would add a event listener to the `element` that listens for the event type specified by property's key. The property's value with `this` set to the owner `component` would be used for handling the event.Consumer would not recieve any reference to the actual event handlers used and hence they can't remove the event listeners added by this directive.
+The `lwc:on` directive would accept an object. For each property of the object, it would add a event listener to the `element` that listens for the event type specified by property's key. The property's value with `this` set to the owner `component` would be used for handling the event. Consumer would not recieve any reference to the actual event handlers used and hence they can't remove the event listeners added by this directive.
 
 ### Considered Properties
 
@@ -80,9 +80,9 @@ Since it is uncommon for event listeners to change after the start of the owner 
 Since it is uncommon for event listeners to change if the constructor passed to `lwc:is` doesn't change, We can skip patching of event listeners if the `element` doesn't change. For consumers, the implication of this would be that after the first `connectedCallback` of owner component, any changes made to the object passed to `lwc:on` would cause no effect until the constructor passed to `lwc:is` itself is changed - at which point all existing listeners are removed and new ones are added based on the current value of object passed to `lwc:on`.
 
 ### Overriding
- 
-If `lwc:on` specifies a listener for the same event type as an event listener declared directly in the template, only the listener from `lwc:on` will be applied, and the other listener will be ignored. In the below example, for `x-child`, only one listener for event type `foo` would be added and `childEventHandlers.foo` would be used for event handler.  
-Additionally, there can be only one `lwc:on` directive on an element
+
+There can be only one `lwc:on` directive on an element.  
+If `lwc:on` specifies a listener for the same event type as an event listener declared directly in the HTML template, only the listener from `lwc:on` will be applied, and the other listener will be ignored. In the example below, for `x-child`, only one listener for event type `foo` will be added and `childEventHandlers.foo` would be used for event handler.  
 
 ```js
 // x/myComponent.js
@@ -106,6 +106,9 @@ export default class MyComponent extends LightningElement {
 </template>
 ```
 
+Event listeners specified by `lwc:on` are added completely independently of event listener properties specified by `lwc:spread`, i.e. If `lwc:on` and `lwc:spread` specify listeners for the same event type, then both event listeners will be added.
+they do not override or overwrite each other in any way. 
+
 ## Drawbacks
 
 One downside of this proposal is that it would prevent us from being able to statically analyze the names of event listeners added by this directive.
@@ -120,7 +123,7 @@ Currently, a component can execute logic in its `connectedCallback` based on the
  
 Currently, `lwc:spread` can be used to listen for standard events like `click` or `focus` by assigning event handlers to the `onclick` or `onfocus` properties. This works because these properties are applied to `element`, meaning the event handlers are bound to the `elements` themselves, not to the owner `component` as `onclick` or `onfocus` on the template does. This behavior might be unexpected for consumers. The distinction between `element` and `component` is an implementation detail. For consumers, it is simply an Lwc, and this behavior cannot be explained as the application of properties to Lwc. The proposed design breaks this behaviour. However, any component that relies on the current behavior can be rewritten to accommodate the new design.
 
-Although properties and event listeners use the same HTML attribute syntax, the distinction between them is a part of public API. Consumers are expected to understand their differences and reason about them separately. Combining them into a single directive does not seem to significantly enhance the developer experience. In fact, a combined directive might lead consumers to treat them as a unified concept, causing confusion. Additionally, the usage patterns of properties and event listeners are different, and a combined directive would complicate consumer code.
+Although properties and event listeners use the same HTML attribute syntax, the distinction between them is a part of public API. Consumers are expected to understand their differences and reason about them separately. Combining them into a single directive does not seem to significantly enhance the developer experience. In fact, a combined directive might lead consumers to treat them as a unified concept, causing confusion. Additionally, the usage patterns of properties and event listeners are different, and a combined directive may complicate consumer code.
 
 Currently, the segregation of properties, attributes, and event listeners is handled solely by the template compiler. This design would require implementing a runtime segregator, causing additional runtime overhead. Any changes in segregation rules would necessitate updates in both the compiler and the runtime engine, leading to increased maintenance effort.
 
@@ -139,3 +142,7 @@ This is a non breaking, observable change. Based on rollout statergy (TBD), cust
 # How we teach this
 
 The LWC documentation should be updated to include an explanation of this directive's behavior. Additionally, the documentation should encourage customers to use this directive instead of `lwc:spread` for dynamically adding event listeners.
+
+# Unresolved questions
+
+Should the [overriding](#overriding) behaviour be functionally similar to `lwc:spread` or shall we deviate from it to have multiple event listeners, see [comment](https://github.com/salesforce/lwc-rfcs/pull/92#discussion_r1913787583)

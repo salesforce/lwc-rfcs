@@ -1,8 +1,8 @@
 ---
 title: "`lwc:on` directive" 
-status: DRAFTED
+status: APPROVED
 created_at: 2025-01-13
-updated_at: 2025-02-17 
+updated_at: 2025-05-19
 pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ---
@@ -11,7 +11,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ## Summary
 
-This proposal introduces a mechanism to dynamically add a collection of event listeners to elements in an LWC template using a new directive, `lwc:on`.
+This proposal introduces a mechanism to add a collection of event listeners which may be computed dynamically to elements in an LWC template using a new directive, `lwc:on`.
 
 ## Basic example
 
@@ -46,7 +46,7 @@ LWC's current support for declarative event listeners is limited to scenarios wh
 
 A common use case arises when using the `lwc:component` directive, where event listeners may depend on the current value of the constructor passed to `lwc:is`. In such cases, the event types cannot be known in advance when authoring the owner component's HTML template.
 
-As an alternative, it is possible to add event listeners imperatively. However, this requires the owner component to have a reference to the element on which the listener needs to be added. This reference is only available after the element has been connected, and hence, it is typically only available after the `connectedCallback` of the corresponding component has terminated. This makes it impossible for the owner component to handle events dispatched by the `connectedCallback` of the corresponding component.
+As an alternative, it is possible to add event listeners imperatively. However, this requires the owner component to have a reference to the element on which the listener needs to be added. This reference is only available after the element has been connected. Since LWC doesn't provide a mechanism to pass the control flow back to owner component immediately after the element is connected, this makes it impossible for owner component to handle events dispatched by the component in between of being connected and owner component getting the control flow. Typically, this means the owner component cannot handle events dispatched by the `connectedCallback` and `renderedCallback` of the corresponding component.
 
 ## Prior Art
 
@@ -65,53 +65,84 @@ In this document, the value of an object's property shall refer to the result of
 
 ### Directive behaviour 
 
-The `lwc:on` directive would accept an object. For each property of the object, it would add a event listener to the `element` that listens for the event type specified by property's key. The property's value with `this` set to the owner `component` would be used for handling the event. Consumer would not recieve any reference to the actual event handlers used and hence they can't remove the event listeners added by this directive.
+The `lwc:on` directive would accept an object. For each property of the object, it would add a event listener to the `element` that listens for the event type specified by property's key. The property's value with `this` set to the owner `component` would be used for handling the event.
 
 ### Considered Properties
 
 Only own enumerable string-keyed properties of object passed to `lwc:on` will be considered. Other properties, i.e. inherited properties, non-enumerable properties and symbol-keyed properties shall be ignored. The only restriction on property keys is that they must be strings — any string, such as 'fooBar', 'foo-bar', or even '', is valid.
 
-### Caching
+### Non-callable Property Values
 
-#### For static components, i.e. components declared in template directly using its selector
-Since it is uncommon for event listeners to change after the start of the owner component's intial render, We can cache them when first encountered, to improve performance. Note that this is same as how `on{eventType}` in template HTML works currently. For consumers, the implication of this would be that any changes made to the object passed to `lwc:on` after the first `connectedCallback` of owner component would cause no effect.
+When a property value in the object passed to `lwc:on` is not callable, the directive will not throw an error during the addition of the event listener. Instead, it will throw an error when that event is handled. This behavior is consistent with how event listeners added via the `onXXX` syntax in HTML templates work.
 
-#### For dynamic components, i.e. components created using `lwc:component` directive
-Since it is uncommon for event listeners to change if the constructor passed to `lwc:is` doesn't change, We can skip patching of event listeners if the `element` doesn't change. For consumers, the implication of this would be that after the first `connectedCallback` of owner component, any changes made to the object passed to `lwc:on` would cause no effect until the constructor passed to `lwc:is` itself is changed - at which point all existing listeners are removed and new ones are added based on the current value of object passed to `lwc:on`.
+### Object Mutation and Identifier Reassignment
 
-### Overriding
-
-There can be only one `lwc:on` directive on an element.  
-If `lwc:on` specifies a listener for the same event type as an event listener declared directly in the HTML template, only the listener from `lwc:on` will be applied, and the other listener will be ignored. In the example below, for `x-child`, only one listener for event type `foo` will be added and `childEventHandlers.foo` would be used for event handler.  
+The object referenced by the identifier passed to `lwc:on` should not be mutated. However, the identifier itself may be reassigned to a different object. This means that while you can change which object the identifier points to, you should not modify the properties of the object itself.
 
 ```js
 // x/myComponent.js
 export default class MyComponent extends LightningElement {
-
-    childEventHandlers = {
-        foo: function (event) {console.log('lwc:on');} ,
+    handlers = {
+        click: () => console.log('clicked')
     };
 
-    fooHandler(){
-        console.log('onfoo');
+    // Valid: Reassigning the identifier to a new object
+    updateHandlers() {
+        this.handlers = {
+            click: () => console.log('new click handler'),
+            mouseover: () => console.log('mouseover')
+        };
     }
 
+    // Invalid: Mutating the object directly
+    invalidUpdate() {
+        this.handlers.click = () => console.log('new click handler'); // Don't do this
+        this.handlers.mouseover = () => console.log('mouseover'); // Don't do this
+    }
 }
 ```
 
-```html
- <!-- x/myComponent.html -->
-<template>
-  <x-child lwc:on={childEventHandlers} onfoo={fooHandler}></x-child>
-</template>
+### Event Listener Updates
+
+When an identifier passed to `lwc:on` is reassigned to a different object, the event listeners are updated accordingly on re-render:
+- New properties in the object will have their event listeners added
+- Properties that no longer exist in the object will have their event listeners removed
+- Properties that exist in both the old and new objects but with different values will have their event listeners updated
+
+```js
+// x/myComponent.js
+export default class MyComponent extends LightningElement {
+    handlers = {
+        click: () => console.log('clicked'),
+        mouseover: () => console.log('mouseover')
+    };
+
+    updateHandlers() {
+        // This will:
+        // 1. Remove the mouseover event listener
+        // 2. Update the click event listener
+        // 3. Add a new keydown event listener
+        this.handlers = {
+            click: () => console.log('new click handler'),
+            keydown: () => console.log('key pressed')
+        };
+    }
+}
 ```
 
-Event listeners specified by `lwc:on` are added completely independently of event listener properties specified by `lwc:spread`, i.e. If `lwc:on` and `lwc:spread` specify listeners for the same event type, then both event listeners will be added.
-they do not override or overwrite each other in any way. 
+### Compatibility between various Event Listener Declarations 
+
+There can be only one `lwc:on` directive on an element.  
+`lwc:on` directive cannot be used together with event listeners declared directly in the HTML template (using `onXXX` syntax) on the same element.
+
+Event listeners specified by `lwc:on` are added completely independently of event listener properties specified by `lwc:spread`, i.e. If `lwc:on` and `lwc:spread` specify listeners for the same event type, then both event listeners will be added. They do not override or overwrite each other in any way.
+
 
 ## Drawbacks
 
-One downside of this proposal is that it would prevent us from being able to statically analyze the names of event listeners added by this directive.
+- It is not possible to statically analyze the names of event listeners added by this directive.
+- The `lwc:on` directive cannot be used together with event listeners declared using the `onXXX` syntax on the same element, which may limit flexibility in certain scenarios.
+- The object passed to `lwc:on` cannot be mutated - only reassignment of the identifier to a new object is allowed. This may require additional code to create new objects when event handlers need to be updated.
 
 ## Alternatives
 
@@ -144,5 +175,3 @@ This is a non breaking, observable change. Based on rollout statergy (TBD), cust
 The LWC documentation should be updated to include an explanation of this directive's behavior. Additionally, the documentation should encourage customers to use this directive instead of `lwc:spread` for dynamically adding event listeners.
 
 # Unresolved questions
-
-Should the [overriding](#overriding) behaviour be functionally similar to `lwc:spread` or shall we deviate from it to have multiple event listeners, see [comment](https://github.com/salesforce/lwc-rfcs/pull/92#discussion_r1913787583)

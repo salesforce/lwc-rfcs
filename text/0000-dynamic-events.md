@@ -1,8 +1,8 @@
 ---
 title: "`lwc:on` directive" 
-status: APPROVED
+status: IMPLEMENTED
 created_at: 2025-01-13
-updated_at: 2025-05-19
+updated_at: 2025-06-09
 pr: https://github.com/salesforce/lwc-rfcs/pull/92
 
 ---

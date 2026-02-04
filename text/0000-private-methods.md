@@ -54,7 +54,7 @@ Then it will go through the @babel/plugin-transform-class-properties. Since @bab
 
 **Section of Random Facts Relating to the Design**
 * Only method declarations need to be transformed. Call expressions, using dot notation, do not need to be transformed as they already work in LWCs
-* This feature is limited to implementing only private methods. It does not include not private properties or private accessors (getter/setters). 
+* This feature is limited to implementing only private methods. It does not include not private properties or private accessors (getter/setters).
 * You can’t use private methods in the template, this throws a linting error parsing the template expression
 * Both of these transforms only get applied if enabled, using a compiler option
 

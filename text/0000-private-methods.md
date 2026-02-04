@@ -91,13 +91,11 @@ The final approach suggestion was to utilize WeakMaps within the internal compon
 ## Adoption Strategy
 New LWCs would need to implement their own private methods. Existing LWCs would need to migrate their existing methods to be private. We intend to create a linter to ensure consistent use of private methods when needed. 
 
-The design spelled out above (the Trojan Horse Strategy) is backwards compatible and does not break existing LWC code. 
+The design spelled out above is backwards compatible and does not break existing LWC code. It will be adopted internally before it is enabled and exposed for external customers.
 
 A simple LWC example could be written for demonstration purposes.  
 
 ## How We Teach This
-Internally, we are currently calling this design the “Trojan Horse Strategy”, as we are sneaking the private methods past @babel/plugin-transform-class-properties by transforming the method names. 
-
 For external audiences, documentation should be written announcing that private methods now work in LWCs. This documentation should link to the public MDN documentation, as we are implementing native JavaScript usage. We will want to make sure to call out all similarities and differences between the LWC private methods and native ones.
 
 ## Unresolved Questions

@@ -35,7 +35,7 @@ If you were to try using a private method in an LWC today, it will fail with an 
 
 <img width="851" height="266" alt="private method" src="https://github.com/user-attachments/assets/afbdb13f-4e26-4ccf-9a58-4b1fcd89dc64" />
 
-To implement private methods, the proposed solution involves transforming the method call both BEFORE and AFTER @babel/plugin-transform-class-properties. 
+To implement private methods, the proposed solution involves transforming the method call both BEFORE and AFTER @babel/plugin-transform-class-properties. Both of these transformations will occur during compilation.
 
 At the start, user code will look something like:
 ```javascript

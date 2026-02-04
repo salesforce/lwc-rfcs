@@ -53,11 +53,10 @@ Then it will go through the @babel/plugin-transform-class-properties. Since @bab
 ```
 
 **Section of Random Facts Relating to the Design**
-* We do not need to transform call expressions within a component, this is already functional
-* We are not going to implement private properties yet, just private methods 
-* If we need to add private accessors (getters/setters), it would be implemented similar to private methods. For now, we are not going to implement this
+* Only method declarations need to be transformed. Call expressions, using dot notation, do not need to be transformed as they already work in LWCs
+* This feature is limited to implementing only private methods. It does not include not private properties or private accessors (getter/setters). 
 * You can’t use private methods in the template, this throws a linting error parsing the template expression
-* Both of these transforms only get applied if it is enabled, using a compiler option
+* Both of these transforms only get applied if enabled, using a compiler option
 
 ## Drawbacks
 **Drawback #1:** Performance.

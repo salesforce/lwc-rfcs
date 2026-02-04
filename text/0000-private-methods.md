@@ -27,7 +27,9 @@ this.#privateMethod();
 The largest motivation for this feature is improving our security approach. Private methods are inherently secure by design, and using them eliminates entire classes of potential component vulnerabilities.
 
 ## Detailed Design 
-The following design proposal is known as the “Trojan Horse Strategy”.
+The following design proposal is known as the “Trojan Horse Strategy”. This backward-compatible strategy allows us to make sensitive changes without impacting existing implementations.
+
+This approach delegates to native browser behavior of private methods and is a backwards compatible solution. [You can find a POC PR here.](https://github.com/salesforce/lwc/pull/5477)
 
 If you were to try using a private method in an LWC today, it will fail with an error from [@babel/plugin-transform-class-properties](https://github.com/salesforce/lwc/blob/master/packages/%40lwc/compiler/src/transformers/javascript.ts).
 
@@ -50,13 +52,12 @@ Then it will go through the @babel/plugin-transform-class-properties. Since @bab
 #privateMethodCall() { ... }
 ```
 
-This approach delegates to native browser behavior of private methods and is a backwards compatible solution. [You can find a POC PR here.](https://github.com/salesforce/lwc/pull/5477)
-
 **Section of Random Facts Relating to the Design**
 * We do not need to transform call expressions within a component, this is already functional
 * We are not going to implement private properties yet, just private methods 
 * If we need to add private accessors (getters/setters), it would be implemented similar to private methods. For now, we are not going to implement this
-* You can’t use private methods in the template, this throws a linting error parsing the template expression  
+* You can’t use private methods in the template, this throws a linting error parsing the template expression
+* Both of these transforms only get applied if it is enabled, using a compiler option
 
 ## Drawbacks
 **Drawback #1:** Performance.

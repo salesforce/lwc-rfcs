@@ -15,13 +15,11 @@ The goal of this project is to enable [native private method support](https://de
 We declare private methods directly on the component class using standard JavaScript private class syntax (the `#` prefix). This matches the native JavaScript authoring experience and requires no framework-specific APIs.
 
 ```javascript
-publicMethod() { ... }
 #privateMethod() { ... }
 ```
 
 Private methods can be referenced using dot notation: 
 ```javascript
-this.publicMethod();
 this.#privateMethod();
 ```
 

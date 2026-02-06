@@ -27,9 +27,7 @@ this.#privateMethod();
 The largest motivation for this feature is improving our security approach. Enabling private methods helps maintain the expected behavior of a component by restricting access to its internal methods. This will prevent unexpected context abuse and shadowing methods that alter the behavior of a component. Private methods are inherently secure by design, and using them eliminates entire classes of potential component vulnerabilities.
 
 ## Detailed Design 
-The following design proposal is known as the “Trojan Horse Strategy”. This backward-compatible strategy allows us to make sensitive changes without impacting existing implementations.
-
-This approach delegates to native browser behavior of private methods and is a backwards compatible solution. [You can find a POC PR here.](https://github.com/salesforce/lwc/pull/5477)
+The following design proposal delegates to native browser behavior of private methods and is a backwards compatible solution, allowing us to make sensitive changes without impacting existing impelementations. [You can find a POC PR here.](https://github.com/salesforce/lwc/pull/5477)
 
 If you were to try using a private method in an LWC today, it will fail with an error from [@babel/plugin-transform-class-properties](https://github.com/salesforce/lwc/blob/master/packages/%40lwc/compiler/src/transformers/javascript.ts).
 

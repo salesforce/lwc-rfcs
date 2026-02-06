@@ -2,14 +2,14 @@
 title: Private Methods for Lightning Web Components
 status: DRAFTED
 created_at: 2026-02-03
-updated_at: 2026-02-03
+updated_at: 2026-02-06
 pr: https://github.com/salesforce/lwc-rfcs/pull/96
 ---
 
 # Private Methods for Lightning Web Components
 
 ## Summary 
-The goal of this project is to enable [native private method support](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements) into LWC. Private methods are created by using a `#` prefix and cannot be referenced outside of the declared class. This provides secure encapsulation. Elements and methods marked as private are not part of the typical inheritance chain and thus cannot be accessed by subclasses. The focus is explicitly only private methods, not private properties. 
+The goal of this project is to enable [native private method support](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements) into LWC. Private methods are created by using a `#` prefix and cannot be referenced outside of the declared class. This provides secure encapsulation. Elements and methods marked as private are not part of the typical inheritance chain and thus cannot be accessed by subclasses. The focus is explicitly only private methods, not private properties due to challenges with reactivity in LWCs. 
 
 ## Basic Example
 We declare private methods directly on the component class using standard JavaScript private class syntax (the `#` prefix). This matches the native JavaScript authoring experience and requires no framework-specific APIs.
@@ -24,7 +24,7 @@ this.#privateMethod();
 ```
 
 ## Motivation
-The largest motivation for this feature is improving our security approach. Private methods are inherently secure by design, and using them eliminates entire classes of potential component vulnerabilities.
+The largest motivation for this feature is improving our security approach. Enabling private methods helps maintain the expected behavior of a component by restricting access to its internal methods. This will prevent unexpected context abuse and shadowing methods that alter the behavior of a component. Private methods are inherently secure by design, and using them eliminates entire classes of potential component vulnerabilities.
 
 ## Detailed Design 
 The following design proposal is known as the “Trojan Horse Strategy”. This backward-compatible strategy allows us to make sensitive changes without impacting existing implementations.

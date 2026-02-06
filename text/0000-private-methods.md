@@ -40,7 +40,7 @@ At the start, user code will look something like:
 #privateMethodCall() { ... }
 ```
 
-We will transform that method declaration, via a own newly written babel transform, to look like: 
+We will transform that method declaration, via a newly written babel transform, to look like: 
 ```javascript
 _internal_only_private_privateMethodCall()
 ```

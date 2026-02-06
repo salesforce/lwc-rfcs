@@ -87,7 +87,7 @@ This alternative design is to introduce a new `@private` decorator for internal 
 The final approach suggestion was to utilize WeakMaps within the internal components. This solution is a design at the component level, instead of at the compiler level. While component owners still need to migrate their LWCs once private methods are enabled, the overhead & boilerplate for the WeakMap implementation is much higher for component owners. 
 
 ## Adoption Strategy
-New LWCs would need to implement their own private methods. Existing LWCs would need to migrate their existing methods to be private. We intend to create a linter to ensure consistent use of private methods when needed. 
+New LWCs would need to implement their own private methods. Existing LWCs would need to migrate their existing methods to be private. We intend to create a linter to ensure consistent use of private methods. 
 
 The design spelled out above is backwards compatible and does not break existing LWC code. It will be adopted internally before it is enabled and exposed for external customers.
 

@@ -94,7 +94,7 @@ The design spelled out above is backwards compatible and does not break existing
 A simple LWC example could be written for demonstration purposes.  
 
 ## How We Teach This
-For external audiences, documentation should be written announcing that private methods now work in LWCs. This documentation should link to the public MDN documentation, as we are implementing native JavaScript usage. We will want to make sure to call out all similarities and differences between the LWC private methods and native ones.
+Documentation for private methods can link to the public MDN documentation, as we are enabling native JavaScript usage. 
 
 ## Unresolved Questions
 N/A

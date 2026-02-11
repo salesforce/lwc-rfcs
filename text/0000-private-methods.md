@@ -33,7 +33,7 @@ The following design proposal delegates to native browser behavior of private me
 
 If you were to try using a private method in an LWC today, it will fail with an error from [@babel/plugin-transform-class-properties](https://github.com/salesforce/lwc/blob/master/packages/%40lwc/compiler/src/transformers/javascript.ts).
 
-<img width="851" height="266" alt="private method" src="https://github.com/user-attachments/assets/afbdb13f-4e26-4ccf-9a58-4b1fcd89dc64" />
+![IDE tooltip showing an error: "LWC1007: /Users/a.chabot/qaFor258/privateMethodExample.js: Class private methods are not enabled. Please add `@babel/plugin-transform-private-methods` to your configuration."](https://github.com/user-attachments/assets/afbdb13f-4e26-4ccf-9a58-4b1fcd89dc64)
 
 To implement private methods, the proposed solution involves transforming the method call both BEFORE and AFTER @babel/plugin-transform-class-properties. Both of these transformations will occur during compilation.
 

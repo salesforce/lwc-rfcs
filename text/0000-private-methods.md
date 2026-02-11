@@ -61,7 +61,7 @@ Private class members can only be accessed from within the class body itself, as
 
 ## Drawbacks
 **Drawback #1:** Performance.
-This design requires AST traversal twice, once to rename the private functions to regular functions & then again to re-rename them as private functions. There is performance overhead to this AST traversal. 
+This design requires AST traversal twice, once to rename the private functions to regular functions & then again to re-rename them as private functions. There is also a manual traversal of the tree to find the `Program` visitor. There is performance overhead to this AST traversal. 
 
 **Drawback #2:** Complexity to LWC Compiler. 
 As with all expansions, this project adds complexity and technical debt to the LWC compiler. This project is implementing two new babel transforms that will need to be maintained. 

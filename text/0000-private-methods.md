@@ -12,7 +12,7 @@ pr: https://github.com/salesforce/lwc-rfcs/pull/96
 The goal of this project is to enable [native private method support](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements) into LWC. Private methods are created by using a `#` prefix and cannot be referenced outside of the declared class. This provides secure encapsulation. Elements and methods marked as private are not part of the typical inheritance chain and thus cannot be accessed by subclasses. The focus is explicitly only private methods, not private properties due to challenges with reactivity in LWCs ([reference](https://github.com/salesforce/lwc/issues/3537)). 
 
 ## Basic Example
-We declare private methods directly on the component class using standard JavaScript private class syntax (the `#` prefix). This matches the native JavaScript authoring experience and requires no framework-specific APIs.
+We declare private methods directly on the component class using standard JavaScript private element syntax (the `#` prefix). This matches the native JavaScript authoring experience and requires no framework-specific APIs.
 
 ```javascript
 #privateMethod() { ... }

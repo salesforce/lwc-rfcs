@@ -73,7 +73,9 @@ We have considered 4 other designs, which are explained below.
 
 As you can see in the screenshot above, the linter suggests to “Please add @babel/plugin-transform-private methods to your configuration” when using private methods in an LWC. This Babel transform lets you use JavaScript private methods in environments that don’t support them yet by transforming them into older, compatible JavaScript. In our use case, the Babel transform would perform compile time validation on private properties (anything without LWC decorators, such as @wire, @api, and @track). 
 
-This design causes issues because class properties get renamed, thus becoming unusable in the template. While this solution does remove the error, it does not resolve the security issues within the components. It is also adding a polyfill for something that is already natively supported in browsers.
+Implementation of this Babel plugin required using the `loose` flag due to it's dependency on @babel/plugin-transform-class-properties. When this flag is true, methods aren't truly private and private properties can get leaked to subclasses.
+
+Furthermore, this design causes issues because class properties get renamed, thus becoming unusable in the template. While this solution does remove the error, it does not resolve the security issues within the components. It is also adding a polyfill for something that is already natively supported in browsers.
 
 **Alternate Design \#2:** Remove [@babel/plugin-transform-class-properties](https://babeljs.io/docs/babel-plugin-transform-class-properties).
 

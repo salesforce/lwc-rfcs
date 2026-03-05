@@ -75,7 +75,6 @@ To guard against this, the forward transform could record every prefixed name it
 
 **Section of Random Facts Relating to the Design**
 
-- Only method declarations need to be transformed. Call expressions, using dot notation, do not need to be transformed as they already work in LWCs
 - This feature is limited to implementing only private methods. It does not include not private properties or private accessors (getter/setters).
 - Both of these transforms only get applied if enabled, using a compiler option
 

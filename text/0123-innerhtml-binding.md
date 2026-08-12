@@ -11,7 +11,7 @@ champion: Philippe Riand, Pierre-Marie Dartus
 
 ## Summary
 
-Applications dealing with rich content, like commerce apps, need to render this content as raw HTML, coming from a database or a CMS. Today, there is no way in LWC to rendered raw HTML content both on the browser and the server. This proposal introduces the `lwc:inner-html` template directive to inject HTML content.
+Applications dealing with rich content, like commerce apps, need to render this content as raw HTML, coming from a database or a CMS. Today, there is no way in LWC to render raw HTML content both on the browser and the server. This proposal introduces the `lwc:inner-html` template directive to inject HTML content.
 
 ### Basic example
 
@@ -56,9 +56,9 @@ This proposal introduces a new `lwc:inner-html` directive to inject raw HTML con
 
 ### Runtime behavior
 
-At runtime the `lwc:inner-html` directive binds the directive value to the `Element.innerHTML` property. During each rendering cycle, the LWC engine diff the current value with its previous value. If the value changes between two rendering cycles, the LWC engine sets the element `innerHTML` property to the new value.
+At runtime the `lwc:inner-html` directive binds the directive value to the `Element.innerHTML` property. During each rendering cycle, the LWC engine diffs the current value with its previous value. If the value changes between two rendering cycles, the LWC engine sets the element `innerHTML` property to the new value.
 
-`Element.innerHTML` is a wellknown XSS sink. To prevent malicious content injection via this `lwc:inner-html` directive, a new `sanitizeHtmlContent` hook is introduced on the LWC engine. This hook is invoked during the LWC component rendering cycle and can be used to strip out malicious code from the content to be injected. The hook accepts a single `content` argument, which is the value passed to the `lwc:inner-html` directive. The `sanitizeHtmlContent` hook is expected to return the sanitized HTML content as a `string`. By default, the `sanitizeHtmlContent` hook will throw an error indicating that it needs to be overridden.
+`Element.innerHTML` is a well-known XSS sink. To prevent malicious content injection via this `lwc:inner-html` directive, a new `sanitizeHtmlContent` hook is introduced on the LWC engine. This hook is invoked during the LWC component rendering cycle and can be used to strip out malicious code from the content to be injected. The hook accepts a single `content` argument, which is the value passed to the `lwc:inner-html` directive. The `sanitizeHtmlContent` hook is expected to return the sanitized HTML content as a `string`. By default, the `sanitizeHtmlContent` hook will throw an error indicating that it needs to be overridden.
 
 You can override the `sanitizeHtmlContent` hook by calling the `setHooks` API. For example:
 
@@ -73,7 +73,7 @@ setHooks({
 });
 ```
 
-When running in native shadow, the shadow DOM style automatically gets applied to injected content. In synthetic shadow, the `lwc:inner-html` relies on the same mechanism than `lwc:dom="manual"` to apply the scoped styles to the manually injected content. The synthetic shadow DOM attaches a MutationObserver on the root element and watches for DOM changes in the subtree to apply the styling attributes.
+When running in native shadow, the shadow DOM style automatically gets applied to injected content. In synthetic shadow, the `lwc:inner-html` relies on the same mechanism as `lwc:dom="manual"` to apply the scoped styles to the manually injected content. The synthetic shadow DOM attaches a MutationObserver on the root element and watches for DOM changes in the subtree to apply the styling attributes.
 
 ### Compilation restrictions
 
@@ -133,7 +133,7 @@ It is also important to call out the opposite effect of injecting `<slot>` in na
 
 Different syntaxes for the `innerHTML` attribute are possible, but they finally lead to the same results. It is then more a matter of preference and consistency.
 
-Another solution would define a new binding syntax, like for example `${{myhtml}}` or `${html:myhtml}}`. But such a syntax could be used everywhere a binding is possible, including attribute values. This could lead to undefined behaviors why not providing any value. The proposed syntax makes sure that the `innerHTML` binding always applies to the content of an element.
+Another solution would define a new binding syntax, like for example `${{myhtml}}` or `${html:myhtml}}`. But such a syntax could be used everywhere a binding is possible, including attribute values. This could lead to undefined behaviors while not providing any value. The proposed syntax makes sure that the `innerHTML` binding always applies to the content of an element.
 
 ## Prior Art
 
@@ -143,7 +143,7 @@ Another solution would define a new binding syntax, like for example `${{myhtml}
 
 ## Adoption strategy
 
-Because the attribute uses the reserved `lwc:` prefix, there is no backward compatibility issue, and there is no potential name conflicts.
+Because the attribute uses the reserved `lwc:` prefix, there is no backward compatibility issue, and there are no potential name conflicts.
 
 ## How we teach this
 

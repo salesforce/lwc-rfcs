@@ -15,7 +15,7 @@ This RFC defines the infrastructure pieces to support feature flags to enable ex
 
 * It is becoming more difficult to add new features to engine and compiler due to the potential breaking hazard.
 * Some features need a period of adaptation and testing before we allow LWC users to consume them, but today the only option is to keep them in a separate branch forever.
-* The performance implications of a change is sometimes difficult to assess without hitting production servers, but at that point, it is too late since everyone has access to the same set of features today.
+* The performance implications of a change are sometimes difficult to assess without hitting production servers, but at that point, it is too late since everyone has access to the same set of features today.
 * Branching code logic for certain features (e.g., slotchange event) is becoming more complicated over time, and having that in the actual code makes the code less readable.
 * Polyfilling new shadow dom semantics is almost impossible considering that we know it is going to break LWC users at some point.
 
@@ -122,7 +122,7 @@ TBD
 
 ### Enabling At Runtime
 
-This could be achieve via the global LWC configuration, e.g.:
+This could be achieved via the global LWC configuration, e.g.:
 
 ```js
 // client side configuration

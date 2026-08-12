@@ -79,7 +79,7 @@ us, we can instead:
    sequentially focusable elements and the set of elements with a negative
    tabindex content attribute value.
 1. Verify that the element received focus via `activeElement`.
-1. If the element did not recieve focus then keep invoking the focus method on
+1. If the element did not receive focus then keep invoking the focus method on
    subsequent elements until we verify that focus was transferred.
 
 The verification step is useful as a workaround for implementation bugs around

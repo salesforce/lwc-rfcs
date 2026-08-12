@@ -14,13 +14,13 @@ This proposal will address two items:
 
 This RFC focused on the compiler errors only, but some of the concepts can be applied later on to the runtime.
 
-Developers will replace assert blocks/statements with `invariant(condition, message)` calls. With invariant calls, during development mode, error messages will appear in the console in its full length; however in production mode, only a friendly URL with an errorCode will be shown. User can follow the URL to the Lightning Web Components site to read detailed error explanation. This minimizes amount of text being shipped and hides error verboseness in production code.
+Developers will replace assert blocks/statements with `invariant(condition, message)` calls. With invariant calls, during development mode, error messages will appear in the console in its full length; however in production mode, only a friendly URL with an errorCode will be shown. User can follow the URL to the Lightning Web Components site to read detailed error explanation. This minimizes the amount of text being shipped and hides error verboseness in production code.
 
 NOTE: This proposal mimics, with some deviations, logic from React's [Error Code system](https://reactjs.org/blog/2016/07/11/introducing-reacts-error-code-system.html).
-Please read over above react doc for it will help you follow current proposal.
+Please read over the above React doc for it will help you follow current proposal.
 
 
-# Lightning Web Components Error Code system will consist of following parts:
+# Lightning Web Components Error Code system will consist of the following parts:
 **1.** `errorCodes.json` -  json object with key:value pairs, where key is a unique error code and value is a unique message key. The message key is a result of concatenating error name-space and error-key ex:
 
 ```js
@@ -31,7 +31,7 @@ Please read over above react doc for it will help you follow current proposal.
 ```
 
 
-Error-code keys follow numeric sequence, where each sequence represents a collection of error codes related to an individual engine part ( ex: 100x - events, 200x - props, 300x - render ... ). Leading digit of the error code will represent a specific engine part and will help developers to quickly identify failing area ( any error starting with '1' is related to events for example ).
+Error-code keys follow numeric sequence, where each sequence represents a collection of error codes related to an individual engine part ( ex: 100x - events, 200x - props, 300x - render ... ). Leading digit of the error code will represent a specific engine part and will help developers to quickly identify failing area ( any error starting with '1' is related to events, for example ).
 NOTE: this file is append only - since these codes will be served on our website for documentation purposes and can potentially be referenced by support groups, these codes must not change.
 
 **2.** `errors.json` - json object with key:value pairs, where key is a unique error identifier and value is a message string ( see below for 'discussion needed' ). This message key becomes the value in the error-code map ( error-code inverse map is used during prod build to retrieve an error code by the message key - see below ). This is the part where Lightning Web Components deviates from React ( see more in info section for explanation ).
@@ -117,7 +117,7 @@ Cons:
 **Error Codes: Manually added vs Auto Generated**
 **Manual:**
 - full control of how code increments are being assigned.
-- no need to introduce babel pass to collect new error messages which are then used to increment error code sequences by adding new entires into errorCodes.json file
+- no need to introduce a babel pass to collect new error messages which are then used to increment error code sequences by adding new entires into errorCodes.json file
 
 **Auto Generated:**
 - No need to worry about manually maintaining error codes - babel pass will automatically create new error code entries if new error messages are added
